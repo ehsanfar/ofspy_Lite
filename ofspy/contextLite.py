@@ -52,6 +52,7 @@ class ContextLite():
         self.Graph.createGraph(self)
 
 
+
     def getElementOwner(self, element):
 
         return next((federate for federate in self.federates

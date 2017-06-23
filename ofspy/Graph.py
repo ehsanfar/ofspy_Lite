@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import networkx.algorithms.isomorphism as iso
 import math
 import numpy as np
+import time
 
 
 class Graph():
@@ -150,6 +151,44 @@ class Graph():
                     G.add_edge(tx.name, rx.name, weight=cost)
 
         self.addNewGraph(G)
+        self.drawGraph(G)
+
+
+    def drawGraph(self, G):
+        if not plt.fignum_exists(1):
+            plt.figure(1)
+            plt.ion()
+            plt.show()
+
+        plt.clf()
+        nodes = [e.name for e in self.elements]
+        nodeLocations = [e.getLocation() for e in self.elements]
+        pos = {e.name: self.convertLocation2xy(nodeLocations[i]) for i, e in enumerate(self.elements)}
+        sec = {e.name: nodeLocations[i] for i, e in enumerate(self.elements)}
+        labels = {n: n[0] + n[-3:] for n in nodes}
+        labelpos = {n: [v[0], v[1] + 0.3] for n, v in pos.items()}
+        x = np.linspace(-1.0, 1.0, 50)
+        y = np.linspace(-1.0, 1.0, 50)
+        X, Y = np.meshgrid(x, y)
+        F = X ** 2 + Y ** 2 - 0.75
+        plt.contour(X, Y, F, [0])
+        # print nodes
+        nx.draw_networkx_nodes(G, pos, nodelist=[n for n in nodes if 'Ground' not in n and 'LE' not in sec[n]],
+                               node_color='r', node_size=100)
+        nx.draw_networkx_nodes(G, pos, nodelist=[n for n in nodes if 'Ground' not in n and 'LE' in sec[n]],
+                               node_color='g', node_size=100)
+        nx.draw_networkx_nodes(G, pos, nodelist=[n for n in nodes if 'Ground' in n], node_color='b', node_size=100)
+        nx.draw_networkx_edges(G, pos)
+        nx.draw_networkx_labels(G, labelpos, labels, font_size=8)
+        plt.xticks([])
+        plt.yticks([])
+        plt.xlim(-2.5, 2.5)
+        plt.ylim(-2.5, 2.5)
+        # plt.draw()
+        plt.draw()
+        plt.pause(0.2)
+
+    # Figure is closed
 
     def drawGraphs(self):
         # pos = None
@@ -184,7 +223,7 @@ class Graph():
             # ax.set_title('Graph:'+str(j))
             # print j, self.shortestPathes[j]
 
-        plt.savefig("Networks_elements%d_.png"%len(self.elements), bbox_inches='tight')
+        # plt.savefig("Networks_elements%d_.png"%len(self.elements), bbox_inches='tight')
         plt.show()
 
 

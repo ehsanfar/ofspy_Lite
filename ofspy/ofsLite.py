@@ -1,8 +1,4 @@
-import logging
 
-from .game import Game
-from .simulator import Simulator
-from .auctioneer import Auctioneer
 from .contextLite import ContextLite
 
 
@@ -20,6 +16,7 @@ class OFSL(object):
 
         self.context.init(self)
         self.execute()
+
 
 
     def execute(self):
