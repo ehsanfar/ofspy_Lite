@@ -45,16 +45,21 @@ class ContextLite():
 
 
         self.generateFederates(ofs.elements)
-        self.generateTasks(N = 6)
+        self.generateTasks()
         self.elements = self.getElements()
 
         self.Graph = Graph()
         self.Graph.createGraph(self)
+        self.pickupTasks(self)
 
+
+    def pickupTasks(self):
+        self.generateTasks()
+        for element in self.elements:
+            element.pickupTask(self.currentTasks)
 
 
     def getElementOwner(self, element):
-
         return next((federate for federate in self.federates
                      if element in federate.elements), None)
 
@@ -90,8 +95,11 @@ class ContextLite():
 
         self.executeOperations()
         self.Graph.createGraph(self)
+
         # self.Graph.drawGraphs()
-        print self.time, [a.getLocation() for a in self.elements]
+        self.pickupTasks()
+
+        # print self.time, [a.getLocation() for a in self.elements]
 
 
     def generateTasks(self, N=6):

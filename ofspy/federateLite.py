@@ -26,7 +26,7 @@ class FederateLite():
         self.satellites = []
         self.stations = []
         self.operation = operation
-        self.costDic = {'oSGL': 1, 'oISL': 1}
+        self.costDic = {'oSGL': 1., 'oISL': 1.}
         self.tasks = {}
         self.transcounter = 0
         self.transrevenue = 0.
@@ -61,7 +61,7 @@ class FederateLite():
         self.costDic[protocol] = cost
 
     def getCost(self, protocol, federate=None, type=None):
-        if type:
+        if self == federate:
             return 0.
         key = '{}-{}'.format(federate, protocol)
         return self.costDic[protocol] if key not in self.costDic else self.costDic[key]

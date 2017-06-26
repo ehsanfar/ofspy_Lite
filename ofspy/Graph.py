@@ -12,7 +12,11 @@ class Graph():
         self.graph = []
         self.nodeLocations = []
         self.shortestPathes = []
-        self.elements = None
+        self.shortestPathCost = []
+        self.elements = []
+        self.federates = []
+        self.elementOwners = {}
+
 
     def findbestxy(self, N):
         if N%2 != 0:
@@ -53,8 +57,9 @@ class Graph():
         costdict = {}
 
         nodes = G.nodes()
-        satellites = [n for n in nodes if 'Ground' not in n]
-        groundstations = [n for n in nodes if 'Ground' in n]
+        print "nodes:", nodes
+        satellites = [n for n in nodes if 'GS' not in n]
+        groundstations = [n for n in nodes if 'GS' in n]
         for s in satellites:
             temppathlist = []
             pathcostlist = []
@@ -63,8 +68,13 @@ class Graph():
                     sh = nx.shortest_path(G, s, g)
                     temppathlist.append(sh)
                     tuplist = self.convertPath2Edge(sh)
-                    print tuplist
-                    pathcostlist.append([G[source][target]['weight'] for source, target in tuplist])
+                    # print tuplist
+                    costlist = []
+                    for (source, target) in tuplist:
+                        cost = 0 if self.elementOwners[s] == self.elementOwners[target] else G[source][target]['weight']
+                        costlist.append(cost)
+
+                    pathcostlist.append(costlist)
 
 
             pathdict[s] = temppathlist#min(temppathlist, key = lambda x: len(x)) if temppathlist else None
@@ -73,16 +83,22 @@ class Graph():
             # print "designCost:", costlist
 
 
-        print "graph all paths:"
-        print pathdict[satellites[0]]
-        print costdict[satellites[0]]
+        # print "graph all paths:"
+        # print pathdict[satellites[0]]
+        # print costdict[satellites[0]]
         return pathdict, costdict
+
+    def findcheapestpath(self, pathlist, costlist):
+        sortedpath = [x for (y,x) in sorted(zip([sum(c) for c in costlist], pathlist))]
+        # print "cost vs path:", sorted(zip([sum(c) for c in costlist], pathlist))
+
+        return self.convertPath2Edge(sortedpath[0])
 
     def addNewGraph(self, G):
         nodes2 = G.nodes()
         out_deg2 = G.out_degree(nodes2)
         equallist = []
-        for g in self.graph:
+        for i, g in enumerate(self.graph):
             nodes1 = g.nodes()
             out_deg1 = g.out_degree(nodes1)
             # print [(out_deg1[k], out_deg2[k]) for k in out_deg2]
@@ -93,13 +109,16 @@ class Graph():
                 if any(map(lambda x: x[0] != x[1], [(set(g.neighbors(n)), set(G.neighbors(n))) for n in nodes1])):
                     continue
                 else:
-                    return
+                    return i
 
         # print "Not equal to eigther"
         self.graph.append(G)
         self.nodeLocations.append([e.getLocation() for e in self.elements])
         pathdict, costdict = self.findShortestPathes(G)
         self.shortestPathes.append(pathdict)
+        self.shortestPathCost.append(costdict)
+        return len(self.graph)-1
+
         # print len(self.graph), G.number_of_nodes(), G.number_of_edges()
 
 
@@ -123,8 +142,11 @@ class Graph():
 
 
     def createGraph(self, context):
-        federates = context.federates[:]
+        self.federates = context.federates[:]
         self.elements = elements = context.elements[:]
+        self.elementOwners = {element: federate for (element, federate) in
+                         zip([e.name for e in self.elements], [e.getOwner().name for e in self.elements])}
+
         elementlocations = [e.getLocation() for e in elements]
         # print elementlocations
 
@@ -150,11 +172,14 @@ class Graph():
 
                     G.add_edge(tx.name, rx.name, weight=cost)
 
-        self.addNewGraph(G)
-        self.drawGraph(G)
+        graphorder = self.addNewGraph(G)
+        print "graph order:", graphorder
+        self.drawGraph(graphorder)
 
 
-    def drawGraph(self, G):
+    def drawGraph(self, graphorder):
+        G = self.graph[graphorder]
+
         if not plt.fignum_exists(1):
             plt.figure(1)
             plt.ion()
@@ -162,6 +187,15 @@ class Graph():
 
         plt.clf()
         nodes = [e.name for e in self.elements]
+        print "nodes:", nodes
+        satellites = [n for n in nodes if 'GS' not in n]
+        alltuples = set([])
+        for s in satellites:
+            pathedges = self.findcheapestpath(self.shortestPathes[graphorder][s], self.shortestPathCost[graphorder][s])
+            print "graphorder & source & path:", graphorder, s, pathedges
+            alltuples = alltuples.union(pathedges)
+
+
         nodeLocations = [e.getLocation() for e in self.elements]
         pos = {e.name: self.convertLocation2xy(nodeLocations[i]) for i, e in enumerate(self.elements)}
         sec = {e.name: nodeLocations[i] for i, e in enumerate(self.elements)}
@@ -173,12 +207,14 @@ class Graph():
         F = X ** 2 + Y ** 2 - 0.75
         plt.contour(X, Y, F, [0])
         # print nodes
-        nx.draw_networkx_nodes(G, pos, nodelist=[n for n in nodes if 'Ground' not in n and 'LE' not in sec[n]],
+        nx.draw_networkx_nodes(G, pos, nodelist=[n for n in nodes if 'GS' not in n and 'LE' not in sec[n]],
                                node_color='r', node_size=100)
-        nx.draw_networkx_nodes(G, pos, nodelist=[n for n in nodes if 'Ground' not in n and 'LE' in sec[n]],
+        nx.draw_networkx_nodes(G, pos, nodelist=[n for n in nodes if 'GS' not in n and 'LE' in sec[n]],
                                node_color='g', node_size=100)
-        nx.draw_networkx_nodes(G, pos, nodelist=[n for n in nodes if 'Ground' in n], node_color='b', node_size=100)
-        nx.draw_networkx_edges(G, pos)
+        nx.draw_networkx_nodes(G, pos, nodelist=[n for n in nodes if 'GS' in n], node_color='b', node_size=100)
+
+        nx.draw_networkx_edges(G, pos, edgelist=list(alltuples))
+        # nx.draw_networkx_edges(G, pos)
         nx.draw_networkx_labels(G, labelpos, labels, font_size=8)
         plt.xticks([])
         plt.yticks([])

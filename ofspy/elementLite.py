@@ -14,6 +14,8 @@ class Element():
         self.federateOwner = federate
         self.savedTasks = []
 
+    def getOwner(self):
+        return self.federateOwner
 
     def getLocation(self):
         return str(self.location)+str(self.section)
@@ -83,6 +85,17 @@ class Element():
         received = pathlist[0].transmitTask(task, pathlist[1:])
         return received
 
+    def isGEO(self):
+        if self.isSpace() and 'GEO' in self.location:
+            return True
+
+        return False
+
+    def pickupTask(self, currentTasks):
+        if self.isSpace() and not self.isGEO():
+            if self.canReceive(currentTasks[self.section]):
+                self.queuedTasks.put(currentTasks[self.section])
+
 
 class GroundStation(Element):
     def __init__(self, federate, name, location, cost):
@@ -93,6 +106,7 @@ class GroundStation(Element):
 
     def isSpace(self):
         return False
+
 
 
 
@@ -115,9 +129,6 @@ class Satellite(Element):
     def isSpace(self):
         return True
 
-    def pickupTask(self, task):
-        if self.canReceive(task):
-            self.queuedTasks.put(task)
 
     def transmit(self, task, pathlist):
         pathlist[0].transmitTask(task, pathlist[1:])
