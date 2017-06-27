@@ -49,11 +49,12 @@ class FederateLite():
         return self.tasks
 
 
-    def ticktock(self):
+    def ticktock(self, time):
         """
         Ticks this federate in a simulation.
         @param sim: the simulator
         """
+        self.time = time
         for element in self.elements:
             element.ticktock()
 

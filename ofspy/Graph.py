@@ -9,13 +9,14 @@ import time
 
 class Graph():
     def __init__(self):
-        self.graph = []
+        self.graphList = []
         self.nodeLocations = []
         self.shortestPathes = []
         self.shortestPathCost = []
         self.elements = []
         self.federates = []
         self.elementOwners = {}
+        self.graphOrder = None
 
 
     def findbestxy(self, N):
@@ -83,22 +84,26 @@ class Graph():
             # print "designCost:", costlist
 
 
-        # print "graph all paths:"
+        # print "graphList all paths:"
         # print pathdict[satellites[0]]
         # print costdict[satellites[0]]
         return pathdict, costdict
 
-    def findcheapestpath(self, pathlist, costlist):
+    def findcheapestpath(self, s):
+        print self.getShortestPathes(), s
+        pathlist = self.getShortestPathes()[s]
+        costlist = self.getShortestPathCost()[s]
         sortedpath = [x for (y,x) in sorted(zip([sum(c) for c in costlist], pathlist))]
         # print "cost vs path:", sorted(zip([sum(c) for c in costlist], pathlist))
 
-        return self.convertPath2Edge(sortedpath[0])
+        # return self.convertPath2Edge(sortedpath[0])
+        return sortedpath[0]
 
     def addNewGraph(self, G):
         nodes2 = G.nodes()
         out_deg2 = G.out_degree(nodes2)
         equallist = []
-        for i, g in enumerate(self.graph):
+        for i, g in enumerate(self.graphList):
             nodes1 = g.nodes()
             out_deg1 = g.out_degree(nodes1)
             # print [(out_deg1[k], out_deg2[k]) for k in out_deg2]
@@ -112,14 +117,14 @@ class Graph():
                     return i
 
         # print "Not equal to eigther"
-        self.graph.append(G)
+        self.graphList.append(G)
         self.nodeLocations.append([e.getLocation() for e in self.elements])
         pathdict, costdict = self.findShortestPathes(G)
         self.shortestPathes.append(pathdict)
         self.shortestPathCost.append(costdict)
-        return len(self.graph)-1
+        return len(self.graphList) - 1
 
-        # print len(self.graph), G.number_of_nodes(), G.number_of_edges()
+        # print len(self.graphList), G.number_of_nodes(), G.number_of_edges()
 
 
 
@@ -172,13 +177,22 @@ class Graph():
 
                     G.add_edge(tx.name, rx.name, weight=cost)
 
-        graphorder = self.addNewGraph(G)
-        print "graph order:", graphorder
-        self.drawGraph(graphorder)
+        self.graphOrder = self.addNewGraph(G)
+        print "graphList order:", self.graphOrder
+        # self.drawGraph()
 
 
-    def drawGraph(self, graphorder):
-        G = self.graph[graphorder]
+    def getGraph(self):
+        return self.graphList[self.graphOrder]
+
+    def getShortestPathes(self):
+        return self.shortestPathes[self.graphOrder]
+
+    def getShortestPathCost(self):
+        return self.shortestPathCost[self.graphOrder]
+
+    def drawGraph(self):
+        G = self.graphList[self.graphOrder]
 
         if not plt.fignum_exists(1):
             plt.figure(1)
@@ -191,8 +205,9 @@ class Graph():
         satellites = [n for n in nodes if 'GS' not in n]
         alltuples = set([])
         for s in satellites:
-            pathedges = self.findcheapestpath(self.shortestPathes[graphorder][s], self.shortestPathCost[graphorder][s])
-            print "graphorder & source & path:", graphorder, s, pathedges
+            path = self.findcheapestpath(s)
+            pathedges = self.convertPath2Edge(path)
+            print "graphorder & source & path:", s, pathedges
             alltuples = alltuples.union(pathedges)
 
 
@@ -230,11 +245,11 @@ class Graph():
         # pos = None
 
         plt.figure()
-        n1,n2 = self.findbestxy(len(self.graph))
+        n1,n2 = self.findbestxy(len(self.graphList))
         # print n1,n2
         earth = plt.Circle((0, 0), 1.1, color='k', fill=True)
 
-        for j, g in enumerate(self.graph):
+        for j, g in enumerate(self.graphList):
             nodes = [e.name for e in self.elements]
             pos = {e.name: self.convertLocation2xy(self.nodeLocations[j][i]) for i, e in enumerate(self.elements)}
             sec = {e.name: self.nodeLocations[j][i] for i, e in enumerate(self.elements)}

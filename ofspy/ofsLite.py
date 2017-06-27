@@ -29,4 +29,9 @@ class OFSL(object):
             self.time += 1
             self.context.ticktock(self)
 
-        self.context.Graph.drawGraphs()
+        # self.context.Graph.drawGraphs()
+        for e in self.context.elements:
+            print e.name, len(e.savedTasks)
+
+        for f in self.context.federates:
+            print f.name, f.cash

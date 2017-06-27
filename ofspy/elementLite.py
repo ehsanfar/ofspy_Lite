@@ -48,7 +48,8 @@ class Element():
         if self.isGround():
             return True
 
-        if task.datasize <= (self.capacity - self.contentzize):
+        print "capacity and content:", self.capacity, self.content
+        if task.datasize <= (self.capacity - self.content):
             return True
 
         return False
@@ -72,17 +73,19 @@ class Element():
         task.federateOwner.discardTask(self, task)
         return False
 
-    def transmitTask(self, task, pathlist = None):
+    def transmitTask(self, task, pathiter):
+        print self.name, task.taskid
         if self.isGround():
             self.saveTask(task)
             return True
 
-        if len(pathlist)<2:
-            federate = task.federateOwner
-            federate.discardTask(self, task)
+        # assert len(pathlist)>=1
+        # if len(pathlist)<2:
+        #     federate = task.federateOwner
+        #     federate.discardTask(self, task)
+        task.nextstop = nextstop = next(pathiter)
 
-        task.nextstop = pathlist[1]
-        received = pathlist[0].transmitTask(task, pathlist[1:])
+        received = nextstop.transmitTask(task, pathiter)
         return received
 
     def isGEO(self):
@@ -91,10 +94,24 @@ class Element():
 
         return False
 
-    def pickupTask(self, currentTasks):
+    def pickupTask(self, currentTasks, taskid):
+        print "elementLite - taskid:", self.name, taskid, self.section
         if self.isSpace() and not self.isGEO():
-            if self.canReceive(currentTasks[self.section]):
-                self.queuedTasks.put(currentTasks[self.section])
+            print "it is satellite"
+            print "current tasks:", currentTasks
+            print self.section
+            print currentTasks[self.section].qsize()
+            assert not currentTasks[self.section].empty()
+            nextTask = currentTasks[self.section].get()
+            print nextTask
+            print "task time:", nextTask.initTime, nextTask.federateOwner
+            if self.canReceive(nextTask):
+                nextTask.setID(taskid)
+                nextTask.assignTask(self.federateOwner)
+                self.queuedTasks.put(nextTask)
+                return True
+
+        return False
 
 
 class GroundStation(Element):
@@ -129,12 +146,10 @@ class Satellite(Element):
     def isSpace(self):
         return True
 
-
-    def transmit(self, task, pathlist):
-        pathlist[0].transmitTask(task, pathlist[1:])
-
     def deliverTasks(self, pathlist):
+        assert not self.queuedTasks.empty()
         task = self.queuedTasks.get()
-        self.transmitTask(task, pathlist)
+        self.transmitTask(task, iter(pathlist[1:]))
+
 
 
