@@ -94,10 +94,10 @@ class ContextLite():
         self.Graph.createGraph(self)
         # self.Graph.drawGraphs()
         self.pickupTasks()
-        print "picked up tasks"
+        # print "picked up tasks"
         self.deliverTasks()
 
-        print "Context - Assigned Tasks:", self.taskid
+        # print "Context - Assigned Tasks:", self.taskid
         # print self.time, [a.getLocation() for a in self.elements]
 
     def generateTasks(self, N=6):
@@ -109,7 +109,7 @@ class ContextLite():
             while not self.currentTasks[l].full():
                 self.currentTasks[l].put(Task(self.time))
 
-        print "current tasks size:", [c.qsize() for c in self.currentTasks.values()]
+        # print "current tasks size:", [c.qsize() for c in self.currentTasks.values()]
 
     def generateFederates(self, elements):
         # elist = elements.split(' ')
@@ -118,7 +118,7 @@ class ContextLite():
             elementgroups.append(re.search(r'\b(\d+)\.(\w+)@(\w+\d).+\b', e).groups())
         fedset = sorted(list(set([e[0] for e in elementgroups])))
         # print elementgroups
-        print fedset
+        # print fedset
         self.federates = [FederateLite(name = 'F'+i) for i in fedset]
         for element in elementgroups:
             index = fedset.index(element[0])
@@ -133,22 +133,20 @@ class ContextLite():
     def pickupTasks(self):
         self.generateTasks()
         # print "pickupTasks elements:", self.elements
-        print "current tasks size:", [c.qsize() for c in self.currentTasks.values()]
+        # print "current tasks size:", [c.qsize() for c in self.currentTasks.values()]
         for element in self.elements:
             if element.pickupTask(self.currentTasks, self.taskid):
                 self.taskid += 1
-                print "pickupTasks taskid:", self.taskid
+                # print "pickupTasks taskid:", self.taskid
 
     def deliverTasks(self):
-        print "delivering tasks"
+        # print "delivering tasks"
         # G = self.Graph.getGraph()
         graphorder = self.Graph.graphOrder
-        for element in self.elements:
-            if element.isSpace():
-                pathname = self.Graph.findcheapestpath(element.name)
-                print "graph order and element:", graphorder, element, pathname
-                path = [next((e for e in self.elements if e.name == p)) for p in pathname]
-                element.deliverTasks(path)
+        for federate in self.federates:
+            federate.deliverTasks()
+
+
 
 
 

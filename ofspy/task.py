@@ -15,13 +15,14 @@ class Task():
         self.initTime = time
         self.nextstop = None
         self.federateOwner = None
+        self.initSection = None
 
     def getValue(self, time):
         """
         Gets the current value of this contract.
         @return: L{float}
         """
-        print time, self.initTime
+        # print time, self.initTime
         self.elapsedTime = time - self.initTime
         revisedvalue = self.value if self.elapsedTime<=self.duration else 0. if self.elapsedTime>self.expirationtime else self.value*(1. - (self.elapsedTime-self.duration)/(2.*(self.expirationtime-self.duration)))
         return revisedvalue
@@ -31,5 +32,15 @@ class Task():
 
     def setID(self, id):
         self.taskid = id
+
+    def getID(self):
+        return self.taskid
+
+    def setSection(self, loc):
+        self.initSection = loc
+
+    def getSection(self):
+        return self.initSection
+
 
 

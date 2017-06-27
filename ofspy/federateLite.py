@@ -32,6 +32,13 @@ class FederateLite():
         self.transrevenue = 0.
         self.time = None
 
+        self.taskduration  = {i: 1. for i in range(1,7)}
+        self.taskvalue = {i: 1000. for i in range(1,7)}
+        self.taskcounter = {i: 10 for i in range(1,7)}
+
+        self.activeTasks = set([])
+        self.supperGraph = None
+
 
     def getElements(self):
         """
@@ -81,11 +88,38 @@ class FederateLite():
     def getTransCounter(self):
         return self.transcounter
 
+    def getStorageCostList(self, task, section):
+        assert section in range(1, 7)
+        storagecostlist = []
+        temptime = self.time
+        while task.getValue(temptime+1)>0:
+            storagecostlist.append(self.taskvalue[section]/self.taskduration[section] + task.getValue(temptime+1) - task.getValue(temptime))
+            temptime += 1
+            section = section%6+1
+
+        return storagecostlist
+
     def discardTask(self, element, task):
         pass
 
+    def reportPickup(self, task):
+        self.activeTasks.add(task)
+
     def finishTask(self, element, task):
-        self.cash += task.getValue(self.time)
+        taskvalue = task.getValue(self.time)
+        self.cash += taskvalue
+        assert task in self.activeTasks
+        section = task.getSection()
+        assert self.time >= task.initTime
+        duration = max(1, self.time - task.initTime)
+        assert section in range(1, 7)
+
+        # print "Finished tasks (section, taskvalue, taskduration):", section, taskvalue, duration
+        self.taskduration[section] = (self.taskduration[section]*self.taskcounter[section] + duration)/(self.taskcounter[section] + 1.)
+        self.taskvalue[section]  = (self.taskvalue[section]*self.taskcounter[section] + taskvalue)/(self.taskcounter[section] + 1.)
+        self.taskcounter[section] += 1
+        self.activeTasks.remove(task)
+
 
     def addElement(self, element, location):
         orbit, section = (re.search(r'(\w)\w+(\d)', location).group(1), int(re.search(r'(\w)\w+(\d)', location).group(2)))
@@ -98,6 +132,15 @@ class FederateLite():
             ss = Satellite(self, 'S%s.%s.%d'%(orbit, self.name, len(self.satellites)+1), location, 800)
             self.elements.append(ss)
             self.satellites.append(ss)
+
+    def deliverTasks(self):
+        for element in self.elements:
+            if element.isSpace():
+                pathname = self.Graph.findcheapestpath(element.name)
+                # print "graph order and element:", graphorder, element, pathname
+                path = [next((e for e in self.elements if e.name == p)) for p in pathname]
+                element.deliverTasks(path)
+
 
 
 

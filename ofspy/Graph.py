@@ -5,6 +5,7 @@ import networkx.algorithms.isomorphism as iso
 import math
 import numpy as np
 import time
+from itertools import cycle
 
 
 class Graph():
@@ -17,7 +18,6 @@ class Graph():
         self.federates = []
         self.elementOwners = {}
         self.graphOrder = None
-
 
     def findbestxy(self, N):
         if N%2 != 0:
@@ -53,51 +53,51 @@ class Graph():
 
         return tuplist
 
-    def findShortestPathes(self, G):
-        pathdict = {}
-        costdict = {}
-
-        nodes = G.nodes()
-        print "nodes:", nodes
-        satellites = [n for n in nodes if 'GS' not in n]
-        groundstations = [n for n in nodes if 'GS' in n]
-        for s in satellites:
-            temppathlist = []
-            pathcostlist = []
-            for g in groundstations:
-                if nx.has_path(G, source=s,target=g):
-                    sh = nx.shortest_path(G, s, g)
-                    temppathlist.append(sh)
-                    tuplist = self.convertPath2Edge(sh)
-                    # print tuplist
-                    costlist = []
-                    for (source, target) in tuplist:
-                        cost = 0 if self.elementOwners[s] == self.elementOwners[target] else G[source][target]['weight']
-                        costlist.append(cost)
-
-                    pathcostlist.append(costlist)
-
-
-            pathdict[s] = temppathlist#min(temppathlist, key = lambda x: len(x)) if temppathlist else None
-            costdict[s] = pathcostlist
-            # print "pathtuplist:", tuplist
-            # print "designCost:", costlist
-
-
-        # print "graphList all paths:"
-        # print pathdict[satellites[0]]
-        # print costdict[satellites[0]]
-        return pathdict, costdict
-
-    def findcheapestpath(self, s):
-        print self.getShortestPathes(), s
-        pathlist = self.getShortestPathes()[s]
-        costlist = self.getShortestPathCost()[s]
-        sortedpath = [x for (y,x) in sorted(zip([sum(c) for c in costlist], pathlist))]
-        # print "cost vs path:", sorted(zip([sum(c) for c in costlist], pathlist))
-
-        # return self.convertPath2Edge(sortedpath[0])
-        return sortedpath[0]
+    # def findShortestPathes(self, G):
+    #     pathdict = {}
+    #     costdict = {}
+    #
+    #     nodes = G.nodes()
+    #     # print "nodes:", nodes
+    #     satellites = [n for n in nodes if 'GS' not in n]
+    #     groundstations = [n for n in nodes if 'GS' in n]
+    #     for s in satellites:
+    #         temppathlist = []
+    #         pathcostlist = []
+    #         for g in groundstations:
+    #             if nx.has_path(G, source=s,target=g):
+    #                 sh = nx.shortest_path(G, s, g)
+    #                 temppathlist.append(sh)
+    #                 tuplist = self.convertPath2Edge(sh)
+    #                 # print tuplist
+    #                 costlist = []
+    #                 for (source, target) in tuplist:
+    #                     cost = 0 if self.elementOwners[s] == self.elementOwners[target] else G[source][target]['weight']
+    #                     costlist.append(cost)
+    #
+    #                 pathcostlist.append(costlist)
+    #
+    #
+    #         pathdict[s] = temppathlist#min(temppathlist, key = lambda x: len(x)) if temppathlist else None
+    #         costdict[s] = pathcostlist
+    #         # print "pathtuplist:", tuplist
+    #         # print "designCost:", costlist
+    #
+    #
+    #     # print "graphList all paths:"
+    #     # print pathdict[satellites[0]]
+    #     # print costdict[satellites[0]]
+    #     return pathdict, costdict
+    #
+    # def findcheapestpath(self, s):
+    #     # print self.getShortestPathes(), s
+    #     pathlist = self.getShortestPathes()[s]
+    #     costlist = self.getShortestPathCost()[s]
+    #     sortedpath = [x for (y,x) in sorted(zip([sum(c) for c in costlist], pathlist))]
+    #     # print "cost vs path:", sorted(zip([sum(c) for c in costlist], pathlist))
+    #
+    #     # return self.convertPath2Edge(sortedpath[0])
+    #     return sortedpath[0]
 
     def addNewGraph(self, G):
         nodes2 = G.nodes()
@@ -114,14 +114,15 @@ class Graph():
                 if any(map(lambda x: x[0] != x[1], [(set(g.neighbors(n)), set(G.neighbors(n))) for n in nodes1])):
                     continue
                 else:
-                    return i
+                    if len(self.graphList) == 6:
+                        return i
 
         # print "Not equal to eigther"
         self.graphList.append(G)
-        self.nodeLocations.append([e.getLocation() for e in self.elements])
-        pathdict, costdict = self.findShortestPathes(G)
-        self.shortestPathes.append(pathdict)
-        self.shortestPathCost.append(costdict)
+        # self.nodeLocations.append([e.getLocation() for e in self.elements])
+        # pathdict, costdict = self.findShortestPathes(G)
+        # self.shortestPathes.append(pathdict)
+        # self.shortestPathCost.append(costdict)
         return len(self.graphList) - 1
 
         # print len(self.graphList), G.number_of_nodes(), G.number_of_edges()
@@ -141,7 +142,6 @@ class Graph():
             if txsection == rxsection:
                 canT = True
 
-
         return canT
 
 
@@ -156,6 +156,7 @@ class Graph():
         # print elementlocations
 
         G = nx.DiGraph()
+        elements = ['%s.%d'%(e, len(self.graphList)) for e in elements]
 
         G.add_nodes_from([e.name for e in elements])
         # print [e.name for e in elements]
@@ -178,9 +179,8 @@ class Graph():
                     G.add_edge(tx.name, rx.name, weight=cost)
 
         self.graphOrder = self.addNewGraph(G)
-        print "graphList order:", self.graphOrder
+        # print "graphList order:", self.graphOrder
         # self.drawGraph()
-
 
     def getGraph(self):
         return self.graphList[self.graphOrder]
@@ -201,14 +201,14 @@ class Graph():
 
         plt.clf()
         nodes = [e.name for e in self.elements]
-        print "nodes:", nodes
-        satellites = [n for n in nodes if 'GS' not in n]
-        alltuples = set([])
-        for s in satellites:
-            path = self.findcheapestpath(s)
-            pathedges = self.convertPath2Edge(path)
-            print "graphorder & source & path:", s, pathedges
-            alltuples = alltuples.union(pathedges)
+        # print "nodes:", nodes
+        # satellites = [n for n in nodes if 'GS' not in n]
+        # alltuples = set([])
+        # for s in satellites:
+        #     path = self.findcheapestpath(s)
+        #     pathedges = self.convertPath2Edge(path)
+        #     # print "graphorder & source & path:", s, pathedges
+        #     alltuples = alltuples.union(pathedges)
 
 
         nodeLocations = [e.getLocation() for e in self.elements]
@@ -228,8 +228,8 @@ class Graph():
                                node_color='g', node_size=100)
         nx.draw_networkx_nodes(G, pos, nodelist=[n for n in nodes if 'GS' in n], node_color='b', node_size=100)
 
-        nx.draw_networkx_edges(G, pos, edgelist=list(alltuples))
-        # nx.draw_networkx_edges(G, pos)
+        # nx.draw_networkx_edges(G, pos, edgelist=list(alltuples))
+        nx.draw_networkx_edges(G, pos)
         nx.draw_networkx_labels(G, labelpos, labels, font_size=8)
         plt.xticks([])
         plt.yticks([])
@@ -276,6 +276,89 @@ class Graph():
 
         # plt.savefig("Networks_elements%d_.png"%len(self.elements), bbox_inches='tight')
         plt.show()
+
+
+class SuperGraph(Graph):
+    def __init__(self, element):
+        Graph.__init__(self)
+        self.storagePenalty = 6*[0]
+        self.rawSuperGraph = None
+        self.SuperGaph = None
+        self.elementOwner = element
+        self.superShorestPaths = None
+        self.superPathsCost = None
+
+    def createSuperGraph(self, graphlist):
+        G = nx.DiGraph()
+        for i, g in enumerate(graphlist):
+            G = nx.compose(G, g)
+
+        self.rawSuperGraph = G
+        self.addStorgeEdges(self.rawSuperGraph)
+
+    def addStorgeEdges(self, G):
+        for i, s in enumerate(self.storagePenalty):
+            name1 = '%s.%d'%(self.elementOwner.name, i%6)
+            name2 = '%s.%d'%(self.elementOwner.name, (i+1)%6)
+            G.add_edge(name1, name2, weight= s)
+
+        self.SuperGaph = G
+
+    def updateSuperGraph(self, storagepenalty):
+        assert len(storagepenalty) <= len(self.storagePenalty)
+        for i in range(len(self.graphOrder)):
+            storagepenalty.append(storagepenalty.pop(0))
+
+        self.storagePenalty[:len(storagepenalty)] = storagepenalty
+        self.storagePenalty = storagepenalty
+        self.addStorgeEdges(self.rawSuperGraph)
+
+    def updatePaths(self):
+        pathlist, costlist = self.findShortestPathes(self.SuperGaph)
+        self.superShorestPaths = pathlist
+        self.superPathsCost = costlist
+
+    def findShortestPathes(self, G):
+        nodes = G.nodes()
+        # print "nodes:", nodes
+        sourcename = '%s.%d'%(self.elementOwner.name, self.graphOrder)
+
+        groundstations = [n for n in nodes if 'GS' in n]
+        temppathlist = []
+        pathcostlist = []
+        for i in range(len(self.storagePenalty)):
+            for g in groundstations:
+                g = '%s.%d'%(self.elementOwner.name, i)
+                if nx.has_path(G, source=s,target=g):
+                    sh = nx.shortest_path(G, sourcename, g)
+                    temppathlist.append(sh)
+                    tuplist = self.convertPath2Edge(sh)
+                    # print tuplist
+                    costlist = []
+                    for (source, target) in tuplist:
+                        cost = 0 if self.elementOwners[sourcename] == self.elementOwners[target] else G[source][target]['weight']
+                        costlist.append(cost)
+
+                    pathcostlist.append(costlist)
+
+
+        return temppathlist, pathcostlist
+
+    def findcheapestpath(self):
+        pathlist = self.superShorestPaths
+        costlist = self.superPathsCost
+        sortedpath = [x for (y,x) in sorted(zip([sum(c) for c in costlist], pathlist))]
+        # print "cost vs path:", sorted(zip([sum(c) for c in costlist], pathlist))
+
+        # return self.convertPath2Edge(sortedpath[0])
+        return sortedpath[0]
+
+
+
+
+
+
+
 
 
 

@@ -48,7 +48,7 @@ class Element():
         if self.isGround():
             return True
 
-        print "capacity and content:", self.capacity, self.content
+        # print "capacity and content:", self.capacity, self.content
         if task.datasize <= (self.capacity - self.content):
             return True
 
@@ -74,7 +74,7 @@ class Element():
         return False
 
     def transmitTask(self, task, pathiter):
-        print self.name, task.taskid
+        # print self.name, task.taskid
         if self.isGround():
             self.saveTask(task)
             return True
@@ -95,20 +95,22 @@ class Element():
         return False
 
     def pickupTask(self, currentTasks, taskid):
-        print "elementLite - taskid:", self.name, taskid, self.section
+        # print "elementLite - taskid:", self.name, taskid, self.section
         if self.isSpace() and not self.isGEO():
-            print "it is satellite"
-            print "current tasks:", currentTasks
-            print self.section
-            print currentTasks[self.section].qsize()
-            assert not currentTasks[self.section].empty()
+            # print "it is satellite"
+            # print "current tasks:", currentTasks
+            # print self.section
+            # print currentTasks[self.section].qsize()
+            # assert not currentTasks[self.section].empty()
             nextTask = currentTasks[self.section].get()
-            print nextTask
-            print "task time:", nextTask.initTime, nextTask.federateOwner
+            # print nextTask
+            # print "task time:", nextTask.initTime, nextTask.federateOwner
             if self.canReceive(nextTask):
                 nextTask.setID(taskid)
                 nextTask.assignTask(self.federateOwner)
+                nextTask.setSection(self.section)
                 self.queuedTasks.put(nextTask)
+                self.federateOwner.reportPickup(nextTask)
                 return True
 
         return False
@@ -133,6 +135,7 @@ class Satellite(Element):
         self.capacity = capacity
         self.content = 0.
         self.queuedTasks = Queue.Queue()
+        self.graph = None
 
     def getCapacity(self):
         return self.capacity

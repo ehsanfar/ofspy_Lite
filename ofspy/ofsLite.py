@@ -35,3 +35,9 @@ class OFSL(object):
 
         for f in self.context.federates:
             print f.name, f.cash
+            print "task duration and value dictionary and counter:"
+            print f.taskduration
+            print f.taskvalue
+            print f.taskcounter
+
+
