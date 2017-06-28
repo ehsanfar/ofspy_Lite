@@ -51,10 +51,6 @@ class ContextLite():
 
         self.Graph = Graph()
         self.Graph.createGraph(self)
-        self.pickupTasks()
-
-
-
 
 
     def getElementOwner(self, element):
@@ -96,6 +92,8 @@ class ContextLite():
         # print "picked up tasks"
         if self.time>=6:
             self.pickupTasks()
+            print [e.queuedTasks.qsize() for e in self.elements if e.isSpace()]
+            print [len(e.savedTasks) for e in self.elements if e.isSpace()]
             self.deliverTasks()
 
         # print "Context - Assigned Tasks:", self.taskid
@@ -120,7 +118,7 @@ class ContextLite():
         fedset = sorted(list(set([e[0] for e in elementgroups])))
         # print elementgroups
         # print fedset
-        self.federates = [FederateLite(name = 'F'+i) for i in fedset]
+        self.federates = [FederateLite(name = 'F'+i, time = self.time) for i in fedset]
         for element in elementgroups:
             index = fedset.index(element[0])
             self.federates[index].addElement(element[1], element[2])
@@ -136,14 +134,19 @@ class ContextLite():
         # print "pickupTasks elements:", self.elements
         # print "current tasks size:", [c.qsize() for c in self.currentTasks.values()]
         for element in self.elements:
-            if element.pickupTask(self.currentTasks, self.taskid):
-                self.taskid += 1
-                # print "pickupTasks taskid:", self.taskid
+            if element.isSpace():
+                print element.name, self.taskid
+                if element.pickupTask(self.currentTasks, self.taskid):
+                    # print "pick up task in context:", element
+                    self.taskid += 1
+                    # print "pickupTasks taskid:", self.taskid
+                else:
+                    print "No pickup"
 
     def deliverTasks(self):
         # print "delivering tasks"
-        # G = self.Graph.getGraph()
-        graphorder = self.Graph.graphOrder
+        # # G = self.Graph.getGraph()
+        # graphorder = self.Graph.graphOrder
         for federate in self.federates:
             federate.deliverTasks(self)
 

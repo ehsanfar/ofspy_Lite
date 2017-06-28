@@ -5,6 +5,8 @@ Elements classes.
 import re
 import Queue
 from .Graph import SuperGraph
+from .Graph import SuperGraph
+
 class Element():
     def __init__(self, federate, name, location, cost=0):
         self.name = name
@@ -44,7 +46,7 @@ class Element():
         return self.designCost
 
 
-    def canReceive(self, task):
+    def canSave(self, task):
         if self.isGround():
             return True
 
@@ -56,22 +58,6 @@ class Element():
 
     def canTransmit(self, rxElement, task):
         return rxElement.couldReceive(self, task)
-
-
-    def saveTask(self, task, nextstop = None):
-        if self.isGround():
-            self.savedTasks.append(task)
-            task.federateOwner.finishTask(self, task)
-            return True
-
-        if (nextstop or task.nextstop) and self.canSave(task):
-            task.nextstop = nextstop
-            self.savedTasks.append(task)
-            self.content += task.datasize
-            return True
-
-        task.federateOwner.discardTask(self, task)
-        return False
 
     def transmitTask(self, task, pathiter):
         # print self.name, task.taskid
@@ -94,26 +80,7 @@ class Element():
 
         return False
 
-    def pickupTask(self, currentTasks, taskid):
-        # print "elementLite - taskid:", self.name, taskid, self.section
-        if self.isSpace() and not self.isGEO():
-            # print "it is satellite"
-            # print "current tasks:", currentTasks
-            # print self.section
-            # print currentTasks[self.section].qsize()
-            # assert not currentTasks[self.section].empty()
-            nextTask = currentTasks[self.section].get()
-            # print nextTask
-            # print "task time:", nextTask.initTime, nextTask.federateOwner
-            if self.canReceive(nextTask):
-                nextTask.setID(taskid)
-                nextTask.assignTask(self.federateOwner)
-                nextTask.setSection(self.section)
-                self.queuedTasks.put(nextTask)
-                self.federateOwner.reportPickup(nextTask)
-                return True
 
-        return False
 
 
 class GroundStation(Element):
@@ -126,6 +93,11 @@ class GroundStation(Element):
     def isSpace(self):
         return False
 
+    def saveTask(self, task, nextstop = None):
+        self.savedTasks.append(task)
+        task.federateOwner.finishTask(self, task)
+        return True
+
 
 
 
@@ -135,7 +107,7 @@ class Satellite(Element):
         self.capacity = capacity
         self.content = 0.
         self.queuedTasks = Queue.Queue()
-        self.Graph = None
+        self.Graph = SuperGraph(self)
 
     def getCapacity(self):
         return self.capacity
@@ -149,17 +121,55 @@ class Satellite(Element):
     def isSpace(self):
         return True
 
-    def deliverTasks(self, pathlist):
-        assert not self.queuedTasks.empty()
-        task = self.queuedTasks.get()
-        self.transmitTask(task, iter(pathlist[1:]))
+    def deliverTasks(self, task):
+        self.transmitTask(task, iter(task.pathlist[1:]))
+
+    def saveTask(self, task, deltatime):
+        if self.canSave(task):
+            task.updateActivationTime(task.initTime + deltatime)
+            self.savedTasks.append(task)
+            self.content += task.datasize
+            return True
+
+        # task.federateOwner.discardTask(self, task)
+        return False
+
+    def removeSavedTask(self, task):
+        self.savedTasks.remove(task)
 
     def updateGraph(self, context):
-        self.Graph = SuperGraph(self)
         self.Graph.graphList = context.Graph.getGraphList()
         self.Graph.graphOrder = context.Graph.getGraphOrder()
         self.Graph.elementOwners = context.Graph.getElementOwners()
         self.Graph.createGraph()
+
+    def pickupTask(self, currentTasks, taskid):
+        # print "elementLite - taskid:", self.name, taskid, self.section
+        if not self.isGEO():
+            # print "it is satellite"
+            # print "current tasks:", currentTasks
+            # print self.section
+            # print currentTasks[self.section].qsize()
+            # assert not currentTasks[self.section].empty()
+            tempqueue = currentTasks[self.section].queue
+            temptask = tempqueue[0]
+            if not self.canSave(temptask):
+                print "cannot save"
+                return False
+
+            nextTask = currentTasks[self.section].get()
+            # print nextTask
+            # print "task time:", nextTask.initTime, nextTask.federateOwner
+            nextTask.setID(taskid)
+            nextTask.updateFederateOwner(self.federateOwner)
+            nextTask.setSection(self.section)
+            nextTask.setTime(self.federateOwner.time)
+            print "element next task inittime:", self.name, taskid, nextTask.initTime
+            self.queuedTasks.put(nextTask)
+            self.federateOwner.reportPickup(nextTask)
+            return True
+
+        return False
 
 
 
