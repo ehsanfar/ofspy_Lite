@@ -133,11 +133,13 @@ class FederateLite():
             self.elements.append(ss)
             self.satellites.append(ss)
 
-    def deliverTasks(self):
+    def deliverTasks(self, context):
         for element in self.elements:
             if element.isSpace():
-                pathname = self.Graph.findcheapestpath(element.name)
-                # print "graph order and element:", graphorder, element, pathname
+                element.updateGraph(context)
+                # element.Graph.setGraphList(context)
+                pathname = element.Graph.findcheapestpath()
+                print "element and path:    ", element, pathname
                 path = [next((e for e in self.elements if e.name == p)) for p in pathname]
                 element.deliverTasks(path)
 

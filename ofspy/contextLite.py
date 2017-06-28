@@ -93,9 +93,10 @@ class ContextLite():
         self.executeOperations()
         self.Graph.createGraph(self)
         # self.Graph.drawGraphs()
-        self.pickupTasks()
         # print "picked up tasks"
-        self.deliverTasks()
+        if self.time>=6:
+            self.pickupTasks()
+            self.deliverTasks()
 
         # print "Context - Assigned Tasks:", self.taskid
         # print self.time, [a.getLocation() for a in self.elements]
@@ -144,7 +145,7 @@ class ContextLite():
         # G = self.Graph.getGraph()
         graphorder = self.Graph.graphOrder
         for federate in self.federates:
-            federate.deliverTasks()
+            federate.deliverTasks(self)
 
 
 

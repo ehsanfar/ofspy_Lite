@@ -130,6 +130,7 @@ class Graph():
 
 
     def canTransmit(self, txElement, rxElement):
+
         txsection = int(re.search(r'.+(\d)', txElement.getLocation()).group(1))
         rxsection = int(re.search(r'.+(\d)', rxElement.getLocation()).group(1))
         canT = False
@@ -156,9 +157,9 @@ class Graph():
         # print elementlocations
 
         G = nx.DiGraph()
-        elements = ['%s.%d'%(e, len(self.graphList)) for e in elements]
+        elementsnames = ['%s.%d'%(e, len(self.graphList)) for e in elements]
 
-        G.add_nodes_from([e.name for e in elements])
+        G.add_nodes_from(elementsnames)
         # print [e.name for e in elements]
 
         for tx in elements:
@@ -184,6 +185,15 @@ class Graph():
 
     def getGraph(self):
         return self.graphList[self.graphOrder]
+
+    def getGraphList(self):
+        return self.graphList
+
+    def getGraphOrder(self):
+        return self.graphOrder
+
+    def getElementOwners(self):
+        return self.elementOwners
 
     def getShortestPathes(self):
         return self.shortestPathes[self.graphOrder]
@@ -287,14 +297,17 @@ class SuperGraph(Graph):
         self.elementOwner = element
         self.superShorestPaths = None
         self.superPathsCost = None
+        self.graphList = []
 
-    def createSuperGraph(self, graphlist):
+
+    def createGraph(self):
         G = nx.DiGraph()
-        for i, g in enumerate(graphlist):
+        for i, g in enumerate(self.graphList):
             G = nx.compose(G, g)
 
         self.rawSuperGraph = G
         self.addStorgeEdges(self.rawSuperGraph)
+        self.updatePaths()
 
     def addStorgeEdges(self, G):
         for i, s in enumerate(self.storagePenalty):
@@ -312,16 +325,18 @@ class SuperGraph(Graph):
         self.storagePenalty[:len(storagepenalty)] = storagepenalty
         self.storagePenalty = storagepenalty
         self.addStorgeEdges(self.rawSuperGraph)
+        self.updatePaths()
 
     def updatePaths(self):
         pathlist, costlist = self.findShortestPathes(self.SuperGaph)
         self.superShorestPaths = pathlist
         self.superPathsCost = costlist
+        print "Updatepaths:", pathlist, costlist
 
     def findShortestPathes(self, G):
         nodes = G.nodes()
         # print "nodes:", nodes
-        sourcename = '%s.%d'%(self.elementOwner.name, self.graphOrder)
+        sourcename = '%s.%d'%(self.elementOwner.name, self.graphOrder-1)
 
         groundstations = [n for n in nodes if 'GS' in n]
         temppathlist = []
@@ -329,14 +344,14 @@ class SuperGraph(Graph):
         for i in range(len(self.storagePenalty)):
             for g in groundstations:
                 g = '%s.%d'%(self.elementOwner.name, i)
-                if nx.has_path(G, source=s,target=g):
+                if nx.has_path(G, source=sourcename,target=g):
                     sh = nx.shortest_path(G, sourcename, g)
                     temppathlist.append(sh)
                     tuplist = self.convertPath2Edge(sh)
                     # print tuplist
                     costlist = []
                     for (source, target) in tuplist:
-                        cost = 0 if self.elementOwners[sourcename] == self.elementOwners[target] else G[source][target]['weight']
+                        cost = 0 if self.elementOwners[sourcename[:-2]] == self.elementOwners[target[:-2]] else G[source][target]['weight']
                         costlist.append(cost)
 
                     pathcostlist.append(costlist)
@@ -353,6 +368,9 @@ class SuperGraph(Graph):
         # return self.convertPath2Edge(sortedpath[0])
         return sortedpath[0]
 
+        # def setGraphList(self, context):
+        #     self.graphList = context.Graph.graphList
+        #     self.graphOrder = context.Graph.graphOrder
 
 
 

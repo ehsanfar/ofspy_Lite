@@ -4,7 +4,7 @@ Elements classes.
 """
 import re
 import Queue
-
+from .Graph import SuperGraph
 class Element():
     def __init__(self, federate, name, location, cost=0):
         self.name = name
@@ -135,7 +135,7 @@ class Satellite(Element):
         self.capacity = capacity
         self.content = 0.
         self.queuedTasks = Queue.Queue()
-        self.graph = None
+        self.Graph = None
 
     def getCapacity(self):
         return self.capacity
@@ -153,6 +153,16 @@ class Satellite(Element):
         assert not self.queuedTasks.empty()
         task = self.queuedTasks.get()
         self.transmitTask(task, iter(pathlist[1:]))
+
+    def updateGraph(self, context):
+        self.Graph = SuperGraph(self)
+        self.Graph.graphList = context.Graph.getGraphList()
+        self.Graph.graphOrder = context.Graph.getGraphOrder()
+        self.Graph.elementOwners = context.Graph.getElementOwners()
+        self.Graph.createGraph()
+
+
+
 
 
 
