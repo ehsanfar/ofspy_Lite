@@ -12,21 +12,25 @@ class Task():
         self.expirationtime = expirationtime
         self.duration = 2
         self.elapsedTime = 0
-        self.activationTime = self.initTime = time
+        self.initTime = time
+        self.activationTime = time + 1
         self.active = True
         self.nextstop = None
         self.federateOwner = None
         self.initSection = None
         self.pathlist = []
+        self.pathcost = 0.
+        self.defaultvalue = -1*self.value / 5.
 
     def getValue(self, time):
         """
         Gets the current value of this contract.
         @return: L{float}
         """
-        print time, self.initTime
+        # print time, self.initTime
         self.elapsedTime = time - self.initTime
-        revisedvalue = self.value if self.elapsedTime<=self.duration else 0. if self.elapsedTime>self.expirationtime else self.value*(1. - (self.elapsedTime-self.duration)/(2.*(self.expirationtime-self.duration)))
+        revisedvalue = self.value if self.elapsedTime<=self.duration else -self.value/5. if self.elapsedTime>self.expirationtime \
+            else self.value*(1. - (self.elapsedTime-self.duration)/(2.*(self.expirationtime-self.duration)))
         return revisedvalue
 
     def updateFederateOwner(self, federate):
@@ -47,12 +51,14 @@ class Task():
     def updateActivationTime(self, activationtime):
         self.activationTime = activationtime
 
-    def updatePath(self, pathlist):
+    def updatePath(self, pathlist, pathcost):
         self.pathlist = pathlist
+        self.pathcost = pathcost
 
     def setTime(self, time):
-        print "task setTime:", time
+        # print "task setTime:", time
         self.initTime = time
+        self.activationTime = self.initTime + 3
 
 
 

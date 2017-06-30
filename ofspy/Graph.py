@@ -6,6 +6,7 @@ import math
 import numpy as np
 import time
 from itertools import cycle
+from graphdrawfunctions import *
 
 
 class Graph():
@@ -19,39 +20,6 @@ class Graph():
         self.elementOwners = {}
         self.graphOrder = None
 
-    def findbestxy(self, N):
-        if N%2 != 0:
-            N += 1
-        temp = int(N**0.5)
-        while N%temp != 0:
-            temp -= 1
-
-        return (temp, N//temp)
-
-
-    def convertLocation2xy(self, location):
-        if 'SUR' in location:
-            r = 0.5
-        elif 'LEO' in location:
-            r = 1
-        elif 'MEO' in location:
-            r = 2
-        else:
-            r = 2.25
-
-        sect = int(re.search(r'.+(\d)', location).group(1))
-        tetha = +math.pi/3-(sect-1)*math.pi/3
-
-        x, y = (r*math.cos(tetha), r*math.sin(tetha))
-        # print location, x, y
-        return (x,y)
-
-    def convertPath2Edge(self, pathlist):
-        tuplist = []
-        for i in range(len(pathlist) - 1):
-            tuplist.append((pathlist[i], pathlist[i+1]))
-
-        return tuplist
 
     # def findShortestPathes(self, G):
     #     pathdict = {}
@@ -68,7 +36,7 @@ class Graph():
     #             if nx.has_path(G, source=s,target=g):
     #                 sh = nx.shortest_path(G, s, g)
     #                 temppathlist.append(sh)
-    #                 tuplist = self.convertPath2Edge(sh)
+    #                 tuplist = convertPath2Edge(sh)
     #                 # print tuplist
     #                 costlist = []
     #                 for (source, target) in tuplist:
@@ -96,7 +64,7 @@ class Graph():
     #     sortedpath = [x for (y,x) in sorted(zip([sum(c) for c in costlist], pathlist))]
     #     # print "cost vs path:", sorted(zip([sum(c) for c in costlist], pathlist))
     #
-    #     # return self.convertPath2Edge(sortedpath[0])
+    #     # return convertPath2Edge(sortedpath[0])
     #     return sortedpath[0]
 
     def addNewGraph(self, G):
@@ -202,91 +170,11 @@ class Graph():
     def getShortestPathCost(self):
         return self.shortestPathCost[self.graphOrder]
 
-    def drawGraph(self):
-        G = self.graphList[self.graphOrder]
-
-        if not plt.fignum_exists(1):
-            plt.figure(1)
-            plt.ion()
-            plt.show()
-
-        plt.clf()
-        nodes = [e.name for e in self.elements]
-        # print "nodes:", nodes
-        # satellites = [n for n in nodes if 'GS' not in n]
-        # alltuples = set([])
-        # for s in satellites:
-        #     path = self.findcheapestpath(s)
-        #     pathedges = self.convertPath2Edge(path)
-        #     # print "graphorder & source & path:", s, pathedges
-        #     alltuples = alltuples.union(pathedges)
-
-
-        nodeLocations = [e.getLocation() for e in self.elements]
-        pos = {e.name: self.convertLocation2xy(nodeLocations[i]) for i, e in enumerate(self.elements)}
-        sec = {e.name: nodeLocations[i] for i, e in enumerate(self.elements)}
-        labels = {n: n[0] + n[-3:] for n in nodes}
-        labelpos = {n: [v[0], v[1] + 0.3] for n, v in pos.items()}
-        x = np.linspace(-1.0, 1.0, 50)
-        y = np.linspace(-1.0, 1.0, 50)
-        X, Y = np.meshgrid(x, y)
-        F = X ** 2 + Y ** 2 - 0.75
-        plt.contour(X, Y, F, [0])
-        # print nodes
-        nx.draw_networkx_nodes(G, pos, nodelist=[n for n in nodes if 'GS' not in n and 'LE' not in sec[n]],
-                               node_color='r', node_size=100)
-        nx.draw_networkx_nodes(G, pos, nodelist=[n for n in nodes if 'GS' not in n and 'LE' in sec[n]],
-                               node_color='g', node_size=100)
-        nx.draw_networkx_nodes(G, pos, nodelist=[n for n in nodes if 'GS' in n], node_color='b', node_size=100)
-
-        # nx.draw_networkx_edges(G, pos, edgelist=list(alltuples))
-        nx.draw_networkx_edges(G, pos)
-        nx.draw_networkx_labels(G, labelpos, labels, font_size=8)
-        plt.xticks([])
-        plt.yticks([])
-        plt.xlim(-2.5, 2.5)
-        plt.ylim(-2.5, 2.5)
-        # plt.draw()
-        plt.draw()
-        plt.pause(0.2)
-
-    # Figure is closed
+    def drawGraph(self, context):
+        drawGraph(self, context)
 
     def drawGraphs(self):
-        # pos = None
-
-        plt.figure()
-        n1,n2 = self.findbestxy(len(self.graphList))
-        # print n1,n2
-        earth = plt.Circle((0, 0), 1.1, color='k', fill=True)
-
-        for j, g in enumerate(self.graphList):
-            nodes = [e.name for e in self.elements]
-            pos = {e.name: self.convertLocation2xy(self.nodeLocations[j][i]) for i, e in enumerate(self.elements)}
-            sec = {e.name: self.nodeLocations[j][i] for i, e in enumerate(self.elements)}
-            labels = {n: n[0] + n[-3:] for n in nodes}
-            labelpos = {n: [v[0], v[1] + 0.3] for n, v in pos.items()}
-            ax = plt.subplot('%d%d%d'%(n1, n2, j+1))
-            x = np.linspace(-1.0, 1.0, 50)
-            y = np.linspace(-1.0, 1.0, 50)
-            X, Y = np.meshgrid(x, y)
-            F = X ** 2 + Y ** 2 - 0.75
-            plt.contour(X, Y, F, [0])
-            # print nodes
-            nx.draw_networkx_nodes(g, pos, nodelist = [n for n in nodes if 'Ground' not in n and 'LE' not in sec[n]], node_color = 'r', node_size = 100)
-            nx.draw_networkx_nodes(g, pos, nodelist=[n for n in nodes if 'Ground' not in n and 'LE' in sec[n]],node_color='g', node_size=100)
-            nx.draw_networkx_nodes(g, pos, nodelist = [n for n in nodes if 'Ground' in n], node_color = 'b', node_size = 100)
-            nx.draw_networkx_edges(g, pos)
-            nx.draw_networkx_labels(g, labelpos, labels, font_size=8)
-            plt.xticks([])
-            plt.yticks([])
-            plt.xlim(-2.5,2.5)
-            plt.ylim(-2.5,2.5)
-            # ax.set_title('Graph:'+str(j))
-            # print j, self.shortestPathes[j]
-
-        # plt.savefig("Networks_elements%d_.png"%len(self.elements), bbox_inches='tight')
-        plt.show()
+        drawGraphs(self)
 
 
 class SuperGraph(Graph):
@@ -319,9 +207,11 @@ class SuperGraph(Graph):
         self.updatePaths()
 
     def addStorgeEdges(self, G):
+        # print "Add storage penalty:", [int(e) for e in self.storagePenalty]
         for i, s in enumerate(self.storagePenalty):
             name1 = '%s.%d'%(self.elementOwner.name, i%6)
             name2 = '%s.%d'%(self.elementOwner.name, (i+1)%6)
+            # print name1, name2, s
             G.add_edge(name1, name2, weight= s)
 
         self.SuperGaph = G
@@ -333,6 +223,7 @@ class SuperGraph(Graph):
 
     def updateSuperGraph(self, task):
         storagepenalty = self.elementOwner.federateOwner.getStorageCostList(task, self.elementOwner.section)
+        # print "Element Storage penalty:", self.elementOwner.name, task.federateOwner.name, storagepenalty, self.graphOrder
         assert len(storagepenalty) == len(self.storagePenalty)
 
         for i in range(self.graphOrder):
@@ -363,26 +254,36 @@ class SuperGraph(Graph):
                 if nx.has_path(G, source=sourcename,target=g):
                     sh = nx.shortest_path(G, sourcename, g)
                     temppathlist.append(sh)
-                    tuplist = self.convertPath2Edge(sh)
+                    tuplist = convertPath2Edge(sh)
                     # print tuplist
                     costlist = []
                     for (source, target) in tuplist:
-                        cost = 0 if self.elementOwners[sourcename[:-2]] == self.elementOwners[target[:-2]] else G[source][target]['weight']
+                        cost = (0 if (self.elementOwners[sourcename[:-2]] == self.elementOwners[target[:-2]] and sourcename[:-2] != target[:-2])
+                                else G[source][target]['weight'])
                         costlist.append(cost)
 
                     pathcostlist.append(costlist)
 
-
+        # print pathcostlist
         # print "find shortest paths:", temppathlist, pathcostlist
         return temppathlist, pathcostlist
 
-    def findcheapestpath(self):
+    def findcheapestpath(self, task):
+        time = self.elementOwner.federateOwner.time
+        activationtime = task.activationTime
+        assert activationtime >= time
+        deltatime = activationtime - time
+        future = (self.graphOrder + deltatime)%6
+        futurename = '%s.%d'%(self.elementOwner.name, future)
+
         pathlist = self.superShorestPaths
         costlist = self.superPathsCost
-        sortedpath = [x for (y,x) in sorted(zip([sum(c) for c in costlist], pathlist))]
+        pathcost = [tup for tup in zip(costlist, pathlist) if futurename in tup[1]]
+
+        sortedpath = sorted([(sum(x), y) for x,y in pathcost])
         # print "cost vs path:", sorted(zip([sum(c) for c in costlist], pathlist))
 
-        # return self.convertPath2Edge(sortedpath[0])
+        # return convertPath2Edge(sortedpath[0])
         return sortedpath[0]
 
         # def setGraphList(self, context):

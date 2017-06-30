@@ -92,15 +92,17 @@ class ContextLite():
         # print "picked up tasks"
         if self.time>=6:
             self.pickupTasks()
-            print [e.queuedTasks.qsize() for e in self.elements if e.isSpace()]
-            print [len(e.savedTasks) for e in self.elements if e.isSpace()]
+            self.Graph.drawGraph(self)
+            # print [e.queuedTasks.qsize() for e in self.elements if e.isSpace()]
+            # print [len(e.savedTasks) for e in self.elements if e.isSpace()]
+            # print "Graphorder:", [e.Graph.graphOrder for e in self.elements if e.isSpace()], self.Graph.graphOrder
             self.deliverTasks()
 
         # print "Context - Assigned Tasks:", self.taskid
         # print self.time, [a.getLocation() for a in self.elements]
 
     def generateTasks(self, N=6):
-        tasklocations = np.random.choice(range(1,7), N)
+        # tasklocations = np.random.choice(range(1,7), N)
         for l in self.currentTasks:
             if self.currentTasks[l].full():
                 self.currentTasks[l].get()
@@ -135,13 +137,13 @@ class ContextLite():
         # print "current tasks size:", [c.qsize() for c in self.currentTasks.values()]
         for element in self.elements:
             if element.isSpace():
-                print element.name, self.taskid
+                # print element.name, self.taskid
                 if element.pickupTask(self.currentTasks, self.taskid):
                     # print "pick up task in context:", element
                     self.taskid += 1
                     # print "pickupTasks taskid:", self.taskid
-                else:
-                    print "No pickup"
+                # else:
+                    # print "No pickup"
 
     def deliverTasks(self):
         # print "delivering tasks"

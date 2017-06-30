@@ -26,14 +26,14 @@ class FederateLite():
         self.satellites = []
         self.stations = []
         self.operation = operation
-        self.costDic = {'oSGL': 1., 'oISL': 1.}
+        self.costDic = {'oSGL': 200., 'oISL': 100.}
         self.tasks = {}
         self.transcounter = 0
         self.transrevenue = 0.
         self.time = time
 
-        self.taskduration  = {i: 1. for i in range(1,7)}
-        self.taskvalue = {i: 1000. for i in range(1,7)}
+        self.taskduration  = {i: 2. for i in range(1,7)}
+        self.taskvalue = {i: 500. for i in range(1,7)}
         self.taskcounter = {i: 10 for i in range(1,7)}
 
         self.activeTasks = set([])
@@ -61,7 +61,7 @@ class FederateLite():
         Ticks this federate in a simulation.
         @param sim: the simulator
         """
-        print "federete tick tock"
+        # print "federete tick tock"
         self.time = time
         for element in self.elements:
             element.ticktock()
@@ -100,14 +100,17 @@ class FederateLite():
 
         return storagecostlist
 
-    def discardTask(self, element, task):
-        pass
+    def discardTask(self):
+        for e in self.elements:
+            for stask in e.savedtasks:
+                if stask.getValue(self.time)<=0:
+                    defaultTask(self, stask)
 
     def reportPickup(self, task):
         self.activeTasks.add(task)
 
-    def finishTask(self, element, task):
-        taskvalue = task.getValue(self.time)
+    def finishTask(self, task):
+        taskvalue = task.getValue(self.time) - task.pathcost
         self.cash += taskvalue
         assert task in self.activeTasks
         section = task.getSection()
@@ -121,6 +124,12 @@ class FederateLite():
         self.taskcounter[section] += 1
         self.activeTasks.remove(task)
 
+    def defaultTask(self, task):
+        # print "defaulted task:", task.taskid
+        element = task.elementOwner
+        element.removeSavedTask(task)
+        task.pathcost = 0.
+        self.finishTask(task)
 
     def addElement(self, element, location):
         orbit, section = (re.search(r'(\w)\w+(\d)', location).group(1), int(re.search(r'(\w)\w+(\d)', location).group(2)))
@@ -154,24 +163,26 @@ class FederateLite():
                 # element.Graph.setGraphList(context)
                 if element.queuedTasks.qsize() > 0:
                     task = element.queuedTasks.get()
-                    print element.name, task.taskid, task.initTime
+                    # print element.name, task.taskid, task.initTime
                     element.Graph.updateSuperGraph(task)
-                    pathname = element.Graph.findcheapestpath()
-                    print "element and path:    ", element.name, pathname
+                    pathcost, pathname = element.Graph.findcheapestpath(task)
+                    # print "element and path:    ", element.name, pathname
                     staticpath, deltatime = self.convertPath2StaticPath(pathname)
-                    elementpath = [next((e for e in self.elements if e.name == p)) for p in staticpath]
-                    task.updatePath(elementpath)
+                    # print staticpath
+                    # print [e.name for e in self.elements]
+                    elementpath = [next((e for e in context.elements if e.name == p)) for p in staticpath]
+                    task.updatePath(elementpath, pathcost)
                     element.saveTask(task, deltatime)
                     # element.deliverTasks(task)
                 savedtasks = element.savedTasks[:]
                 for task in savedtasks:
-                    print  "time and task activation time:", self.time, task.activationTime
+                    # print  "time and task activation time:", self.time, task.activationTime
                     assert task.activationTime >= self.time
                     if self.time == task.activationTime:
-                        element.deliverTasks(task)
-                        print "len of saved tasks:", len(element.savedTasks),
-                        element.remove(task)
-                        print len(element.savedTasks)
+                        element.deliverTask(task)
+                        # print "len of saved tasks:", len(element.savedTasks),
+                        element.removeSavedTask(task)
+                        # print len(element.savedTasks)
 
 
 

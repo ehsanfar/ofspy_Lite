@@ -26,7 +26,7 @@ class OFSL(object):
         """
         self.time = self.initTime
         for i in range(self.initTime, self.maxTime):
-            print self.time
+            # print self.time
             self.time += 1
             self.context.ticktock(self)
 

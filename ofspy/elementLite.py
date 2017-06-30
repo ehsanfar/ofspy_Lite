@@ -95,7 +95,7 @@ class GroundStation(Element):
 
     def saveTask(self, task, nextstop = None):
         self.savedTasks.append(task)
-        task.federateOwner.finishTask(self, task)
+        task.federateOwner.finishTask(task)
         return True
 
 
@@ -121,7 +121,7 @@ class Satellite(Element):
     def isSpace(self):
         return True
 
-    def deliverTasks(self, task):
+    def deliverTask(self, task):
         self.transmitTask(task, iter(task.pathlist[1:]))
 
     def saveTask(self, task, deltatime):
@@ -135,6 +135,8 @@ class Satellite(Element):
         return False
 
     def removeSavedTask(self, task):
+        assert task in self.savedTasks
+        self.content -= task.datasize
         self.savedTasks.remove(task)
 
     def updateGraph(self, context):
@@ -154,7 +156,7 @@ class Satellite(Element):
             tempqueue = currentTasks[self.section].queue
             temptask = tempqueue[0]
             if not self.canSave(temptask):
-                print "cannot save"
+                # print "cannot save"
                 return False
 
             nextTask = currentTasks[self.section].get()
@@ -164,7 +166,7 @@ class Satellite(Element):
             nextTask.updateFederateOwner(self.federateOwner)
             nextTask.setSection(self.section)
             nextTask.setTime(self.federateOwner.time)
-            print "element next task inittime:", self.name, taskid, nextTask.initTime
+            # print "element next task inittime:", self.name, taskid, nextTask.initTime
             self.queuedTasks.put(nextTask)
             self.federateOwner.reportPickup(nextTask)
             return True
