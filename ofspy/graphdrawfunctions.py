@@ -129,10 +129,10 @@ def drawGraph(graph, context):
     plt.contour(X, Y, F, [0])
     # print nodes
     nx.draw_networkx_nodes(G, pos, nodelist=[n for n in nodes if 'GS' not in n and nameselementdict[n].savedTasks],
-                           node_color='g', node_size=100)
+                           node_color='r', node_size=100)
 
     nx.draw_networkx_nodes(G, pos, nodelist=[n for n in nodes if 'GS' not in n and not nameselementdict[n].savedTasks],
-                           node_color='r', node_size=100)
+                           node_color='g', node_size=100)
 
     # nx.draw_networkx_nodes(G, pos, nodelist=[n for n in nodes if 'GS' not in n and 'LE' in sec[n]], node_color='g', node_size=100)
 
@@ -152,7 +152,7 @@ def drawGraph(graph, context):
     plt.ylim(-2.5, 2.5)
     # plt.draw()
     plt.draw()
-    plt.pause(0.2)
+    plt.pause(0.5)
 
 
 # Figure is closed
