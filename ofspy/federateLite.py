@@ -6,7 +6,7 @@ from .elementLite import Satellite, GroundStation
 
 
 class FederateLite():
-    def __init__(self, name, time, initialCash=0, operation =OperationLite()):
+    def __init__(self, name, context, initialCash=0, operation =OperationLite(), costSGL = 200., costISL = 100., storagePenalty = -1):
         """
         @param name: the name of this federate
         @type name: L{str}
@@ -26,19 +26,21 @@ class FederateLite():
         self.satellites = []
         self.stations = []
         self.operation = operation
-        self.costDic = {'oSGL': 200., 'oISL': 100.}
+        self.costDic = {'oSGL': costSGL, 'oISL': costISL}
+        self.storagePenalty = storagePenalty
         self.tasks = {}
         self.transcounter = 0
         self.transrevenue = 0.
-        self.time = time
+        self.time = context.time
 
         self.taskduration  = {i: 2. for i in range(1,7)}
         self.taskvalue = {i: 500. for i in range(1,7)}
         self.taskcounter = {i: 10 for i in range(1,7)}
+        self.pickupOpportunities = 0
 
         self.activeTasks = set([])
         self.supperGraph = None
-
+        self.pickupProbability = 1.
 
     def getElements(self):
         """
@@ -89,22 +91,28 @@ class FederateLite():
     def getTransCounter(self):
         return self.transcounter
 
-    def getStorageCostList(self, task, section):
+    def getStorageCostList(self, taskvaluelist, section):
+        # print("federate storage penalty:", self.storagePenalty)
+        if self.storagePenalty>=0:
+            return 6*[self.storagePenalty]
+
         assert section in range(1, 7)
         storagecostlist = []
         temptime = self.time
         for i in range(1, 7):
-            storagecostlist.append(self.taskvalue[section]/self.taskduration[section] + task.getValue(temptime+1) - task.getValue(temptime))
+            # print(i, section, len(self.taskduration), len(self.taskvalue),len(taskvaluelist))
+            storagecostlist.append(self.pickupProbability*(self.taskvalue[section]/self.taskduration[section]) + taskvaluelist[i-1] - taskvaluelist[min(i, 5)])
             temptime += 1
             section = section%6+1
 
+        # print storagecostlist
         return storagecostlist
 
     def discardTask(self):
         for e in self.elements:
             for stask in e.savedtasks:
                 if stask.getValue(self.time)<=0:
-                    defaultTask(self, stask)
+                    self.defaultTask(self, stask)
 
     def reportPickup(self, task):
         self.activeTasks.add(task)
@@ -143,42 +151,17 @@ class FederateLite():
             self.elements.append(ss)
             self.satellites.append(ss)
 
-    def convertPath2StaticPath(self, path):
-        temppath = [e[:-2] for e in path]
-        ends = [e[-1] for e in path]
-        seen = set([])
-        seen_add = seen.add
-        staticpath = [e for e in temppath if not (e in seen or seen_add(e))]
-        # print "convert path 2 static path:", path, staticpath
-        deltatime = len(path) - len(seen)
-        assert len(set(ends[deltatime:])) == 1
-        return (staticpath, deltatime)
 
     def deliverTasks(self, context):
         for element in self.elements:
             # print "deliver task in Federate:", element
             if element.isSpace():
-                element.updateGraph(context)
-                # print "graph updated"
-                # element.Graph.setGraphList(context)
-                if element.queuedTasks.qsize() > 0:
-                    task = element.queuedTasks.get()
-                    # print element.name, task.taskid, task.initTime
-                    element.Graph.updateSuperGraph(task)
-                    pathcost, pathname = element.Graph.findcheapestpath(task)
-                    # print "element and path:    ", element.name, pathname
-                    staticpath, deltatime = self.convertPath2StaticPath(pathname)
-                    # print staticpath
-                    # print [e.name for e in self.elements]
-                    elementpath = [next((e for e in context.elements if e.name == p)) for p in staticpath]
-                    task.updatePath(elementpath, pathcost)
-                    element.saveTask(task, deltatime)
-                    # element.deliverTasks(task)
+                # element.updateGraph(context)
                 savedtasks = element.savedTasks[:]
                 for task in savedtasks:
                     # print  "time and task activation time:", self.time, task.activationTime
                     assert task.activationTime >= self.time
-                    if self.time == task.activationTime:
+                    if self.time >= task.activationTime:
                         element.deliverTask(task)
                         # print "len of saved tasks:", len(element.savedTasks),
                         element.removeSavedTask(task)

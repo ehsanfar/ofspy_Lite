@@ -6,7 +6,7 @@ import math
 import numpy as np
 import time
 from itertools import cycle
-from graphdrawfunctions import *
+from .generalFunctions import *
 
 
 class Graph():
@@ -204,10 +204,11 @@ class SuperGraph(Graph):
         self.rawSuperGraph = G
         self.addStorgeEdges(self.rawSuperGraph)
 
+
         self.updatePaths()
 
     def addStorgeEdges(self, G):
-        # print "Add storage penalty:", [int(e) for e in self.storagePenalty]
+        # print("Add storage penalty:", [int(e) for e in self.storagePenalty])
         for i, s in enumerate(self.storagePenalty):
             name1 = '%s.%d'%(self.elementOwner.name, i%6)
             name2 = '%s.%d'%(self.elementOwner.name, (i+1)%6)
@@ -215,15 +216,15 @@ class SuperGraph(Graph):
             G.add_edge(name1, name2, weight= s)
 
         self.SuperGaph = G
-        # print "create Graph:", self.elementOwner.name
+        # print("create Graph:", self.elementOwner.name)
         # for n in self.SuperGaph.nodes():
         #     if self.elementOwner.name in n:
-        #         print n, self.SuperGaph.neighbors(n),
-        # print ''
+        #         print(n, self.SuperGaph.neighbors(n),)
+        # print('')
 
-    def updateSuperGraph(self, task):
-        storagepenalty = self.elementOwner.federateOwner.getStorageCostList(task, self.elementOwner.section)
-        # print "Element Storage penalty:", self.elementOwner.name, task.federateOwner.name, storagepenalty, self.graphOrder
+    def updateSuperGraph(self, taskvaluelist):
+        storagepenalty = self.elementOwner.federateOwner.getStorageCostList(taskvaluelist, self.elementOwner.section)
+        # print("Element Storage penalty:", self.elementOwner.name, self.graphOrder, storagepenalty)
         assert len(storagepenalty) == len(self.storagePenalty)
 
         for i in range(self.graphOrder):
@@ -268,11 +269,7 @@ class SuperGraph(Graph):
         # print "find shortest paths:", temppathlist, pathcostlist
         return temppathlist, pathcostlist
 
-    def findcheapestpath(self, task):
-        time = self.elementOwner.federateOwner.time
-        activationtime = task.activationTime
-        assert activationtime >= time
-        deltatime = activationtime - time
+    def findcheapestpath(self, deltatime):
         future = (self.graphOrder + deltatime)%6
         futurename = '%s.%d'%(self.elementOwner.name, future)
 

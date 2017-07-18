@@ -1,7 +1,7 @@
 import random
 import numpy as np
 from .task import Task
-import Queue
+import queue
 from .federateLite import FederateLite
 import re
 
@@ -26,12 +26,13 @@ class ContextLite():
         self.elements = []
         self.masterfederate = []
         self.seed = 0
-        self.currentTasks = {i: Queue.Queue(maxsize = 3) for i in range(1,7)}
+        self.currentTasks = {i: queue.Queue(maxsize = 3) for i in range(1,7)}
         self.graph = []
         self.nodeLocations = []
         self.shortestPathes = []
         self.Graph = None
         self.taskid = 0
+        self.pickupProbability = 1.
 
 
 
@@ -45,7 +46,7 @@ class ContextLite():
         self.orderStream = random.Random(self.masterStream.random())
 
 
-        self.generateFederates(ofs.elements)
+        self.generateFederates(ofs)
         self.generateTasks()
         self.elements = self.getElements()
 
@@ -80,6 +81,13 @@ class ContextLite():
         elif scheme == 'centralized':
             self.masterfederate.ticktock()
 
+    def updatePickupProbablity(self):
+        opportunitycounter = sum([f.pickupOpportunities for f in self.federates])
+
+        taskcounter = sum([sum(list(f.taskcounter.values())) for f in self.federates])
+        self.pickupProbability = taskcounter/float(opportunitycounter)
+        for f in self.federates:
+            f.pickupProbability = self.pickupProbability
 
     def ticktock(self, ofs):
         """
@@ -92,11 +100,12 @@ class ContextLite():
         # print "picked up tasks"
         if self.time>=6:
             self.pickupTasks()
-            self.Graph.drawGraph(self)
+            # self.Graph.drawGraph(self)
             # print [e.queuedTasks.qsize() for e in self.elements if e.isSpace()]
             # print [len(e.savedTasks) for e in self.elements if e.isSpace()]
             # print "Graphorder:", [e.Graph.graphOrder for e in self.elements if e.isSpace()], self.Graph.graphOrder
             self.deliverTasks()
+            self.updatePickupProbablity()
 
         # print "Context - Assigned Tasks:", self.taskid
         # print self.time, [a.getLocation() for a in self.elements]
@@ -112,15 +121,19 @@ class ContextLite():
 
         # print "current tasks size:", [c.qsize() for c in self.currentTasks.values()]
 
-    def generateFederates(self, elements):
+    def generateFederates(self, ofs):
         # elist = elements.split(' ')
+        elements = ofs.elements
+        costSGL = ofs.costSGL
+        costISL = ofs.costISL
+        storagePenalty = ofs.storagePenalty
         elementgroups = []
         for e in elements:
             elementgroups.append(re.search(r'\b(\d+)\.(\w+)@(\w+\d).+\b', e).groups())
         fedset = sorted(list(set([e[0] for e in elementgroups])))
         # print elementgroups
         # print fedset
-        self.federates = [FederateLite(name = 'F'+i, time = self.time) for i in fedset]
+        self.federates = [FederateLite(name = 'F'+i, context = self, costSGL = costSGL, costISL = costISL, storagePenalty = storagePenalty) for i in fedset]
         for element in elementgroups:
             index = fedset.index(element[0])
             self.federates[index].addElement(element[1], element[2])
@@ -138,7 +151,7 @@ class ContextLite():
         for element in self.elements:
             if element.isSpace():
                 # print element.name, self.taskid
-                if element.pickupTask(self.currentTasks, self.taskid):
+                if element.pickupTask(self, self.taskid):
                     # print "pick up task in context:", element
                     self.taskid += 1
                     # print "pickupTasks taskid:", self.taskid

@@ -38,14 +38,24 @@ def convertLocation2xy(location):
     # print location, x, y
     return (x, y)
 
+def convertPath2StaticPath(path):
+    temppath = [e[:-2] for e in path]
+    ends = [e[-1] for e in path]
+    seen = set([])
+    seen_add = seen.add
+    staticpath = [e for e in temppath if not (e in seen or seen_add(e))]
+    # print "convert path 2 static path:", path, staticpath
+    deltatime = len(path) - len(seen)
+    assert len(set(ends[deltatime:])) == 1
+    return (staticpath, deltatime)
 
 def fillBetween3Points(a, b, c):
     sortedpoints = sorted([a,b,c])
-    print sortedpoints
+    # print sortedpoints
     z = zip(a,b,c)
     x1 = np.linspace(sortedpoints[0][0], sortedpoints[1][0], num=2)
     x2 = np.linspace(sortedpoints[1][0], sortedpoints[2][0], num=2)
-    print x1, x2
+    # print x1, x2
     y1 = (sortedpoints[0][1]-sortedpoints[1][1])*(x1-sortedpoints[0][0])/float(sortedpoints[0][0]-sortedpoints[1][0]) + sortedpoints[0][1] if sortedpoints[0][0]-sortedpoints[1][0] != 0 else None
     y2 = (sortedpoints[0][1]-sortedpoints[2][1])*(x1-sortedpoints[0][0])/float(sortedpoints[0][0]-sortedpoints[2][0]) + sortedpoints[0][1] if sortedpoints[0][0]-sortedpoints[2][0] != 0 else None
     y3 = (sortedpoints[0][1]-sortedpoints[2][1])*(x2-sortedpoints[2][0])/float(sortedpoints[0][0]-sortedpoints[2][0]) + sortedpoints[2][1] if sortedpoints[0][0]-sortedpoints[2][0] != 0 else None
@@ -62,7 +72,7 @@ def fillBetween3Points(a, b, c):
         plt.fill_between(x1, y1, y2, color= col)
 
     elif y2 is None or y3 is None:
-        print "there is error with points"
+        print("there is error with points")
 
     else:
         # plt.plot(x1, y1, 'g')
@@ -93,10 +103,11 @@ def drawGraph(graph, context):
     #     alltuples = alltuples.union(pathedges)
 
     alltuples = set([])
+    print("Number of saved tasks:", [len(element.savedTasks) for element in graph.elements])
     currenttasks = [e for l in [element.savedTasks for element in graph.elements] for e in l]
     assert len(set(currenttasks)) == len(currenttasks)
     activetasks = [t for t in currenttasks if t.activationTime == context.time]
-    for actives in currenttasks:
+    for actives in activetasks:
         path = [a.name for a in actives.pathlist]
         pathedges = convertPath2Edge(path)
         alltuples = alltuples.union(pathedges)
@@ -107,9 +118,9 @@ def drawGraph(graph, context):
     #     # print "graphorder & source & path:", s, pathedges
     #     alltuples = alltuples.union(pathedges)
     recenttasks = [t.taskid for t in currenttasks if t.initTime == context.time-1]
-    print "recent tasks:", recenttasks
+    # print "recent tasks:", recenttasks
     elementswithrecenttasks = [e for e in graph.elements if set([t.taskid for t in e.savedTasks]).intersection(recenttasks)]
-    print "elements with recent tasks:", elementswithrecenttasks
+    # print "elements with recent tasks:", elementswithrecenttasks
 
     section2pointsdict = {1: [(0, 1), (0.866, 0.5)], 2: [(0.866, 0.5), (0.866, -0.5)], 3: [(0.866, -0.5), (0, -1)], 4: [(0, -1), (-0.866, -0.5)], 5: [(-0.866, -0.5), (-0.866, 0.5)], 6: [(-0.866, 0.5), (0, 1)]}
 
@@ -117,7 +128,7 @@ def drawGraph(graph, context):
     pos = {e.name: convertLocation2xy(nodeLocations[i]) for i, e in enumerate(graph.elements)}
 
     positionsection = [[pos[e.name]]+section2pointsdict[e.section] for e in elementswithrecenttasks]
-    print "position and section :", positionsection
+    # print "position and section :", positionsection
 
     sec = {e.name: nodeLocations[i] for i, e in enumerate(graph.elements)}
     labels = {n: n[0] + n[-3:] for n in nodes}
@@ -139,12 +150,12 @@ def drawGraph(graph, context):
     nx.draw_networkx_nodes(G, pos, nodelist=[n for n in nodes if 'GS' in n], node_color='b', node_size=100)
 
     # print "Graph all tuples: ", alltuples
+    for ps in positionsection:
+        fillBetween3Points(*ps)
+
     nx.draw_networkx_edges(G, pos, edgelist=list(alltuples))
     # nx.draw_networkx_edges(G, pos)
     nx.draw_networkx_labels(G, labelpos, labels, font_size=8)
-
-    for ps in positionsection:
-        fillBetween3Points(*ps)
 
     plt.xticks([])
     plt.yticks([])
@@ -152,7 +163,8 @@ def drawGraph(graph, context):
     plt.ylim(-2.5, 2.5)
     # plt.draw()
     plt.draw()
-    plt.pause(0.5)
+    plt.waitforbuttonpress()
+    # plt.pause(0.5)
 
 
 # Figure is closed

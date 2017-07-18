@@ -1,9 +1,10 @@
-
+import socket
+print(socket.gethostbyname("localhost"))
 import argparse
 import itertools
 import logging
 import pymongo
-from scoop import futures
+# from scoop import futures
 import sys, os
 import re
 
@@ -13,7 +14,6 @@ sys.path.append(os.path.abspath('..'))
 db = None  # lazy-load if required
 
 from ofspy.ofsLite import OFSL
-import socket
 import json
 
 
@@ -57,15 +57,19 @@ def execute(dbHost, dbPort, dbName, start, stop, cases, numPlayers,
                  .format(len(cases), start, stop, len(executions)))
     # for results in futures.map(queryCase, executions):
     # results = futures.map(queryCase, executions)
-    futures.map(queryCase, executions)
+    # print(len(list(executions)))
+    # print([list(e) for e in executions])
+    # map(queryCase, executions)
+    for execution in executions:
+        argslist = list(execution)
+        # print(argslist)
+        queryCase(*argslist)
     # print "results :", results
     # N = len(results[0])
     # This line calculates the average of each element of each tuple for all the lists in the results, in other words assuming that each tuple of each results shows one seed of the same identity
     # print [[sum(x)/float(N) for x in zip(*l)] for l in [[l[j] for l in results] for j in range(N)]]
 
-
-def queryCase((dbHost, dbPort, dbName, elements, numPlayers,
-              initialCash, numTurns, seed, ops, fops)):
+def queryCase(dbHost, dbPort, dbName, elements, numPlayers, initialCash, numTurns, seed, ops, fops):
     """
     Queries and retrieves existing results or executes an OFS simulation.
     @param dbHost: the database host
@@ -91,31 +95,32 @@ def queryCase((dbHost, dbPort, dbName, elements, numPlayers,
     @return: L{list}
     """
     # print "elements:", elements
-    executeCase((elements, numPlayers, initialCash,
-                 numTurns, seed, ops, fops))
-    """
+    # executeCase(elements, numPlayers, initialCash,
+    #              numTurns, seed, ops, fops)
+    experiment = "Storage Penalty"
     global db
-    dbHost = socket.gethostbyname(socket.gethostname())
+    # dbHost = socket.gethostbyname(socket.gethostname())
+    dbHost = "127.0.0.1"
+    # dbHost = "155.246.119.30"
     # print dbHost, dbPort, dbName, db
     # print "fops:", fops
-    if re.match('x\d+,\d+,.', fops) is not None:
-        args = re.search('x(\d+),(\d+),.',
-                         fops)
+    if re.match('x\d+,\d+,.+', fops) is not None:
+        args = re.search('x(\d+),(\d+),([-v\d]+)', fops)
         costSGL = int(args.group(1))
         costISL = int(args.group(2))
-    elif 'xv,v' in fops:
-        costSGL = 'v'
-        costISL = 'v'
+        storagePenalty = int(args.group(3))
+
     else:
         costSGL = 0
         costISL = 0
+        storagePenalty = -1
 
     # print costISL, costSGL
 
     if db is None and dbHost is None:
         # print "db is None adn dbHOst is None"
-        return executeCase((elements, numPlayers, initialCash,
-                            numTurns, seed, ops, fops))
+        return executeCase(elements, numPlayers, initialCash,
+                 numTurns, seed, ops, fops)
     elif db is None and dbHost is not None:
         # print "read from database"
         db = pymongo.MongoClient(dbHost, dbPort).ofs
@@ -123,11 +128,9 @@ def queryCase((dbHost, dbPort, dbName, elements, numPlayers,
     query = {u'experiment': experiment,
              u'elements': ' '.join(elements),
              u'numPlayers': numPlayers,
-             u'initialCash': initialCash,
              u'numTurns': numTurns,
              u'seed': seed,
-             u'ops': ops,
-             u'fops': fops,
+             u'storagePenalty': storagePenalty,
              u'costSGL': costSGL,
              u'costISL': costISL,
              }
@@ -136,35 +139,34 @@ def queryCase((dbHost, dbPort, dbName, elements, numPlayers,
     if dbName is not None:
         doc = db[dbName].find_one(query)
     if doc is None:
-        db.results.remove({}) #this is temporary, should be removed afterwards
+        db.results.remove(query) #this is temporary, should be removed afterwards
         doc = db.results.find_one(query)
+        if doc:
+            print("Found in DB", doc)
+            # print(doc)
         if doc is None:
-            results, transRevenue, transCounter = executeCase((elements, numPlayers, initialCash,
-                                   numTurns, seed, ops, fops))
+            results = executeCase(elements, numPlayers, initialCash, numTurns, seed, ops, fops)
 
             doc = {u'experiment': experiment,
                    u'elements': ' '.join(elements),
                    u'numPlayers': numPlayers,
-                   u'initialCash': initialCash,
                    u'numTurns': numTurns,
                    u'seed': seed,
-                   u'ops': ops,
-                   u'fops': fops,
+                   u'storagePenalty': storagePenalty,
                    u'costSGL': costSGL,
                    u'costISL': costISL,
-                   u'results': results,
-                   u'transRevenue': json.dumps(transRevenue),
-                   u'tarnsCounter': json.dumps(transCounter)
+                   u'results': json.dumps(results),
                     }
+            print("Not Found in DB", doc)
             db.results.insert_one(doc)
 
         if dbName is not None:
             db[dbName].insert_one(doc)
 
     return [tuple(result) for result in doc[u'results']]
-"""
 
-def executeCase((elements, numPlayers, initialCash, numTurns, seed, ops, fops)):
+
+def executeCase(elements, numPlayers, initialCash, numTurns, seed, ops, fops):
     """
     Executes an OFS simulation.
     @param elements: the design specifications
@@ -185,9 +187,17 @@ def executeCase((elements, numPlayers, initialCash, numTurns, seed, ops, fops)):
     # print "ofs-exp-vs elements: ", elements
     #
     # return OFSL(elements=elements, numPlayers=numPlayers, initialCash=initialCash, numTurns=numTurns, seed=seed, ops=ops, fops=fops).execute()
-    OFSL(elements=elements, numPlayers=numPlayers, numTurns=numTurns, seed=seed, ops=ops, fops=fops)
+    ofsl = OFSL(elements=elements, numPlayers=numPlayers, numTurns=numTurns, seed=seed, ops=ops, fops=fops)
+    return ofsl.execute()
 
 
+def fopsGen():
+    costSGLList = list(range(0, 2001, 100))
+    # costISLList = [c/2. for c in costSGLList]
+    storagePenalty = list(range(0, 1000, 100))+[-1]
+    for sgl in costSGLList:
+        for s in storagePenalty:
+            yield "x%d,%d,%d"%(sgl, sgl/2., s)
 
 
 if __name__ == '__main__':
@@ -230,7 +240,7 @@ if __name__ == '__main__':
     #     #     hardcoded_designs.append(l)
     # hardcoded_designs = [x.strip() for x in hardcoded_designs]
     hardcoded_designs = (
-        # "1.GroundSta@SUR1,oSGL 2.GroundSta@SUR3,oSGL 1.MediumSat@MEO3,VIS,SAR,oSGL,oISL  2.MediumSat@MEO5,VIS,SAR,oSGL,oISL",
+        "1.GroundSta@SUR1,oSGL 2.GroundSta@SUR3,oSGL 1.MediumSat@MEO3,VIS,SAR,oSGL,oISL  2.MediumSat@MEO5,VIS,SAR,oSGL,oISL",
         "1.SmallSat@MEO6,oSGL,oISL 1.MediumSat@MEO4,VIS,SAR,oSGL,oISL 2.SmallSat@MEO2,oSGL,oISL 2.MediumSat@MEO1,VIS,SAR,oSGL,oISL 1.GroundSta@SUR1,oSGL 2.GroundSta@SUR4,oSGL",
         # "1.SmasllSat@MEO6,oSGL,oISL 1.SmallSat@MEO5,oSGL,oISL 1.LargeSat@MEO4,VIS,SAR,DAT,oSGL,oISL 2.SmallSat@MEO3,oSGL,oISL 2.SmallSat@MEO2,oSGL,oISL 2.LargeSat@MEO1,VIS,SAR,DAT,oSGL,oISL 1.GroundSta@SUR1,oSGL 2.GroundSta@SUR4,oSGL",
         # "1.SmallSat@MEO6,oSGL,oISL 1.MediumSat@MEO5,DAT,oSGL,oISL 1.MediumSat@MEO4,VIS,SAR,oSGL,oISL 2.SmallSat@MEO3,oSGL,oISL 2.MediumSat@MEO2,DAT,oSGL,oISL 2.MediumSat@MEO1,VIS,SAR,oSGL,oISL 1.GroundSta@SUR1,oSGL 2.GroundSta@SUR4,oSGL",
@@ -241,11 +251,11 @@ if __name__ == '__main__':
         # "1.MediumSat@MEO6,VIS,oSGL,oISL 1.MediumSat@MEO5,VIS,DAT,oSGL,oISL 1.LargeSat@MEO4,VIS,SAR,DAT,oSGL,oISL 2.MediumSat@MEO3,VIS,oSGL,oISL 2.MediumSat@MEO2,VIS,DAT,oSGL,oISL 2.LargeSat@MEO1,VIS,SAR,DAT,oSGL,oISL 1.GroundSta@SUR1,oSGL 2.GroundSta@SUR4,oSGL",
         # "1.MediumSat@MEO6,VIS,SAR,oSGL,oISL 1.MediumSat@MEO5,VIS,SAR,oSGL,oISL 1.LargeSat@MEO4,VIS,SAR,DAT,oSGL,oISL 2.MediumSat@MEO3,VIS,SAR,oSGL,oISL 2.MediumSat@MEO2,VIS,SAR,oSGL,oISL 2.LargeSat@MEO1,VIS,SAR,DAT,oSGL,oISL 1.GroundSta@SUR1,oSGL 2.GroundSta@SUR4,oSGL",
         #
-        # "1.GroundSta@SUR%d,oSGL 2.GroundSta@SUR%d,oSGL 3.GroundSta@SUR%d,oSGL 1.SmallSat@MEO%d,oSGL,oISL 1.MediumSat@MEO%d,VIS,SAR,oSGL,oISL 2.SmallSat@LEO%d,oSGL,oISL 2.MediumSat@MEO%d,VIS,SAR,oSGL,oISL 3.SmallSat@LEO%d,oSGL,oISL 3.MediumSat@MEO%d,VIS,SAR,oSGL,oISL"%(1,4,5,1,3,6,4,5,2),
+        "1.GroundSta@SUR%d,oSGL 2.GroundSta@SUR%d,oSGL 3.GroundSta@SUR%d,oSGL 1.SmallSat@MEO%d,oSGL,oISL 1.MediumSat@MEO%d,VIS,SAR,oSGL,oISL 2.SmallSat@LEO%d,oSGL,oISL 2.MediumSat@MEO%d,VIS,SAR,oSGL,oISL 3.SmallSat@LEO%d,oSGL,oISL 3.MediumSat@MEO%d,VIS,SAR,oSGL,oISL"%(1,4,5,1,3,6,4,5,2),
         # "1.GroundSta@SUR%d,oSGL 2.GroundSta@SUR%d,oSGL 3.GroundSta@SUR%d,oSGL 1.SmallSat@MEO%d,oSGL,oISL 1.SmallSat@MEO%d,oSGL,oISL 1.LargeSat@MEO%d,VIS,SAR,DAT,oSGL,oISL 2.SmallSat@MEO%d,oSGL,oISL 2.SmallSat@MEO%d,oSGL,oISL 2.LargeSat@MEO%d,VIS,SAR,DAT,oSGL,oISL 3.SmallSat@MEO%d,oSGL,oISL 3.SmallSat@MEO%d,oSGL,oISL 3.LargeSat@MEO%d,VIS,SAR,DAT,oSGL,oISL"%(1,3,5,1,3,6,3,5,2,5,1,4),
         # "1.GroundSta@SUR%d,oSGL 2.GroundSta@SUR%d,oSGL 3.GroundSta@SUR%d,oSGL 1.SmallSat@MEO%d,oSGL,oISL 1.MediumSat@MEO%d,DAT,oSGL,oISL 1.MediumSat@MEO%d,VIS,SAR,oSGL,oISL 2.SmallSat@MEO%d,oSGL,oISL 2.MediumSat@MEO%d,DAT,oSGL,oISL 2.MediumSat@MEO%d,VIS,SAR,oSGL,oISL 3.SmallSat@MEO%d,oSGL,oISL 3.MediumSat@MEO%d,DAT,oSGL,oISL 3.MediumSat@MEO%d,VIS,SAR,oSGL,oISL"%(1,3,5,1,3,6,3,5,2,5,1,4),
         # "1.GroundSta@SUR%d,oSGL 2.GroundSta@SUR%d,oSGL 3.GroundSta@SUR%d,oSGL 1.SmallSat@MEO%d,oSGL,oISL 1.MediumSat@MEO%d,VIS,SAR,oSGL,oISL 1.MediumSat@MEO%d,VIS,SAR,oSGL,oISL 2.SmallSat@MEO%d,oSGL,oISL 2.MediumSat@MEO%d,VIS,SAR,oSGL,oISL 2.MediumSat@MEO%d,VIS,SAR,oSGL,oISL 3.SmallSat@MEO%d,oSGL,oISL 3.MediumSat@MEO%d,VIS,SAR,oSGL,oISL 3.MediumSat@MEO%d,VIS,SAR,oSGL,oISL"%(1,3,5,1,3,6,3,5,2,5,1,4),
-        # "1.GroundSta@SUR%d,oSGL 2.GroundSta@SUR%d,oSGL 3.GroundSta@SUR%d,oSGL 1.SmallSat@MEO%d,oSGL,oISL 1.MediumSat@MEO%d,DAT,oSGL,oISL 1.LargeSat@MEO%d,VIS,SAR,DAT,oSGL,oISL 2.SmallSat@MEO%d,oSGL,oISL 2.MediumSat@MEO%d,DAT,oSGL,oISL 2.LargeSat@MEO%d,VIS,SAR,DAT,oSGL,oISL 3.SmallSat@MEO%d,oSGL,oISL 3.MediumSat@MEO%d,DAT,oSGL,oISL 3.LargeSat@MEO%d,VIS,SAR,DAT,oSGL,oISL"%(1,3,5,1,3,6,3,5,2,5,1,4),
+        "1.GroundSta@SUR%d,oSGL 2.GroundSta@SUR%d,oSGL 3.GroundSta@SUR%d,oSGL 1.SmallSat@MEO%d,oSGL,oISL 1.MediumSat@MEO%d,DAT,oSGL,oISL 1.LargeSat@MEO%d,VIS,SAR,DAT,oSGL,oISL 2.SmallSat@MEO%d,oSGL,oISL 2.MediumSat@MEO%d,DAT,oSGL,oISL 2.LargeSat@MEO%d,VIS,SAR,DAT,oSGL,oISL 3.SmallSat@MEO%d,oSGL,oISL 3.MediumSat@MEO%d,DAT,oSGL,oISL 3.LargeSat@MEO%d,VIS,SAR,DAT,oSGL,oISL"%(1,3,5,1,3,6,3,5,2,5,1,4),
         #  "1.GroundSta@SUR%d,oSGL 2.GroundSta@SUR%d,oSGL 3.GroundSta@SUR%d,oSGL 1.SmallSat@MEO%d,oSGL,oISL 1.MediumSat@MEO%d,VIS,SAR,oSGL,oISL 1.LargeSat@MEO%d,VIS,SAR,DAT,oSGL,oISL 2.SmallSat@MEO%d,oSGL,oISL 2.MediumSat@MEO%d,VIS,SAR,oSGL,oISL 2.LargeSat@MEO%d,VIS,SAR,DAT,oSGL,oISL 3.SmallSat@MEO%d,oSGL,oISL 3.MediumSat@MEO%d,VIS,SAR,oSGL,oISL 3.LargeSat@MEO%d,VIS,SAR,DAT,oSGL,oISL"%(1,3,5,1,3,6,3,5,2,5,1,4),
         # "1.GroundSta@SUR%d,oSGL 2.GroundSta@SUR%d,oSGL 3.GroundSta@SUR%d,oSGL 1.MediumSat@MEO%d,VIS,oSGL,oISL 1.MediumSat@MEO%d,VIS,oSGL,oISL 1.LargeSat@MEO%d,VIS,SAR,DAT,oSGL,oISL 2.MediumSat@MEO%d,VIS,oSGL,oISL 2.MediumSat@MEO%d,VIS,oSGL,oISL 2.LargeSat@MEO%d,VIS,SAR,DAT,oSGL,oISL 3.MediumSat@MEO%d,VIS,oSGL,oISL 3.MediumSat@MEO%d,VIS,oSGL,oISL 3.LargeSat@MEO%d,VIS,SAR,DAT,oSGL,oISL"%(1,3,5,1,3,6,3,5,2,5,1,4),
         # "1.GroundSta@SUR%d,oSGL 2.GroundSta@SUR%d,oSGL 3.GroundSta@SUR%d,oSGL 1.MediumSat@MEO%d,VIS,oSGL,oISL 1.MediumSat@MEO%d,VIS,DAT,oSGL,oISL 1.LargeSat@MEO%d,VIS,SAR,DAT,oSGL,oISL 2.MediumSat@MEO%d,VIS,oSGL,oISL 2.MediumSat@MEO%d,VIS,DAT,oSGL,oISL 2.LargeSat@MEO%d,VIS,SAR,DAT,oSGL,oISL 3.MediumSat@MEO%d,VIS,oSGL,oISL 3.MediumSat@MEO%d,VIS,DAT,oSGL,oISL 3.LargeSat@MEO%d,VIS,SAR,DAT,oSGL,oISL"%(1,3,5,1,3,6,3,5,2,5,1,4),
@@ -262,10 +272,14 @@ if __name__ == '__main__':
             numPlayers = 2
 
         stop = args.start + 1
-        execute(args.dbHost, args.dbPort, None, args.start, stop,
-                [design],
-                numPlayers, args.initialCash, args.numTurns,
-                None, None)
+
+
+        for fops in fopsGen():
+            print(fops)
+            execute(args.dbHost, args.dbPort, None, args.start, stop,
+                    [design],
+                    numPlayers, args.initialCash, args.numTurns,
+                    None, fops)
 
         # for ops, fops in [('d6,a,1', 'x')]:#[('n', 'd6,a,1'), ('d6,a,1', 'n'), ('d6,a,1', 'x')]:#[('d6,a,1', 'x')]:#
         #     if 'x' in fops:

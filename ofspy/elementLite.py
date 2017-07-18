@@ -3,9 +3,11 @@
 Elements classes.
 """
 import re
-import Queue
+import queue
 from .Graph import SuperGraph
 from .Graph import SuperGraph
+from .generalFunctions import *
+import random
 
 class Element():
     def __init__(self, federate, name, location, cost=0):
@@ -15,6 +17,7 @@ class Element():
         self.designCost = cost
         self.federateOwner = federate
         self.savedTasks = []
+        self.pickupprobablity = self.federateOwner.pickupProbability
 
     def getOwner(self):
         return self.federateOwner
@@ -106,7 +109,7 @@ class Satellite(Element):
         Element.__init__(self, federate, name, location, cost)
         self.capacity = capacity
         self.content = 0.
-        self.queuedTasks = Queue.Queue()
+        self.queuedTasks = queue.Queue()
         self.Graph = SuperGraph(self)
 
     def getCapacity(self):
@@ -145,29 +148,48 @@ class Satellite(Element):
         self.Graph.elementOwners = context.Graph.getElementOwners()
         self.Graph.createGraph()
 
-    def pickupTask(self, currentTasks, taskid):
+    def pickupTask(self, context, taskid):
         # print "elementLite - taskid:", self.name, taskid, self.section
-        if not self.isGEO():
+        if not self.isGEO():# or random.random()<self.pickupprobablity:
             # print "it is satellite"
             # print "current tasks:", currentTasks
             # print self.section
             # print currentTasks[self.section].qsize()
             # assert not currentTasks[self.section].empty()
+            self.updateGraph(context)
+
+            currentTasks = context.currentTasks
             tempqueue = currentTasks[self.section].queue
             temptask = tempqueue[0]
+            taskvaluelist = [temptask.getValue(self.federateOwner.time + i, inittime=self.federateOwner.time) for i in range(6)]
+            # print("pickup : task value list:", taskvaluelist)
+            self.Graph.updateSuperGraph(taskvaluelist= taskvaluelist)
             if not self.canSave(temptask):
                 # print "cannot save"
                 return False
 
-            nextTask = currentTasks[self.section].get()
+            deltatime1 = temptask.duration
+            # print("pickup: graph order and time:", context.time, self.federateOwner.time)
+            pathcost, pathname = self.Graph.findcheapestpath(deltatime= deltatime1)
+            staticpath, deltatime2 = convertPath2StaticPath(pathname)
+            self.federateOwner.pickupOpportunities += 1
+
+            prospectiveValue = temptask.getValue(self.federateOwner.time + deltatime2, inittime= self.federateOwner.time)
+            if pathcost >= prospectiveValue:
+                # print("Pickup: pathcost vs task value:", pathcost, prospectiveValue)
+                return False
+
+            elementpath = [next((e for e in context.elements if e.name == p)) for p in staticpath]
             # print nextTask
             # print "task time:", nextTask.initTime, nextTask.federateOwner
+            nextTask = currentTasks[self.section].get()
             nextTask.setID(taskid)
             nextTask.updateFederateOwner(self.federateOwner)
             nextTask.setSection(self.section)
             nextTask.setTime(self.federateOwner.time)
+            nextTask.updatePath(elementpath, pathcost)
             # print "element next task inittime:", self.name, taskid, nextTask.initTime
-            self.queuedTasks.put(nextTask)
+            self.saveTask(nextTask, deltatime2)
             self.federateOwner.reportPickup(nextTask)
             return True
 
