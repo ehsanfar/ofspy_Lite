@@ -1,31 +1,30 @@
-
 import re
-
-from .operationLite import OperationLite
 from .elementLite import Satellite, GroundStation
+from .bundle import UniqueBundle
 
 
 class FederateLite():
-    def __init__(self, name, context, initialCash=0, operation =OperationLite(), costSGL = 200., costISL = 100., storagePenalty = -1):
+    def __init__(self, name, context, initialCash=0, costSGL = 200., costISL = 100., storagePenalty = -1):
         """
         @param name: the name of this federate
         @type name: L{str}
         @param initialCash: the initial cash for this federate
         @type initialCash: L{float}
-        @param elements: the elements controlled by this federate
-        @type elements: L{list}
+        @param elementlist: the elementlist controlled by this federate
+        @type elementlist: L{list}
         @param contracts: the contracts owned by this federate
         @type contracts: L{list}
         @param operations: the operations model of this federate
         @type operations: L{Operations}
         """
+        self.context = context
         self.name = name
         self.initialCash = initialCash
         self.cash = self.initialCash
         self.elements = []
         self.satellites = []
         self.stations = []
-        self.operation = operation
+        # self.operation = operation
         self.costDic = {'oSGL': costSGL, 'oISL': costISL}
         self.storagePenalty = storagePenalty
         self.tasks = {}
@@ -35,16 +34,18 @@ class FederateLite():
 
         self.taskduration  = {i: 2. for i in range(1,7)}
         self.taskvalue = {i: 500. for i in range(1,7)}
-        self.taskcounter = {i: 10 for i in range(1,7)}
+        self.taskcounter = {i: 0 for i in range(1,7)}
         self.pickupOpportunities = 0
 
         self.activeTasks = set([])
         self.supperGraph = None
-        self.pickupProbability = 1.
+        self.pickupProbability = context.pickupProbability
+        self.uniqueBundles = []
+        self.nodeElementDict = {}
 
     def getElements(self):
         """
-        Gets the elements controlled by this controller.
+        Gets the elementlist controlled by this controller.
         @return L{list}
         """
         return self.elements[:]
@@ -71,11 +72,14 @@ class FederateLite():
     def setCost(self, protocol, cost):
         self.costDic[protocol] = cost
 
-    def getCost(self, protocol, federate=None, type=None):
-        if self == federate:
+    def getCost(self, protocol, federate = None):
+        # print(self.name, federate.name, self.name == federate.name, self.costDic[protocol])
+        if federate and self.name == federate.name:
             return 0.
-        key = '{}-{}'.format(federate, protocol)
-        return self.costDic[protocol] if key not in self.costDic else self.costDic[key]
+
+        return self.costDic[protocol]
+        # key = '{}-{}'.format(federate, protocol)
+        # return self.costDic[protocol] if key not in self.costDic else self.costDic[key]
 
     def addTransRevenue(self, protocol, amount):
         if protocol in self.transCounter:
@@ -99,13 +103,14 @@ class FederateLite():
         assert section in range(1, 7)
         storagecostlist = []
         temptime = self.time
+        # print("storage cost pickup probability:", self.pickupProbability)
         for i in range(1, 7):
             # print(i, section, len(self.taskduration), len(self.taskvalue),len(taskvaluelist))
             storagecostlist.append(self.pickupProbability*(self.taskvalue[section]/self.taskduration[section]) + taskvaluelist[i-1] - taskvaluelist[min(i, 5)])
             temptime += 1
             section = section%6+1
 
-        # print storagecostlist
+        # print("storage cost:", [int(e) for e in storagecostlist])
         return storagecostlist
 
     def discardTask(self):
@@ -118,7 +123,8 @@ class FederateLite():
         self.activeTasks.add(task)
 
     def finishTask(self, task):
-        taskvalue = task.getValue(self.time) - task.pathcost
+        path = task.path
+        taskvalue = task.getValue(self.time) - path.getPathPrice()
         self.cash += taskvalue
         assert task in self.activeTasks
         section = task.getSection()
@@ -130,6 +136,7 @@ class FederateLite():
         self.taskduration[section] = (self.taskduration[section]*self.taskcounter[section] + duration)/(self.taskcounter[section] + 1.)
         self.taskvalue[section]  = (self.taskvalue[section]*self.taskcounter[section] + taskvalue)/(self.taskcounter[section] + 1.)
         self.taskcounter[section] += 1
+        # print("finishtask: pickup opp and task counter:", sum(list(self.taskcounter.values())), self.pickupOpportunities)
         self.activeTasks.remove(task)
 
     def defaultTask(self, task):
@@ -151,7 +158,6 @@ class FederateLite():
             self.elements.append(ss)
             self.satellites.append(ss)
 
-
     def deliverTasks(self, context):
         for element in self.elements:
             # print "deliver task in Federate:", element
@@ -166,6 +172,52 @@ class FederateLite():
                         # print "len of saved tasks:", len(element.savedTasks),
                         element.removeSavedTask(task)
                         # print len(element.savedTasks)
+
+
+    def getBundleBid(self, bundlelist):
+        # print("Federates: bundellist:", edgebundlelist)
+        alledges = [edge for bundle in bundlelist for edge in bundle.edgelist]
+        assert all([re.search(r'.+\.(F\d)\..+', tup[1]).group(1) == self.name for tup in alledges])
+        # edgeAskerDict = {edge: bundle.federateAsker for bundle in edgebundlelist for edge in bundle.edgelist}
+        bundlecostdict = {}
+        for bundle in bundlelist:
+            edgeAskerDict = {}
+            asker = bundle.federateAsker
+
+            tuplecostdict = {edge: self.getCost('oISL', asker) if self.nodeElementDict[edge[1]].isSpace() else self.getCost('oSGL', asker) for edge in alledges}
+
+            bundlecostdict[bundle] = sum([tuplecostdict[b] for b in bundle.edgelist])
+
+        # print("federates: bundlecst:")
+        #
+        # for b in bundlecostdict:
+        #     print(b.federateAsker.name, self.name, bundlecostdict[b])
+        return bundlecostdict
+
+    def grantBundlePrice(self, bundle):
+        keybundle = UniqueBundle(bundle)
+        if keybundle in self.uniqueBundles:
+            ubundle = self.uniqueBundles[self.uniqueBundles.index(keybundle)]
+            opportunitycost = bundle.price
+            ubundle.setGenOppCost(opportunitycost)
+        else:
+            self.uniqueBundles.append(keybundle)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

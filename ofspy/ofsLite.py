@@ -19,7 +19,7 @@ class OFSL(object):
         self.costISL = int(args.group(2))
         self.storagePenalty = int(args.group(3))
 
-        # print "OFSL elements:", elements
+        # print "OFSL elementlist:", elementlist
 
         self.context.init(self)
         # results = self.execute()
@@ -33,11 +33,10 @@ class OFSL(object):
         self.time = self.initTime
         for i in range(self.initTime, self.maxTime):
             # print self.time
-            self.time += 1
             self.context.ticktock(self)
 
         # self.context.Graph.drawGraphs()
-        # for e in self.context.elements:
+        # for e in self.context.elementlist:
         #     print(e.name, len(e.savedTasks))
 
         results = []

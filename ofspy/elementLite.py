@@ -4,8 +4,8 @@ Elements classes.
 """
 import re
 import queue
-from .Graph import SuperGraph
-from .Graph import SuperGraph
+from .task import Task
+from .graph import ElementG
 from .generalFunctions import *
 import random
 
@@ -18,6 +18,7 @@ class Element():
         self.federateOwner = federate
         self.savedTasks = []
         self.pickupprobablity = self.federateOwner.pickupProbability
+        self.elementG = None
 
     def getOwner(self):
         return self.federateOwner
@@ -110,7 +111,7 @@ class Satellite(Element):
         self.capacity = capacity
         self.content = 0.
         self.queuedTasks = queue.Queue()
-        self.Graph = SuperGraph(self)
+        self.elementGraph = None
 
     def getCapacity(self):
         return self.capacity
@@ -125,7 +126,7 @@ class Satellite(Element):
         return True
 
     def deliverTask(self, task):
-        self.transmitTask(task, iter(task.pathlist[1:]))
+        self.transmitTask(task, iter(task.path.elementlist[1:]))
 
     def saveTask(self, task, deltatime):
         if self.canSave(task):
@@ -143,57 +144,76 @@ class Satellite(Element):
         self.savedTasks.remove(task)
 
     def updateGraph(self, context):
-        self.Graph.graphList = context.Graph.getGraphList()
-        self.Graph.graphOrder = context.Graph.getGraphOrder()
-        self.Graph.elementOwners = context.Graph.getElementOwners()
-        self.Graph.createGraph()
+        self.elementGraph.graphList = context.Graph.getGraphList()
+        self.elementGraph.graphOrder = context.Graph.getGraphOrder()
+        self.elementGraph.elementOwners = context.Graph.getElementOwners()
+        self.elementGraph.createGraph()
 
-    def pickupTask(self, context, taskid):
-        # print "elementLite - taskid:", self.name, taskid, self.section
-        if not self.isGEO():# or random.random()<self.pickupprobablity:
-            # print "it is satellite"
-            # print "current tasks:", currentTasks
-            # print self.section
-            # print currentTasks[self.section].qsize()
-            # assert not currentTasks[self.section].empty()
-            self.updateGraph(context)
-
-            currentTasks = context.currentTasks
-            tempqueue = currentTasks[self.section].queue
-            temptask = tempqueue[0]
-            taskvaluelist = [temptask.getValue(self.federateOwner.time + i, inittime=self.federateOwner.time) for i in range(6)]
-            # print("pickup : task value list:", taskvaluelist)
-            self.Graph.updateSuperGraph(taskvaluelist= taskvaluelist)
-            if not self.canSave(temptask):
-                # print "cannot save"
-                return False
-
-            deltatime1 = temptask.duration
-            # print("pickup: graph order and time:", context.time, self.federateOwner.time)
-            pathcost, pathname = self.Graph.findcheapestpath(deltatime= deltatime1)
-            staticpath, deltatime2 = convertPath2StaticPath(pathname)
+    def collectTasks(self, context):
+        if not self.isGEO():
+            # print("Element collect new tasks")
+            nextTask = Task(time=self.federateOwner.time, id=context.getTaskid(), federate=self.federateOwner, element=self)
+            taskvaluelist = [nextTask.getValue(self.federateOwner.time + i, inittime=self.federateOwner.time) for i in
+                             range(6)]
+            # print("Element tasks value list:", taskvaluelist)
+            self.elementG.updateGraph(taskvaluelist=taskvaluelist)
             self.federateOwner.pickupOpportunities += 1
+            if self.canSave(nextTask):
 
-            prospectiveValue = temptask.getValue(self.federateOwner.time + deltatime2, inittime= self.federateOwner.time)
-            if pathcost >= prospectiveValue:
-                # print("Pickup: pathcost vs task value:", pathcost, prospectiveValue)
-                return False
-
-            elementpath = [next((e for e in context.elements if e.name == p)) for p in staticpath]
-            # print nextTask
-            # print "task time:", nextTask.initTime, nextTask.federateOwner
-            nextTask = currentTasks[self.section].get()
-            nextTask.setID(taskid)
-            nextTask.updateFederateOwner(self.federateOwner)
-            nextTask.setSection(self.section)
-            nextTask.setTime(self.federateOwner.time)
-            nextTask.updatePath(elementpath, pathcost)
-            # print "element next task inittime:", self.name, taskid, nextTask.initTime
-            self.saveTask(nextTask, deltatime2)
-            self.federateOwner.reportPickup(nextTask)
-            return True
-
+                # print("Element Return task")
+                return nextTask
         return False
+
+    def pickupTask(self, task):
+        staticpath, deltatime2 = convertPath2StaticPath(task.path)
+        self.saveTask(task, deltatime2)
+        self.federateOwner.reportPickup(task)
+
+
+
+        # # print "elementLite - taskid:", self.name, taskid, self.section
+        # if not self.isGEO():# or random.random()<self.pickupprobablity:
+        #     # print "it is satellite"
+        #     # print "current tasks:", currentTasks
+        #     # print self.section
+        #     # print currentTasks[self.section].qsize()
+        #     # assert not currentTasks[self.section].empty()
+        #     self.updateGraph(context)
+        #
+        #     # currentTasks = context.currentTasks
+        #     nextTask = Task(time = self.federateOwner.time, id = context.taskid, federate = self.federateOwner, element = self)
+        #     # tempqueue = currentTasks[self.section].queue
+        #     # temptask = tempqueue[0]
+        #     taskvaluelist = [nextTask.getValue(self.federateOwner.time + i, inittime=self.federateOwner.time) for i in range(6)]
+        #     # print("pickup : task value list:", taskvaluelist)
+        #     self.elementGraph.updateSuperGraph(taskvaluelist= taskvaluelist)
+        #     if not self.canSave(nextTask):
+        #         # print "cannot save"
+        #         return False
+        #
+        #
+        #     #
+        #     # deltatime1 = nextTask.duration
+        #     # # print("pickup: graph order and time:", context.time, self.federateOwner.time)
+        #     # pathcost, pathname = self.elementGraph.findcheapestpath(deltatime= deltatime1)
+        #     # staticpath, deltatime2 = convertPath2StaticPath(pathname)
+        #     # self.federateOwner.pickupOpportunities += 1
+        #     #
+        #     # prospectiveValue = nextTask.getValue(self.federateOwner.time + deltatime2, inittime= self.federateOwner.time)
+        #     # if pathcost >= prospectiveValue:
+        #     #     # print("Pickup: pathcost vs task value:", pathcost, prospectiveValue)
+        #     #     return False
+        #     #
+        #     # elementpath = [next((e for e in context.elements if e.name == p)) for p in staticpath]
+        #     # context.taskid += 1
+        #     # nextTask.setSection(self.section)
+        #     # nextTask.updatePath(elementpath, pathcost)
+        #     # # print "element next task inittime:", self.name, taskid, nextTask.initTime
+        #     # self.saveTask(nextTask, deltatime2)
+        #     # self.federateOwner.reportPickup(nextTask)
+        #     return True
+        #
+        # return False
 
 
 

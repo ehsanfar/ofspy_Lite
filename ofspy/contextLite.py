@@ -5,7 +5,8 @@ import queue
 from .federateLite import FederateLite
 import re
 
-from .Graph import Graph
+from .graph import SuperG
+from .auctioneer import Auctioneer
 
 class ContextLite():
     def __init__(self):
@@ -27,14 +28,14 @@ class ContextLite():
         self.masterfederate = []
         self.seed = 0
         self.currentTasks = {i: queue.Queue(maxsize = 3) for i in range(1,7)}
-        self.graph = []
         self.nodeLocations = []
         self.shortestPathes = []
-        self.Graph = None
+        self.G = None
         self.taskid = 0
         self.pickupProbability = 1.
-
-
+        self.auctioneer = None
+        self.nodeElementDict = {}
+        self.nodeFederateDict = {}
 
     def init(self, ofs):
         self.time = ofs.initTime
@@ -47,13 +48,23 @@ class ContextLite():
 
 
         self.generateFederates(ofs)
-        self.generateTasks()
-        self.elements = self.getElements()
+        # self.generateTasks()
 
-        self.Graph = Graph()
-        self.Graph.createGraph(self)
+        self.G = SuperG(self)
+        self.G.createGraph(self)
 
+        # for e in [element for element in self.elementlist if element.isSpace()]:
+        #     elementGraph = e.elementGraph
+            # for key, pathlist in elementGraph.orderPathDict.items():
+            #     print(key, [p.nodelist for p in pathlist])
+            # print(elementGraph.orderPathDict)
 
+        self.auctioneer = Auctioneer(self) #nodefederatedict=nodefederatedict, nodeelementdict=nodeelementdict)
+
+    def getTaskid(self):
+        self.taskid += 1
+        return self.taskid - 1
+    
     def getElementOwner(self, element):
         return next((federate for federate in self.federates
                      if element in federate.elements), None)
@@ -67,19 +78,18 @@ class ContextLite():
                      for element in federate.elements
                      if task in element.savedTasks), None)
 
-    def executeOperations(self, scheme = 'federated'):
+    def propagate(self, scheme ='federated'):
         """
         Executes operational models.
         """
-        if scheme == 'federated':
-            federates = self.federates
-            random.shuffle(federates, random=self.orderStream.random)
-            for federate in federates:
-                # print "Pre federate operation cash:", federate.cash
-                federate.ticktock(self.time)
-                # print "Post federate operation cash:", federate.cash
-        elif scheme == 'centralized':
-            self.masterfederate.ticktock()
+        federates = self.federates
+        random.shuffle(federates, random=self.orderStream.random)
+        for federate in federates:
+            # print "Pre federate operation cash:", federate.cash
+            federate.ticktock(self.time)
+            # print "Post federate operation cash:", federate.cash
+        self.time += 1
+
 
     def updatePickupProbablity(self):
         opportunitycounter = sum([f.pickupOpportunities for f in self.federates])
@@ -94,35 +104,34 @@ class ContextLite():
         Tocks this context in a simulation.
         """
         self.time = ofs.time
-        self.executeOperations()
-        self.Graph.createGraph(self)
-        # self.Graph.drawGraphs()
-        # print "picked up tasks"
-        if self.time>=6:
-            self.pickupTasks()
+
+        self.auctioneer.initiateAuction()
+            # self.pickupTasks()
             # self.Graph.drawGraph(self)
-            # print [e.queuedTasks.qsize() for e in self.elements if e.isSpace()]
-            # print [len(e.savedTasks) for e in self.elements if e.isSpace()]
-            # print "Graphorder:", [e.Graph.graphOrder for e in self.elements if e.isSpace()], self.Graph.graphOrder
-            self.deliverTasks()
-            self.updatePickupProbablity()
+            # print [e.queuedTasks.qsize() for e in self.elementlist if e.isSpace()]
+            # print [len(e.savedTasks) for e in self.elementlist if e.isSpace()]
+            # print "Graphorder:", [e.Graph.graphOrder for e in self.elementlist if e.isSpace()], self.Graph.graphOrder
+        self.deliverTasks()
+        self.updatePickupProbablity()
+        self.propagate()
 
         # print "Context - Assigned Tasks:", self.taskid
-        # print self.time, [a.getLocation() for a in self.elements]
+        # print self.time, [a.getLocation() for a in self.elementlist]
 
-    def generateTasks(self, N=6):
-        # tasklocations = np.random.choice(range(1,7), N)
-        for l in self.currentTasks:
-            if self.currentTasks[l].full():
-                self.currentTasks[l].get()
-
-            while not self.currentTasks[l].full():
-                self.currentTasks[l].put(Task(self.time))
-
-        # print "current tasks size:", [c.qsize() for c in self.currentTasks.values()]
+    # def generateTasks(self, N=6):
+    #     # tasklocations = np.random.choice(range(1,7), N)
+    #     for l in self.currentTasks:
+    #         if self.currentTasks[l].full():
+    #             self.currentTasks[l].get()
+    #
+    #         while not self.currentTasks[l].full():
+    #             self.currentTasks[l].put(Task(self.time, id = self.taskid))
+    #             self.taskid += 1
+    #
+    #     # print "current tasks size:", [c.qsize() for c in self.currentTasks.values()]
 
     def generateFederates(self, ofs):
-        # elist = elements.split(' ')
+        # elist = elementlist.split(' ')
         elements = ofs.elements
         costSGL = ofs.costSGL
         costISL = ofs.costISL
@@ -138,32 +147,19 @@ class ContextLite():
             index = fedset.index(element[0])
             self.federates[index].addElement(element[1], element[2])
 
-    def getElements(self):
-        elements = []
         for f in self.federates:
-            elements += f.getElements()[:]
-        return elements
+            self.elements += f.getElements()[:]
 
-    def pickupTasks(self):
-        self.generateTasks()
-        # print "pickupTasks elements:", self.elements
-        # print "current tasks size:", [c.qsize() for c in self.currentTasks.values()]
-        for element in self.elements:
-            if element.isSpace():
-                # print element.name, self.taskid
-                if element.pickupTask(self, self.taskid):
-                    # print "pick up task in context:", element
-                    self.taskid += 1
-                    # print "pickupTasks taskid:", self.taskid
-                # else:
-                    # print "No pickup"
+        self.nodeElementDict = {e.name: e for e in self.elements}
+        self.nodeFederateDict = {e.name: e.federateOwner for e in self.elements}
 
     def deliverTasks(self):
         # print "delivering tasks"
-        # # G = self.Graph.getGraph()
+        # # Graph = self.Graph.getGraph()
         # graphorder = self.Graph.graphOrder
         for federate in self.federates:
             federate.deliverTasks(self)
+
 
 
 

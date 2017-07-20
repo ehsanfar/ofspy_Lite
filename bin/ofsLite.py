@@ -94,8 +94,8 @@ def queryCase(dbHost, dbPort, dbName, elements, numPlayers, initialCash, numTurn
     @type fops: L{str}
     @return: L{list}
     """
-    # print "elements:", elements
-    # executeCase(elements, numPlayers, initialCash,
+    # print "elementlist:", elementlist
+    # executeCase(elementlist, numPlayers, initialCash,
     #              numTurns, seed, ops, fops)
     experiment = "Storage Penalty"
     global db
@@ -126,7 +126,7 @@ def queryCase(dbHost, dbPort, dbName, elements, numPlayers, initialCash, numTurn
         db = pymongo.MongoClient(dbHost, dbPort).ofs
 
     query = {u'experiment': experiment,
-             u'elements': ' '.join(elements),
+             u'elementlist': ' '.join(elements),
              u'numPlayers': numPlayers,
              u'numTurns': numTurns,
              u'seed': seed,
@@ -139,16 +139,16 @@ def queryCase(dbHost, dbPort, dbName, elements, numPlayers, initialCash, numTurn
     if dbName is not None:
         doc = db[dbName].find_one(query)
     if doc is None:
-        db.results.remove(query) #this is temporary, should be removed afterwards
+        # db.results.remove(query) #this is temporary, should be removed afterwards
         doc = db.results.find_one(query)
-        if doc:
-            print("Found in DB", doc)
+        # if doc:
+            # print("Found in DB", doc['results'])
             # print(doc)
         if doc is None:
             results = executeCase(elements, numPlayers, initialCash, numTurns, seed, ops, fops)
 
             doc = {u'experiment': experiment,
-                   u'elements': ' '.join(elements),
+                   u'elementlist': ' '.join(elements),
                    u'numPlayers': numPlayers,
                    u'numTurns': numTurns,
                    u'seed': seed,
@@ -157,7 +157,7 @@ def queryCase(dbHost, dbPort, dbName, elements, numPlayers, initialCash, numTurn
                    u'costISL': costISL,
                    u'results': json.dumps(results),
                     }
-            print("Not Found in DB", doc)
+            # print("Not Found in DB", doc['results'])
             db.results.insert_one(doc)
 
         if dbName is not None:
@@ -184,20 +184,20 @@ def executeCase(elements, numPlayers, initialCash, numTurns, seed, ops, fops):
     @param fops: the federation operations definition
     @type fops: L{str}
     """
-    # print "ofs-exp-vs elements: ", elements
+    # print "ofs-exp-vs elementlist: ", elementlist
     #
-    # return OFSL(elements=elements, numPlayers=numPlayers, initialCash=initialCash, numTurns=numTurns, seed=seed, ops=ops, fops=fops).execute()
+    # return OFSL(elementlist=elementlist, numPlayers=numPlayers, initialCash=initialCash, numTurns=numTurns, seed=seed, ops=ops, fops=fops).execute()
     ofsl = OFSL(elements=elements, numPlayers=numPlayers, numTurns=numTurns, seed=seed, ops=ops, fops=fops)
     return ofsl.execute()
 
 
 def fopsGen():
-    costSGLList = list(range(0, 2001, 100))
+    costSGLList = list(range(0, 1001, 100))
     # costISLList = [c/2. for c in costSGLList]
-    storagePenalty = list(range(0, 1000, 100))+[-1]
+    storagePenalty = list(range(0, 1001, 200))+[-1]
     for sgl in costSGLList:
         for s in storagePenalty:
-            yield "x%d,%d,%d"%(sgl, sgl/2., s)
+            yield "x%d,%d,%d"%(sgl, sgl, s)
 
 
 if __name__ == '__main__':
@@ -240,7 +240,7 @@ if __name__ == '__main__':
     #     #     hardcoded_designs.append(l)
     # hardcoded_designs = [x.strip() for x in hardcoded_designs]
     hardcoded_designs = (
-        "1.GroundSta@SUR1,oSGL 2.GroundSta@SUR3,oSGL 1.MediumSat@MEO3,VIS,SAR,oSGL,oISL  2.MediumSat@MEO5,VIS,SAR,oSGL,oISL",
+        # "1.GroundSta@SUR1,oSGL 2.GroundSta@SUR3,oSGL 1.MediumSat@MEO3,VIS,SAR,oSGL,oISL  2.MediumSat@MEO5,VIS,SAR,oSGL,oISL",
         "1.SmallSat@MEO6,oSGL,oISL 1.MediumSat@MEO4,VIS,SAR,oSGL,oISL 2.SmallSat@MEO2,oSGL,oISL 2.MediumSat@MEO1,VIS,SAR,oSGL,oISL 1.GroundSta@SUR1,oSGL 2.GroundSta@SUR4,oSGL",
         # "1.SmasllSat@MEO6,oSGL,oISL 1.SmallSat@MEO5,oSGL,oISL 1.LargeSat@MEO4,VIS,SAR,DAT,oSGL,oISL 2.SmallSat@MEO3,oSGL,oISL 2.SmallSat@MEO2,oSGL,oISL 2.LargeSat@MEO1,VIS,SAR,DAT,oSGL,oISL 1.GroundSta@SUR1,oSGL 2.GroundSta@SUR4,oSGL",
         # "1.SmallSat@MEO6,oSGL,oISL 1.MediumSat@MEO5,DAT,oSGL,oISL 1.MediumSat@MEO4,VIS,SAR,oSGL,oISL 2.SmallSat@MEO3,oSGL,oISL 2.MediumSat@MEO2,DAT,oSGL,oISL 2.MediumSat@MEO1,VIS,SAR,oSGL,oISL 1.GroundSta@SUR1,oSGL 2.GroundSta@SUR4,oSGL",
@@ -275,7 +275,7 @@ if __name__ == '__main__':
 
 
         for fops in fopsGen():
-            print(fops)
+            # print(fops)
             execute(args.dbHost, args.dbPort, None, args.start, stop,
                     [design],
                     numPlayers, args.initialCash, args.numTurns,

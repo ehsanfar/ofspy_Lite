@@ -4,6 +4,8 @@ import networkx as nx
 import re
 import math
 
+def checkEqual2(iterator):
+   return len(set(iterator)) <= 1
 
 def findbestxy(N):
     if N % 2 != 0:
@@ -38,14 +40,15 @@ def convertLocation2xy(location):
     # print location, x, y
     return (x, y)
 
+
 def convertPath2StaticPath(path):
-    temppath = [e[:-2] for e in path]
-    ends = [e[-1] for e in path]
+    temppath = [e[:-2] for e in path.nodelist]
+    ends = [e[-1] for e in path.nodelist]
     seen = set([])
     seen_add = seen.add
     staticpath = [e for e in temppath if not (e in seen or seen_add(e))]
     # print "convert path 2 static path:", path, staticpath
-    deltatime = len(path) - len(seen)
+    deltatime = path.deltatime
     assert len(set(ends[deltatime:])) == 1
     return (staticpath, deltatime)
 
@@ -120,7 +123,7 @@ def drawGraph(graph, context):
     recenttasks = [t.taskid for t in currenttasks if t.initTime == context.time-1]
     # print "recent tasks:", recenttasks
     elementswithrecenttasks = [e for e in graph.elements if set([t.taskid for t in e.savedTasks]).intersection(recenttasks)]
-    # print "elements with recent tasks:", elementswithrecenttasks
+    # print "elementlist with recent tasks:", elementswithrecenttasks
 
     section2pointsdict = {1: [(0, 1), (0.866, 0.5)], 2: [(0.866, 0.5), (0.866, -0.5)], 3: [(0.866, -0.5), (0, -1)], 4: [(0, -1), (-0.866, -0.5)], 5: [(-0.866, -0.5), (-0.866, 0.5)], 6: [(-0.866, 0.5), (0, 1)]}
 
@@ -145,7 +148,7 @@ def drawGraph(graph, context):
     nx.draw_networkx_nodes(G, pos, nodelist=[n for n in nodes if 'GS' not in n and not nameselementdict[n].savedTasks],
                            node_color='g', node_size=100)
 
-    # nx.draw_networkx_nodes(G, pos, nodelist=[n for n in nodes if 'GS' not in n and 'LE' in sec[n]], node_color='g', node_size=100)
+    # nx.draw_networkx_nodes(Graph, pos, nodelist=[n for n in nodes if 'GS' not in n and 'LE' in sec[n]], node_color='g', node_size=100)
 
     nx.draw_networkx_nodes(G, pos, nodelist=[n for n in nodes if 'GS' in n], node_color='b', node_size=100)
 
@@ -154,7 +157,7 @@ def drawGraph(graph, context):
         fillBetween3Points(*ps)
 
     nx.draw_networkx_edges(G, pos, edgelist=list(alltuples))
-    # nx.draw_networkx_edges(G, pos)
+    # nx.draw_networkx_edges(Graph, pos)
     nx.draw_networkx_labels(G, labelpos, labels, font_size=8)
 
     plt.xticks([])
@@ -204,5 +207,41 @@ def drawGraphs(graph):
         # ax.set_title('Graph:'+str(j))
         # print j, graph.shortestPathes[j]
 
-    # plt.savefig("Networks_elements%d_.png"%len(graph.elements), bbox_inches='tight')
+    # plt.savefig("Networks_elements%d_.png"%len(graph.elementlist), bbox_inches='tight')
     plt.show()
+
+
+def bfs_paths(G, source, destination):
+    queue = [(source, [source])]
+    while queue:
+        v, path = queue.pop(0)
+        for next in set(G.neighbors(v)) - set(path):
+            if next == destination:
+                yield path + [next]
+            else:
+                queue.append((next, path + [next]))
+
+def findAllPaths(G, sources, destinations):
+    allpathes = []
+    for s in sources:
+        for d in destinations:
+            allpathes.extend(bfs_paths(G, s, d))
+
+    return allpathes
+
+# nodes = range(1,12)
+# edges = [(1,7), (4,7), (4,2), (6,2), (4,7), (7,3), (7,5), (2,5), (2,8), (3,11), (3,9), (5,11), (5,9), (8,9), (8,10)]
+# sources = [1, 4, 6]
+# destinations = [9, 10, 11]
+#
+# Graph = nx.DiGraph()
+# Graph.add_nodes_from(nodes)
+# Graph.add_edges_from(edges)
+#
+# # for s in sources:
+# #     print s
+# #     gen = findAllPaths(Graph, [s], destinations)
+# #     print gen
+#
+#
+# print findAllPathes(Graph, sources, destinations)
