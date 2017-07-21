@@ -141,9 +141,9 @@ def queryCase(dbHost, dbPort, dbName, elements, numPlayers, initialCash, numTurn
     if doc is None:
         # db.results.remove(query) #this is temporary, should be removed afterwards
         doc = db.results.find_one(query)
-        # if doc:
-            # print("Found in DB", doc['results'])
-            # print(doc)
+        if doc:
+            print("Found in DB,elements, storage, sgl, isl, results: ")
+            print([len(doc['elementlist'])]+[doc[k] for k in ['storagePenalty','costSGL', 'costISL', 'results']])
         if doc is None:
             results = executeCase(elements, numPlayers, initialCash, numTurns, seed, ops, fops)
 
@@ -158,6 +158,8 @@ def queryCase(dbHost, dbPort, dbName, elements, numPlayers, initialCash, numTurn
                    u'results': json.dumps(results),
                     }
             # print("Not Found in DB", doc['results'])
+            print("Not in DB,elements, storage, sgl, isl, results: ")
+            print([len(doc['elementlist'].split(' '))] + [doc[k] for k in ['storagePenalty', 'costSGL', 'costISL', 'results']])
             db.results.insert_one(doc)
 
         if dbName is not None:

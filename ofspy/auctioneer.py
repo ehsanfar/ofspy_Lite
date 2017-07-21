@@ -71,7 +71,7 @@ class Auctioneer():
 
 
         if self.currenttasks:
-            print('new tasks:', [t.taskid for t in self.currenttasks])
+            # print('new tasks:', [t.taskid for t in self.currenttasks])
             pathbundle = self.runAuction(self.currenttasks)
             tasklist = [p.task for p in pathbundle.pathlist]
             for task in tasklist:

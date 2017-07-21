@@ -2,6 +2,8 @@ import re
 from collections import defaultdict
 from .bundle import PathBundle
 import itertools
+import time
+from .generalFunctions import returnCompatiblePaths
 
 class Auction():
     def __init__(self, auctioneer, time, taskslist):
@@ -44,9 +46,10 @@ class Auction():
             path.updateBid(linkbids)
             # print("all tasks:", [t.taskid for t in self.tasklist])
             for taskid in [t.taskid for t in self.tasklist]:
-
                 if self.taskDict[taskid].elementOwner.name == path.elementOwner.name:
                     self.taskPathDict[taskid].append(path)
+
+        # print("tasksPathDict:", [v for v in self.taskPathDict.values()], [len(set(v)) for v in self.taskPathDict.values()])
 
 
     def findBestBundle(self, compatiblebundles = []):
@@ -88,63 +91,100 @@ class Auction():
         return True
 
     def findCompatiblePaths(self):
-        # print("Compatible paths: tasks:", [(t, len(p)) for t, p in self.taskPathDict.items()])
-        all_paths = list(self.taskPathDict.items())
-        # print("Update compatible bundles: all paths:", all_paths)
-        # print("All paths:", self.pathdict)
-        taskpathgenerator = self.uniquePermutations(all_paths)
-        # print("find compatible, length of products:", len(taskpathgenerator))
-        possible_bundles = []
-        for taskids, paths in taskpathgenerator:
-            print("tasks id:", taskids, len(paths))
-            if self.checkPathCombinations(paths):
-                possible_bundles.append(PathBundle(tuple([self.taskDict[id] for id in taskids]), paths))
-        # possible_bundles = [PathBundle([self.taskDict[id] for id in taskids], paths) for taskids, paths in taskpathgenerator if self.checkPathCombinations(paths)]
-        # print
-        # print("Auctioneer: possible path combinations:", [p.pathlist for p in possible_bundles])
-        print("Length of possible bundles:", len(possible_bundles))
-        # print([t.length for t in possible_bundles])
-        self.compatibleBundles = possible_bundles
+        # # print("Compatible paths: tasks:", [(t, len(p)) for t, p in self.taskPathDict.items()])
+        taskspaths = list(self.taskPathDict.items())
+        # # print("Update compatible bundles: all paths:", all_paths)
+        # # print("All paths:", self.pathdict)
+        # print("length of all paths:", [len(e[1]) for e in all_paths])
+        # taskspaths = [(t, p) for t, p in all_paths]
+        # taskpathgenerator = self.uniquePermutations(pathindex)
+        # print("length of all products",len(list(taskpathgenerator)))
+        # # print("find compatible, length of products:", len(taskpathgenerator))
+        # possible_bundles = []
+        # j = 0
+        # for taskids, paths in taskpathgenerator:
+        #     j += 1
+        #     # print("tasks id:", taskids, len(paths))
+        #     checktime1 = time.time()
+        #     check = self.checkPathCombinations(paths)
+        #     checktime2 = time.time()
+        #     if check:
+        #         possible_bundles.append(PathBundle(tuple([self.taskDict[id] for id in taskids]), paths))
+        #     checktime3 = time.time()
+        #     print("time differences: 1 , 2 :", checktime2 - checktime1, checktime3 - checktime2, j)
+        # # possible_bundles = [PathBundle([self.taskDict[id] for id in taskids], paths) for taskids, paths in taskpathgenerator if self.checkPathCombinations(paths)]
+        # # print
+        # # print("Auctioneer: possible path combinations:", [p.pathlist for p in possible_bundles])
+        # print("Length of possible bundles:", len(possible_bundles))
+        # # print([t.length for t in possible_bundles])
+
+        self.compatibleBundles = list(self.returnFeasibleBundles(taskspaths))
         # return possible_bundles
 
-    def checkPathCombinations(self, plist):
-        self.auctioneer.timeOccupiedLinkDict = {t: v for t, v in self.auctioneer.timeOccupiedLinkDict.items() if t>=self.time}
-        # print("time:", self.time)
-        # print("Check compatible: ", self.auctioneer.timeOccupiedLinkDict.keys())
-        alledges = set([a for alllinks in self.auctioneer.timeOccupiedLinkDict.values() for a in alllinks])
-        # print("check path combination:", [p.nodelist for p in pathlist])
-        for path in plist:
-            newlinks = set(path.linklist)
-            # print("new edges:", newedges)
-            intersection = alledges.intersection(newlinks)
-            # print("intersection:", intersection)
-            if intersection:
-                # print(False)
-                return False
+    # def checkPathCombinations(self, plist):
+    #     self.auctioneer.timeOccupiedLinkDict = {t: v for t, v in self.auctioneer.timeOccupiedLinkDict.items() if t>=self.time}
+    #     # print("time:", self.time)
+    #     # print("Check compatible: ", self.auctioneer.timeOccupiedLinkDict.keys())
+    #     alledges = set([a for alllinks in self.auctioneer.timeOccupiedLinkDict.values() for a in alllinks])
+    #     # print("all edges:", alledges)
+    #     # print("check path combination:", [p.nodelist for p in pathlist])
+    #     for path in plist:
+    #         newlinks = set(path.linklist)
+    #         # print("new edges:", newedges)
+    #         intersection = alledges.intersection(newlinks)
+    #         # print("intersection:", intersection)
+    #         if intersection:
+    #             # print(False)
+    #             return False
+    #
+    #         alledges = alledges.union(newlinks)
+    #     # print(True)
+    #     return True
+    #
+    # def uniquePermutations(self, taskpathindices):
+    #     # print("task paths size:", [len(tp[1]) for tp in taskpathindices])
+    #     # print("taskpathlist:", taskpathlist)
+    #     # print("uniquePermulations:", [[p.nodelist for p in pathlist] for pathlist in taskpathlist])
+    #     taskpathlist = [tp for tp in taskpathindices if tp[1]]
+    #     ntasks = len(taskpathlist)
+    #     permutations = []
+    #     combinations =  []
+    #     for n in range(1,ntasks+1):
+    #         tempcombinations = itertools.combinations(range(ntasks), n)
+    #         combinations += list(tempcombinations)
+    #
+    #     for c in combinations:
+    #         tasks = [taskpathindices[i][0] for i in c]
+    #         pathindeces = [taskpathindices[i][1] for i in c]
+    #         # print("newlist:", newlist)
+    #         indexproducts = itertools.product(*pathindeces)
+    #         # print("Permutations:", [p.nodelist for p in list(tempproducts)])
+    #         for indexes in indexproducts:
+    #             yield tasks, indexes
+    #         # permutations.append((tasks, indexproducts))
 
-            alledges = alledges.union(newlinks)
-        # print(True)
-        return True
-
-    def uniquePermutations(self, taskpathlist):
-        # print("taskpathlist:", taskpathlist)
-        # print("uniquePermulations:", [[p.nodelist for p in pathlist] for pathlist in taskpathlist])
-        taskpathlist = [tp for tp in taskpathlist if tp[1]]
-        ntasks = len(taskpathlist)
-        permutations = []
+    def returnFeasibleBundles(self, taskspaths):
+        tlist = [tp[0] for tp in taskspaths]
+        plist = [tp[1] for tp in taskspaths]
+        ntasks = len(plist)
         combinations =  []
         for n in range(1,ntasks+1):
             tempcombinations = itertools.combinations(range(ntasks), n)
             combinations += list(tempcombinations)
 
         for c in combinations:
-            tasks = [taskpathlist[i][0] for i in c]
-            paths = [taskpathlist[i][1] for i in c]
-            # print("newlist:", newlist)
-            pathproducts = itertools.product(*paths)
-            # print("Permutations:", [p.nodelist for p in list(tempproducts)])
-            for paths in pathproducts:
-                yield tasks, paths
+            # print(c)
+            taskcomblist = [tlist[i] for i in c]
+            pathcomblist = [plist[i] for i in c]
+            # linkset = set([])
+            for comb in returnCompatiblePaths(pathcomblist):
+                # print(c)
+                yield PathBundle(tuple([self.taskDict[id] for id in taskcomblist]), comb)
+
+
+
+
+        # return permutations
         # print("Unique products:", )
 
         #     tempdict = self.updatePathFederateBundleDict(path)

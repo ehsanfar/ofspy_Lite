@@ -84,6 +84,6 @@ class Path():
             return self.nodelist < other.nodelist
 
     def __hash__(self):
-        return hash(tuple(len(self.nodelist), self.nodelist))
+        return hash(tuple(self.nodelist))
 
 

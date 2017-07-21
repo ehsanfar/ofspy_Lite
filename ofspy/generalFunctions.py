@@ -229,6 +229,65 @@ def findAllPaths(G, sources, destinations):
 
     return allpathes
 
+
+# class Path():
+#     def __init__(self, l):
+#         self.linklist = l
+
+def returnCompatiblePaths(pathlist):
+    # for path in pathlist[0]
+    if pathlist:
+        queue = [(0, [], set([]))]
+        while queue:
+            n, histpath, s = queue.pop(0)
+            # print("length of pathlist and n:", len(pathlist), n)
+            # if n == len(pathlist) - 1:
+            #     yield histpath
+            # else:
+            nextpaths = [path for path in pathlist[n] if not s.intersection(set(path.linklist))]
+            for np in nextpaths:
+                if n == len(pathlist)-1:
+                    yield histpath + [np]
+                else:
+                    s = s.union(set(np.linklist))
+                    queue.append((n, histpath + [np], s))
+    yield []
+
+    #
+    # for path in pathlist[0]:
+    #     print(path)
+    #     tempset = set(path.linklist)
+    #     print("Linkset and temp set:", linkset, tempset)
+    #     inter = linkset.intersection(tempset)
+    #     print(inter)
+    #     if inter:
+    #         continue
+    #     else:
+    #         nextset = linkset.union(tempset)
+    #         print("nextset:", nextset)
+    #         print("length:", len(pathlist))
+    #         if len(pathlist)>1:
+    #
+    #             yield returnCompatiblePaths(pathlist[1:], nextset, histpath + [path])
+    #         else:
+    #             yield histpath + [path]
+
+# l1 = [(1,2), (2,3), (3,4)]
+# l2 = [(2,4), (4,9)]
+# l3 = [(1,3), (3,4), (4,5)]
+#
+#
+# p1 = Path(l1)
+# p2 = Path(l2)
+# p3 = Path(l3)
+# p4 = Path([(1,4),(5,6)])
+#
+# gen = returnCompatiblePaths([[p1, p2, p3, p4], [p1, p2, p3, p4],[p1, p2, p3, p4]])
+#
+# print(gen)
+# for g in gen:
+#     print(g)
+
 # nodes = range(1,12)
 # edges = [(1,7), (4,7), (4,2), (6,2), (4,7), (7,3), (7,5), (2,5), (2,8), (3,11), (3,9), (5,11), (5,9), (8,9), (8,10)]
 # sources = [1, 4, 6]
