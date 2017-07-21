@@ -139,7 +139,7 @@ def queryCase(dbHost, dbPort, dbName, elements, numPlayers, initialCash, numTurn
     if dbName is not None:
         doc = db[dbName].find_one(query)
     if doc is None:
-        # db.results.remove(query) #this is temporary, should be removed afterwards
+        db.results.remove(query) #this is temporary, should be removed afterwards
         doc = db.results.find_one(query)
         if doc:
             print("Found in DB,elements, storage, sgl, isl, results: ")
@@ -194,9 +194,9 @@ def executeCase(elements, numPlayers, initialCash, numTurns, seed, ops, fops):
 
 
 def fopsGen():
-    costSGLList = list(range(0, 1001, 100))
+    costSGLList = list(range(100, 1001, 100))
     # costISLList = [c/2. for c in costSGLList]
-    storagePenalty = list(range(0, 1001, 200))+[-1]
+    storagePenalty = list(range(100, 1001, 200))+[-1]
     for sgl in costSGLList:
         for s in storagePenalty:
             yield "x%d,%d,%d"%(sgl, sgl, s)

@@ -96,15 +96,35 @@ class ElementG():
             # print(name1, name2)
             self.Graph.add_edge(name1, name2, weight= s)
 
-    def updateGraph(self, taskvaluelist):
+    def updateGraph(self, context, taskvaluelist):
         self.storagePenalty = deque(self.elementOwner.federateOwner.getStorageCostList(taskvaluelist, self.elementOwner.section))
         torder = self.elementOwner.federateOwner.time%6
         self.storagePenalty.rotate(-torder)
+        # print(self.storagePenalty)
+
+
+        edges = self.Graph.edges()
+        fedname = self.elementOwner.federateOwner.name
+        for e1, e2 in edges:
+            fname = re.search(r'.+\.(F\d)\..+', e2).group(1)
+            if fedname == fname:
+                self.Graph[e1][e2]['weight'] = 0.
+            elif 'GS' in e2:
+                self.Graph[e1][e2]['weight'] = context.auctioneer.costSGLDict[fname]
+            else:
+                self.Graph[e1][e2]['weight'] = context.auctioneer.costISLDict[fname]
+
         for i, s in enumerate(self.storagePenalty):
             name1 = '%s.%d'%(self.elementOwner.name, i%6)
             name2 = '%s.%d'%(self.elementOwner.name, (i+1)%6)
             # print name1, name2, s
             self.Graph[name1][name2]['weight'] = s
+
+        # edges = self.Graph.edges()
+        # print(context.auctioneer.costSGLDict, context.auctioneer.costISLDict)
+        # for e in edges:
+        #     print("edge data:", self.elementOwner.federateOwner.name, e, self.Graph.get_edge_data(*e))
+
 
     def bfs_paths(self, source, destination):
         q = [(source, [source])]

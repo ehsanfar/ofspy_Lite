@@ -5,6 +5,9 @@
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/bin/ofsLite.py" afterPath="$PROJECT_DIR$/bin/ofsLite.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/ofspy/auction.py" afterPath="$PROJECT_DIR$/ofspy/auction.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/ofspy/auctioneer.py" afterPath="$PROJECT_DIR$/ofspy/auctioneer.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/ofspy/bundle.py" afterPath="$PROJECT_DIR$/ofspy/bundle.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/ofspy/elementLite.py" afterPath="$PROJECT_DIR$/ofspy/elementLite.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/ofspy/federateLite.py" afterPath="$PROJECT_DIR$/ofspy/federateLite.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/ofspy/generalFunctions.py" afterPath="$PROJECT_DIR$/ofspy/generalFunctions.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/ofspy/path.py" afterPath="$PROJECT_DIR$/ofspy/path.py" />
     </list>
@@ -21,11 +24,11 @@
   <component name="ExecutionTargetManager" SELECTED_TARGET="default_target" />
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file leaf-file-name="ofsLite.py" pinned="false" current-in-tab="true">
+      <file leaf-file-name="ofsLite.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/bin/ofsLite.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="131">
-              <caret line="142" column="36" lean-forward="true" selection-start-line="142" selection-start-column="36" selection-end-line="142" selection-end-column="36" />
+            <state relative-caret-position="440">
+              <caret line="142" column="32" lean-forward="false" selection-start-line="142" selection-start-column="32" selection-end-line="142" selection-end-column="32" />
               <folding />
             </state>
           </provider>
@@ -34,8 +37,8 @@
       <file leaf-file-name="elementLite.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/ofspy/elementLite.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="2415">
-              <caret line="161" column="0" lean-forward="false" selection-start-line="161" selection-start-column="0" selection-end-line="161" selection-end-column="0" />
+            <state relative-caret-position="185">
+              <caret line="160" column="75" lean-forward="false" selection-start-line="160" selection-start-column="75" selection-end-line="160" selection-end-column="75" />
               <folding>
                 <element signature="e#27#36#0" expanded="true" />
               </folding>
@@ -46,8 +49,8 @@
       <file leaf-file-name="federateLite.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/ofspy/federateLite.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="1695">
-              <caret line="113" column="30" lean-forward="false" selection-start-line="113" selection-start-column="30" selection-end-line="113" selection-end-column="30" />
+            <state relative-caret-position="47">
+              <caret line="96" column="17" lean-forward="true" selection-start-line="96" selection-start-column="17" selection-end-line="96" selection-end-column="17" />
               <folding>
                 <element signature="e#0#9#0" expanded="true" />
               </folding>
@@ -55,13 +58,13 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="auctioneer.py" pinned="false" current-in-tab="false">
+      <file leaf-file-name="auctioneer.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/ofspy/auctioneer.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="837">
-              <caret line="74" column="59" lean-forward="true" selection-start-line="74" selection-start-column="59" selection-end-line="74" selection-end-column="59" />
+            <state relative-caret-position="321">
+              <caret line="83" column="34" lean-forward="false" selection-start-line="83" selection-start-column="34" selection-end-line="83" selection-end-column="34" />
               <folding>
-                <element signature="e#0#46#0" expanded="true" />
+                <element signature="e#0#81#0" expanded="true" />
               </folding>
             </state>
           </provider>
@@ -70,11 +73,11 @@
       <file leaf-file-name="generalFunctions.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/ofspy/generalFunctions.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="395">
-              <caret line="240" column="20" lean-forward="true" selection-start-line="240" selection-start-column="20" selection-end-line="240" selection-end-column="20" />
+            <state relative-caret-position="-3399">
+              <caret line="5" column="0" lean-forward="false" selection-start-line="5" selection-start-column="0" selection-end-line="5" selection-end-column="0" />
               <folding>
                 <element signature="e#0#31#0" expanded="true" />
-                <marker date="1500600486000" expanded="true" signature="3012:4627" ph="..." />
+                <marker date="1500614834000" expanded="true" signature="3045:4660" ph="..." />
               </folding>
             </state>
           </provider>
@@ -83,8 +86,8 @@
       <file leaf-file-name="auction.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/ofspy/auction.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="2640">
-              <caret line="176" column="22" lean-forward="false" selection-start-line="176" selection-start-column="22" selection-end-line="176" selection-end-column="22" />
+            <state relative-caret-position="50">
+              <caret line="46" column="37" lean-forward="true" selection-start-line="46" selection-start-column="37" selection-end-line="46" selection-end-column="37" />
               <folding>
                 <element signature="e#0#9#0" expanded="true" />
               </folding>
@@ -95,20 +98,20 @@
       <file leaf-file-name="bundle.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/ofspy/bundle.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="179">
-              <caret line="81" column="44" lean-forward="false" selection-start-line="81" selection-start-column="44" selection-end-line="81" selection-end-column="44" />
+            <state relative-caret-position="256">
+              <caret line="89" column="29" lean-forward="true" selection-start-line="89" selection-start-column="29" selection-end-line="89" selection-end-column="29" />
               <folding />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="contextLite.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/ofspy/contextLite.py">
+      <file leaf-file-name="graph.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/ofspy/graph.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="870">
-              <caret line="58" column="24" lean-forward="false" selection-start-line="58" selection-start-column="18" selection-end-line="58" selection-end-column="24" />
+            <state relative-caret-position="384">
+              <caret line="122" column="0" lean-forward="false" selection-start-line="122" selection-start-column="0" selection-end-line="125" selection-end-column="104" />
               <folding>
-                <element signature="e#0#13#0" expanded="true" />
+                <element signature="e#0#21#0" expanded="true" />
               </folding>
             </state>
           </provider>
@@ -117,7 +120,7 @@
       <file leaf-file-name="task.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/ofspy/task.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="627">
+            <state relative-caret-position="675">
               <caret line="45" column="27" lean-forward="false" selection-start-line="45" selection-start-column="27" selection-end-line="45" selection-end-column="27" />
               <folding />
             </state>
@@ -127,11 +130,9 @@
       <file leaf-file-name="path.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/ofspy/path.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="1290">
-              <caret line="86" column="40" lean-forward="false" selection-start-line="86" selection-start-column="40" selection-end-line="86" selection-end-column="40" />
-              <folding>
-                <element signature="e#0#30#0" expanded="true" />
-              </folding>
+            <state relative-caret-position="0">
+              <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+              <folding />
             </state>
           </provider>
         </entry>
@@ -147,8 +148,6 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>context</find>
-      <find>elements with</find>
       <find>self.federateOwner.time</find>
       <find>Feder</find>
       <find>Que</find>
@@ -173,10 +172,12 @@
       <find>execute</find>
       <find>pickupOppo</find>
       <find>self.federate</find>
-      <find>print(</find>
       <find>print</find>
       <find>self.taskPathDict</find>
       <find>tasksPathDict</find>
+      <find>print(</find>
+      <find>check</find>
+      <find>elementG</find>
     </findStrings>
     <replaceStrings>
       <replace>graph.</replace>
@@ -196,16 +197,16 @@
         <option value="$PROJECT_DIR$/ofspy/Graph.py" />
         <option value="$PROJECT_DIR$/ofspy/node.py" />
         <option value="$PROJECT_DIR$/ofspy/ofsLite.py" />
-        <option value="$PROJECT_DIR$/ofspy/graph.py" />
         <option value="$PROJECT_DIR$/ofspy/contextLite.py" />
-        <option value="$PROJECT_DIR$/ofspy/bundle.py" />
         <option value="$PROJECT_DIR$/ofspy/task.py" />
-        <option value="$PROJECT_DIR$/ofspy/elementLite.py" />
-        <option value="$PROJECT_DIR$/ofspy/federateLite.py" />
-        <option value="$PROJECT_DIR$/ofspy/path.py" />
         <option value="$PROJECT_DIR$/ofspy/generalFunctions.py" />
-        <option value="$PROJECT_DIR$/ofspy/auction.py" />
+        <option value="$PROJECT_DIR$/ofspy/path.py" />
+        <option value="$PROJECT_DIR$/ofspy/federateLite.py" />
+        <option value="$PROJECT_DIR$/ofspy/bundle.py" />
         <option value="$PROJECT_DIR$/ofspy/auctioneer.py" />
+        <option value="$PROJECT_DIR$/ofspy/elementLite.py" />
+        <option value="$PROJECT_DIR$/ofspy/graph.py" />
+        <option value="$PROJECT_DIR$/ofspy/auction.py" />
         <option value="$PROJECT_DIR$/bin/ofsLite.py" />
       </list>
     </option>
@@ -430,6 +431,7 @@
       <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.1981402" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="true" content_ui="tabs" />
+      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32831737" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Python Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
@@ -443,7 +445,6 @@
       <window_info id="Commander" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Inspection" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
       <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="2" side_tool="false" content_ui="combo" />
-      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.32831737" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
     </layout>
   </component>
@@ -472,7 +473,7 @@
         <state relative-caret-position="1350">
           <caret line="97" column="30" lean-forward="false" selection-start-line="97" selection-start-column="30" selection-end-line="97" selection-end-column="30" />
           <folding>
-            <element signature="e#0#13#0" expanded="true" />
+            <element signature="e#0#13#0" expanded="false" />
           </folding>
         </state>
       </provider>
@@ -508,9 +509,6 @@
           <caret line="196" column="0" lean-forward="true" selection-start-line="196" selection-start-column="0" selection-end-line="196" selection-end-column="0" />
           <folding>
             <element signature="e#0#21#0" expanded="true" />
-            <marker date="1500510158000" expanded="true" signature="296:344" ph="..." />
-            <marker date="1500510158000" expanded="true" signature="329:344" ph="..." />
-            <marker date="1500510158000" expanded="true" signature="7101:7112" ph="..." />
           </folding>
         </state>
       </provider>
@@ -559,7 +557,7 @@
         <state relative-caret-position="675">
           <caret line="52" column="0" lean-forward="true" selection-start-line="52" selection-start-column="0" selection-end-line="52" selection-end-column="0" />
           <folding>
-            <element signature="e#0#13#0" expanded="true" />
+            <element signature="e#0#13#0" expanded="false" />
           </folding>
         </state>
       </provider>
@@ -586,9 +584,6 @@
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
             <element signature="e#0#21#0" expanded="true" />
-            <marker date="1500510158000" expanded="true" signature="296:344" ph="..." />
-            <marker date="1500510158000" expanded="true" signature="329:344" ph="..." />
-            <marker date="1500510158000" expanded="true" signature="7101:7112" ph="..." />
           </folding>
         </state>
       </provider>
@@ -617,7 +612,7 @@
         <state relative-caret-position="0">
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
-            <element signature="e#0#13#0" expanded="true" />
+            <element signature="e#0#13#0" expanded="false" />
           </folding>
         </state>
       </provider>
@@ -645,9 +640,6 @@
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
             <element signature="e#0#21#0" expanded="true" />
-            <marker date="1500510158000" expanded="true" signature="296:344" ph="..." />
-            <marker date="1500510158000" expanded="true" signature="329:344" ph="..." />
-            <marker date="1500510158000" expanded="true" signature="7101:7112" ph="..." />
           </folding>
         </state>
       </provider>
@@ -676,7 +668,7 @@
         <state relative-caret-position="0">
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
-            <element signature="e#0#13#0" expanded="true" />
+            <element signature="e#0#13#0" expanded="false" />
           </folding>
         </state>
       </provider>
@@ -704,9 +696,6 @@
           <caret line="187" column="21" lean-forward="false" selection-start-line="187" selection-start-column="21" selection-end-line="187" selection-end-column="21" />
           <folding>
             <element signature="e#0#21#0" expanded="true" />
-            <marker date="1500510158000" expanded="true" signature="296:344" ph="..." />
-            <marker date="1500510158000" expanded="true" signature="329:344" ph="..." />
-            <marker date="1500510158000" expanded="true" signature="7101:7112" ph="..." />
           </folding>
         </state>
       </provider>
@@ -727,6 +716,7 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="75">
           <caret line="5" column="26" lean-forward="false" selection-start-line="5" selection-start-column="26" selection-end-line="5" selection-end-column="26" />
+          <folding />
         </state>
       </provider>
     </entry>
@@ -745,90 +735,93 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/ofspy/graph.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="435">
-          <caret line="134" column="103" lean-forward="false" selection-start-line="134" selection-start-column="103" selection-end-line="134" selection-end-column="103" />
-          <folding>
-            <element signature="e#0#21#0" expanded="true" />
-            <marker date="1500510158000" expanded="true" signature="296:344" ph="..." />
-            <marker date="1500510158000" expanded="true" signature="329:344" ph="..." />
-            <marker date="1500510158000" expanded="true" signature="7101:7112" ph="..." />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/ofspy/elementLite.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="2415">
-          <caret line="161" column="0" lean-forward="false" selection-start-line="161" selection-start-column="0" selection-end-line="161" selection-end-column="0" />
-          <folding>
-            <element signature="e#27#36#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/ofspy/contextLite.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="870">
           <caret line="58" column="24" lean-forward="false" selection-start-line="58" selection-start-column="18" selection-end-line="58" selection-end-column="24" />
           <folding>
-            <element signature="e#0#13#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/ofspy/federateLite.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1695">
-          <caret line="113" column="30" lean-forward="false" selection-start-line="113" selection-start-column="30" selection-end-line="113" selection-end-column="30" />
-          <folding>
-            <element signature="e#0#9#0" expanded="true" />
+            <element signature="e#0#13#0" expanded="false" />
           </folding>
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/ofspy/task.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="627">
+        <state relative-caret-position="675">
           <caret line="45" column="27" lean-forward="false" selection-start-line="45" selection-start-column="27" selection-end-line="45" selection-end-column="27" />
           <folding />
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/ofspy/federateLite.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="47">
+          <caret line="96" column="17" lean-forward="true" selection-start-line="96" selection-start-column="17" selection-end-line="96" selection-end-column="17" />
+          <folding>
+            <element signature="e#0#9#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/ofspy/generalFunctions.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-3399">
+          <caret line="5" column="0" lean-forward="false" selection-start-line="5" selection-start-column="0" selection-end-line="5" selection-end-column="0" />
+          <folding>
+            <element signature="e#0#31#0" expanded="true" />
+            <marker date="1500614834000" expanded="true" signature="3045:4660" ph="..." />
+          </folding>
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/ofspy/path.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1290">
-          <caret line="86" column="40" lean-forward="false" selection-start-line="86" selection-start-column="40" selection-end-line="86" selection-end-column="40" />
+        <state relative-caret-position="0">
+          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/ofspy/elementLite.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="185">
+          <caret line="160" column="75" lean-forward="false" selection-start-line="160" selection-start-column="75" selection-end-line="160" selection-end-column="75" />
           <folding>
-            <element signature="e#0#30#0" expanded="true" />
+            <element signature="e#27#36#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/ofspy/bundle.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="179">
-          <caret line="81" column="44" lean-forward="false" selection-start-line="81" selection-start-column="44" selection-end-line="81" selection-end-column="44" />
+        <state relative-caret-position="256">
+          <caret line="89" column="29" lean-forward="true" selection-start-line="89" selection-start-column="29" selection-end-line="89" selection-end-column="29" />
           <folding />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/ofspy/generalFunctions.py">
+    <entry file="file://$PROJECT_DIR$/ofspy/graph.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="395">
-          <caret line="240" column="20" lean-forward="true" selection-start-line="240" selection-start-column="20" selection-end-line="240" selection-end-column="20" />
+        <state relative-caret-position="384">
+          <caret line="122" column="0" lean-forward="false" selection-start-line="122" selection-start-column="0" selection-end-line="125" selection-end-column="104" />
           <folding>
-            <element signature="e#0#31#0" expanded="true" />
-            <marker date="1500600486000" expanded="true" signature="3012:4627" ph="..." />
+            <element signature="e#0#21#0" expanded="true" />
           </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/bin/ofsLite.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="440">
+          <caret line="142" column="32" lean-forward="false" selection-start-line="142" selection-start-column="32" selection-end-line="142" selection-end-column="32" />
+          <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/ofspy/auction.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="2640">
-          <caret line="176" column="22" lean-forward="false" selection-start-line="176" selection-start-column="22" selection-end-line="176" selection-end-column="22" />
+        <state relative-caret-position="50">
+          <caret line="46" column="37" lean-forward="true" selection-start-line="46" selection-start-column="37" selection-end-line="46" selection-end-column="37" />
           <folding>
             <element signature="e#0#9#0" expanded="true" />
           </folding>
@@ -837,19 +830,11 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/ofspy/auctioneer.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="837">
-          <caret line="74" column="59" lean-forward="true" selection-start-line="74" selection-start-column="59" selection-end-line="74" selection-end-column="59" />
+        <state relative-caret-position="321">
+          <caret line="83" column="34" lean-forward="false" selection-start-line="83" selection-start-column="34" selection-end-line="83" selection-end-column="34" />
           <folding>
-            <element signature="e#0#46#0" expanded="true" />
+            <element signature="e#0#81#0" expanded="true" />
           </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/bin/ofsLite.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="131">
-          <caret line="142" column="36" lean-forward="true" selection-start-line="142" selection-start-column="36" selection-end-line="142" selection-end-column="36" />
-          <folding />
         </state>
       </provider>
     </entry>

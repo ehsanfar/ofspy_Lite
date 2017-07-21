@@ -33,50 +33,63 @@ class Auction():
         self.pathlist = [e for l in self.pathlist for e in l]
         # print("pathlist:", self.pathlist)
         for path in self.pathlist:
+            elementOwner = path.elementOwner
             ownername = path.elementOwner.federateOwner.name
             linkbids = []
             for link in path.linklist:
                 fname = re.search(r'.+\.(F\d)\..+', link[1]).group(1)
                 if fname == ownername:
-                    cost = 0.
+                    cost = elementOwner.elementG.Graph[link[0]][link[1]]['weight']
+                    # print(elementOwner.name, link, cost)
                 else:
                     cost = self.auctioneer.costSGLDict[fname] if 'GS' in link[1] else self.auctioneer.costISLDict[fname]
 
                 linkbids.append(cost)
             path.updateBid(linkbids)
             # print("all tasks:", [t.taskid for t in self.tasklist])
-            for taskid in [t.taskid for t in self.tasklist]:
-                if self.taskDict[taskid].elementOwner.name == path.elementOwner.name:
-                    self.taskPathDict[taskid].append(path)
+            for task in self.tasklist:
+                if task.elementOwner.name == path.elementOwner.name:
+                    if path.pathBid < task.getValue(task.initTime + path.deltatime):
+                        self.taskPathDict[task.taskid].append(path)
 
-        # print("tasksPathDict:", [v for v in self.taskPathDict.values()], [len(set(v)) for v in self.taskPathDict.values()])
+        # print("tasksPathDict length:", [len(set(v)) for v in self.taskPathDict.values()])
+        # for taskid in self.taskPathDict:
+        #     for path in self.taskPathDict[taskid]:
+        #         print(path.linklist)
 
 
-    def findBestBundle(self, compatiblebundles = []):
-        if compatiblebundles:
-            possible_bundles = compatiblebundles
+
+    def findBestBundle(self, tasklist = None):
+        # if compatiblebundles:
+        #     possible_bundles = compatiblebundles
+        # else:
+        #     if self.compatibleBundles:
+        #         possible_bundles = self.compatibleBundles
+        #     else:
+        #         self.findCompatiblePaths()
+        #         possible_bundles = self.compatibleBundles
+        #
+        # if not possible_bundles:
+        #     # self.bestPathBundle = None
+        #     return False
+        if tasklist:
+            self.findCompatiblePaths(tasklist)
         else:
-            if self.compatibleBundles:
-                possible_bundles = self.compatibleBundles
-            else:
-                self.findCompatiblePaths()
-                possible_bundles = self.compatibleBundles
+            self.findCompatiblePaths()
 
-        if not possible_bundles:
-            # self.bestPathBundle = None
-            return False
-
+        possible_bundles = self.compatibleBundles
         # print("length of compatible bundles:", len(self.compatibleBundles))
 
         path_bundle_cost = [b.bundleCost for b in possible_bundles]
         path_bundle_revenue = [b.bundleRevenue for b in possible_bundles]
         path_bundle_profit = [x-y for (x,y) in zip(path_bundle_revenue, path_bundle_cost)]
-        # path_bundle_length = [b.length for b in possible_bundles]
+        path_bundle_length = [b.length for b in possible_bundles]
         # print("pathbundle cost:", path_bundle_cost)
-        # sortedcost = sorted(list(zip(path_bundle_cost, path_bundle_length)))
+        # sortedcost = sorted(list(zip(path_bundle_cost, possible_bundles)), reverse = True)
         # print("sorted cost:", sortedcost)
+        # print(sorted(path_bundle_length, reverse = True))
         sorted_revenue = sorted(list(zip(path_bundle_profit, possible_bundles)), reverse = True)
-        # print("sorted revenue:", [(x, [p.nodelist for p in y.pathlist]) for x,y in sorted_revenue[:1]])
+        # print("sorted revenue:", [(x, [p.nodelist for p in y.pathlist]) for x,y in sorted_revenue])
         self.bestPathBundle = sorted_revenue[0][1]
         # print("best path bundle:", self.bestPathBundle)
         for path in self.bestPathBundle.pathlist:
@@ -90,9 +103,11 @@ class Auction():
                 self.auctioneer.updateTimeLinks(time, link)
         return True
 
-    def findCompatiblePaths(self):
+    def findCompatiblePaths(self, tasklist = None):
         # # print("Compatible paths: tasks:", [(t, len(p)) for t, p in self.taskPathDict.items()])
-        taskspaths = list(self.taskPathDict.items())
+        taskPathDict = {t: self.taskPathDict[t] for t in tasklist} if tasklist else self.taskPathDict
+        taskspaths = list(taskPathDict.items())
+        # print("tasks paths:", taskPathDict)
         # # print("Update compatible bundles: all paths:", all_paths)
         # # print("All paths:", self.pathdict)
         # print("length of all paths:", [len(e[1]) for e in all_paths])
@@ -117,7 +132,6 @@ class Auction():
         # # print("Auctioneer: possible path combinations:", [p.pathlist for p in possible_bundles])
         # print("Length of possible bundles:", len(possible_bundles))
         # # print([t.length for t in possible_bundles])
-
         self.compatibleBundles = list(self.returnFeasibleBundles(taskspaths))
         # return possible_bundles
 
@@ -166,7 +180,7 @@ class Auction():
     def returnFeasibleBundles(self, taskspaths):
         tlist = [tp[0] for tp in taskspaths]
         plist = [tp[1] for tp in taskspaths]
-        ntasks = len(plist)
+        ntasks = len(taskspaths)
         combinations =  []
         for n in range(1,ntasks+1):
             tempcombinations = itertools.combinations(range(ntasks), n)
@@ -178,8 +192,10 @@ class Auction():
             pathcomblist = [plist[i] for i in c]
             # linkset = set([])
             for comb in returnCompatiblePaths(pathcomblist):
-                # print(c)
-                yield PathBundle(tuple([self.taskDict[id] for id in taskcomblist]), comb)
+                # print(c, comb)
+                bundle = PathBundle(tuple([self.taskDict[id] for id in taskcomblist]), comb)
+                # print("bundle length:", c, len(comb), bundle.length)
+                yield bundle
 
 
 

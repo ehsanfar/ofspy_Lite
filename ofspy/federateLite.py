@@ -1,6 +1,5 @@
 import re
 from .elementLite import Satellite, GroundStation
-from .bundle import UniqueBundle
 
 
 class FederateLite():

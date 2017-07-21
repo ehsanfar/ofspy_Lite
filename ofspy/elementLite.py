@@ -152,11 +152,17 @@ class Satellite(Element):
     def collectTasks(self, context):
         if not self.isGEO():
             # print("Element collect new tasks")
+            # print("new task:", self.federateOwner.name, self.name)
             nextTask = Task(time=self.federateOwner.time, id=context.getTaskid(), federate=self.federateOwner, element=self)
+
             taskvaluelist = [nextTask.getValue(self.federateOwner.time + i, inittime=self.federateOwner.time) for i in
                              range(6)]
             # print("Element tasks value list:", taskvaluelist)
-            self.elementG.updateGraph(taskvaluelist=taskvaluelist)
+            self.elementG.updateGraph(context, taskvaluelist=taskvaluelist)
+
+            edges = self.elementG.Graph.edges()
+
+
             self.federateOwner.pickupOpportunities += 1
             if self.canSave(nextTask):
 
@@ -165,6 +171,7 @@ class Satellite(Element):
         return False
 
     def pickupTask(self, task):
+        # print("pickcup tasks:", self.federateOwner.name, self.name)
         staticpath, deltatime2 = convertPath2StaticPath(task.path)
         self.saveTask(task, deltatime2)
         self.federateOwner.reportPickup(task)

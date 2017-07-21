@@ -1,4 +1,3 @@
-from .bundle import EdgeBundle
 from .generalFunctions import *
 
 class Path():

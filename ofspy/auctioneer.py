@@ -1,6 +1,6 @@
-from .generalFunctions import convertPath2Edge
+from .generalFunctions import convertPath2Edge, returnAvgPathCost, combineBundles
 from .path import Path
-from .bundle import EdgeBundle, PathBundle
+from .bundle import PathBundle
 import itertools
 from .auction import Auction
 from collections import defaultdict
@@ -52,10 +52,26 @@ class Auctioneer():
     #     self.pathlist.append(obj)
 
     def runAuction(self, tasklist):
+        # print(tasklist)
         auction =  Auction(self, self.context.time, tasklist)
         auction.inquirePrice()
-        auction.findBestBundle()
+        # if not auction.taskPathDict:
+        #     return None
+
+        taskcostlist = returnAvgPathCost(auction.taskPathDict)
+        # print(taskcostlist)
+        bundles = []
+        for _, taskid in taskcostlist:
+            # print("taskid:", taskid)
+            auction.findBestBundle([taskid])
+            newbundle = auction.bestPathBundle
+            # print("best bundle path:", newbundle.tasklist, newbundle.pathlist)
+            bundles.append(newbundle)
         # print(auction.bestPathBundle)
+        # print(bundles)
+        alltasks, allpaths = combineBundles(bundles)
+        # print(alltasks, allpaths)
+        auction.bestPathBundle = PathBundle(alltasks, allpaths)
         return auction.bestPathBundle
 
     def initiateAuction(self):
@@ -72,7 +88,9 @@ class Auctioneer():
 
         if self.currenttasks:
             # print('new tasks:', [t.taskid for t in self.currenttasks])
+            # print("current tasks federates:", [t.federateOwner.name for t in self.currenttasks])
             pathbundle = self.runAuction(self.currenttasks)
+            # print("best bundle tasks and federates:", [p.elementOwner.federateOwner.name for p in pathbundle.pathlist])
             tasklist = [p.task for p in pathbundle.pathlist]
             for task in tasklist:
                 element = task.elementOwner

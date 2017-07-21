@@ -3,6 +3,7 @@ import numpy as np
 import networkx as nx
 import re
 import math
+# from .bundle import PathBundle
 
 def checkEqual2(iterator):
    return len(set(iterator)) <= 1
@@ -229,7 +230,7 @@ def findAllPaths(G, sources, destinations):
 
     return allpathes
 
-
+#
 # class Path():
 #     def __init__(self, l):
 #         self.linklist = l
@@ -245,13 +246,33 @@ def returnCompatiblePaths(pathlist):
             #     yield histpath
             # else:
             nextpaths = [path for path in pathlist[n] if not s.intersection(set(path.linklist))]
+            # print("current path, next path:\n", [e.linklist for e in histpath],'\n', [p.linklist for p in nextpaths])
+            # print("set:", s)
+            n += 1
             for np in nextpaths:
-                if n == len(pathlist)-1:
+                # print("new path:", np.linklist)
+                if n == len(pathlist):
                     yield histpath + [np]
                 else:
-                    s = s.union(set(np.linklist))
-                    queue.append((n, histpath + [np], s))
-    yield []
+                    scopy = s.union(set(np.linklist))
+                    queue.append((n, histpath + [np], scopy))
+
+
+def returnAvgPathCost(taskPathDict):
+    tasksumcostnum = [(min([p.pathPrice for p in paths]), len(paths), taskid) for taskid, paths in taskPathDict.items()]
+    # tasksumcostnum = [(min([len(p.nodelist) for p in paths]), len(paths), taskid) for taskid, paths in taskPathDict.items()]
+    avgcosttask = [(x, z) for x,y,z in tasksumcostnum]
+    # print("avg cost task:", avgcosttask)
+    return sorted(avgcosttask)
+
+def combineBundles(bundles):
+    alltasks = []
+    allpaths = []
+    for b in bundles:
+        alltasks.extend(list(b.tasklist))
+        allpaths.extend(list(b.pathlist))
+
+    return alltasks, allpaths
 
     #
     # for path in pathlist[0]:
@@ -274,7 +295,7 @@ def returnCompatiblePaths(pathlist):
 
 # l1 = [(1,2), (2,3), (3,4)]
 # l2 = [(2,4), (4,9)]
-# l3 = [(1,3), (3,4), (4,5)]
+# l3 = [(1,3), (4,5)]
 #
 #
 # p1 = Path(l1)
@@ -283,10 +304,9 @@ def returnCompatiblePaths(pathlist):
 # p4 = Path([(1,4),(5,6)])
 #
 # gen = returnCompatiblePaths([[p1, p2, p3, p4], [p1, p2, p3, p4],[p1, p2, p3, p4]])
-#
-# print(gen)
+# print(len(list(gen)))
 # for g in gen:
-#     print(g)
+#     print([e.linklist for e in g])
 
 # nodes = range(1,12)
 # edges = [(1,7), (4,7), (4,2), (6,2), (4,7), (7,3), (7,5), (2,5), (2,8), (3,11), (3,9), (5,11), (5,9), (8,9), (8,10)]
