@@ -33,6 +33,9 @@ class Auctioneer():
         if time not in self.timeOccupiedLinkDict:
             self.timeOccupiedLinkDict[time] = []
         self.timeOccupiedLinkDict[time].append(link)
+        for t in list(self.timeOccupiedLinkDict.keys()):
+            if t<self.context.time:
+                self.timeOccupiedLinkDict.pop(t)
 
 
     def reset(self):
@@ -55,6 +58,12 @@ class Auctioneer():
         # print(tasklist)
         auction =  Auction(self, self.context.time, tasklist)
         auction.inquirePrice()
+        # print("length of time:", len(auction.taskPathDict))
+        # for t, links in self.timeOccupiedLinkDict.items():
+        #     print("time and links:", t, len(links))
+        #
+        # for t, paths in auction.taskPathDict.items():
+        #     print("time, task, deltatime:",self.context.time, t, [p.deltatime for p in paths], len(paths))
         # if not auction.taskPathDict:
         #     return None
 
@@ -62,35 +71,46 @@ class Auctioneer():
         # print(taskcostlist)
         bundles = []
         for _, taskid in taskcostlist:
+            # print(taskid)
             # print("taskid:", taskid)
             auction.findBestBundle([taskid])
+            # print(self.context.time, self.timeOccupiedLinkDict)
             newbundle = auction.bestPathBundle
+            # for path in newbundle.pathlist:
+                # print(path.nodelist)
             # print("best bundle path:", newbundle.tasklist, newbundle.pathlist)
             bundles.append(newbundle)
         # print(auction.bestPathBundle)
         # print(bundles)
+        # print("bundles path, tasks:", [b.pathlist[0].task.taskid for b in bundles])
         alltasks, allpaths = combineBundles(bundles)
-        # print(alltasks, allpaths)
+        # print([t.taskid for t in alltasks])
+        # print([p.task.taskid for p in allpaths])
         auction.bestPathBundle = PathBundle(alltasks, allpaths)
+        # print(self.context.time)
+        # for path in auction.bestPathBundle.pathlist:
+        #     print(self.context.time, path.nodelist)
+
         return auction.bestPathBundle
 
     def initiateAuction(self):
         self.currenttasks = []
         self.costSGLDict = {f.name: f.getCost('oSGL') for f in self.context.federates}
         self.costISLDict = {f.name: f.getCost('oISL') for f in self.context.federates}
-        # print("elements:", self.context.elements)
+        # print("elements:",[e.name for e in self.context.elements])
         for element in self.context.elements:
             if element.isSpace():
                 newtask = element.collectTasks(self.context)
                 if newtask:
                     self.currenttasks.append(newtask)
 
-
         if self.currenttasks:
             # print('new tasks:', [t.taskid for t in self.currenttasks])
             # print("current tasks federates:", [t.federateOwner.name for t in self.currenttasks])
+            # print("curresnt tasks and owners:", [t.taskid for t in self.currenttasks], [t.elementOwner.name for t in self.currenttasks])
             pathbundle = self.runAuction(self.currenttasks)
             # print("best bundle tasks and federates:", [p.elementOwner.federateOwner.name for p in pathbundle.pathlist])
+            # print("path bundle tasks:", [p.task.taskid for p in pathbundle.pathlist])
             tasklist = [p.task for p in pathbundle.pathlist]
             for task in tasklist:
                 element = task.elementOwner

@@ -36,6 +36,7 @@ class Auction():
             elementOwner = path.elementOwner
             ownername = path.elementOwner.federateOwner.name
             linkbids = []
+
             for link in path.linklist:
                 fname = re.search(r'.+\.(F\d)\..+', link[1]).group(1)
                 if fname == ownername:
@@ -93,6 +94,7 @@ class Auction():
         self.bestPathBundle = sorted_revenue[0][1]
         # print("best path bundle:", self.bestPathBundle)
         for path in self.bestPathBundle.pathlist:
+            # print("path noelsit:", path.nodelist)
             path(next((task for task in self.tasklist if task.elementOwner.name == path.elementOwner.name)))
             path.task.updatePath(path)
             # path.updateTime()

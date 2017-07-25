@@ -60,6 +60,8 @@ class SuperG():
 
                         # print("new edge:", telement.name, relement.name)
                         G.add_edge(tx, rx, weight=cost)
+
+            context.propagate()
         return G
 
     def drawGraph(self):
@@ -97,7 +99,7 @@ class ElementG():
             self.Graph.add_edge(name1, name2, weight= s)
 
     def updateGraph(self, context, taskvaluelist):
-        self.storagePenalty = deque(self.elementOwner.federateOwner.getStorageCostList(taskvaluelist, self.elementOwner.section))
+        self.storagePenalty = deque(self.elementOwner.federateOwner.getStorageCostList(self.elementOwner))
         torder = self.elementOwner.federateOwner.time%6
         self.storagePenalty.rotate(-torder)
         # print(self.storagePenalty)

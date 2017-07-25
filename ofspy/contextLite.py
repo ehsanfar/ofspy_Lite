@@ -2,7 +2,7 @@ import random
 import numpy as np
 from .task import Task
 import queue
-from .federateLite import FederateLite
+from .federateLite import FederateLite, FederateLearning
 import re
 
 from .graph import SuperG
@@ -82,29 +82,29 @@ class ContextLite():
         """
         Executes operational models.
         """
+        self.time += 1
         federates = self.federates
         random.shuffle(federates, random=self.orderStream.random)
         for federate in federates:
             # print "Pre federate operation cash:", federate.cash
-            federate.ticktock(self.time)
+            federate.ticktock()
             # print "Post federate operation cash:", federate.cash
-        self.time += 1
 
 
-    def updatePickupProbablity(self):
-        opportunitycounter = sum([f.pickupOpportunities for f in self.federates])
 
-        taskcounter = sum([sum(list(f.taskcounter.values())) for f in self.federates])
-        self.pickupProbability = taskcounter/float(opportunitycounter)
-        for f in self.federates:
-            f.pickupProbability = self.pickupProbability
+    # def updatePickupProbablity(self):
+    #     opportunitycounter = sum([f.pickupOpportunities for f in self.federates])
+    #
+    #     taskcounter = sum([sum(list(f.taskcounter.values())) for f in self.federates])
+    #     self.pickupProbability = taskcounter/float(opportunitycounter)
+    #     for f in self.federates:
+    #         f.pickupProbability = self.pickupProbability
 
     def ticktock(self, ofs):
         """
         Tocks this context in a simulation.
         """
-        self.time = ofs.time
-
+        # self.time = ofs.time
         self.auctioneer.initiateAuction()
             # self.pickupTasks()
             # self.Graph.drawGraph(self)
@@ -112,7 +112,7 @@ class ContextLite():
             # print [len(e.savedTasks) for e in self.elementlist if e.isSpace()]
             # print "Graphorder:", [e.Graph.graphOrder for e in self.elementlist if e.isSpace()], self.Graph.graphOrder
         self.deliverTasks()
-        self.updatePickupProbablity()
+        # self.updatePickupProbablity()
         self.propagate()
 
         # print "Context - Assigned Tasks:", self.taskid
@@ -138,14 +138,21 @@ class ContextLite():
         storagePenalty = ofs.storagePenalty
         elementgroups = []
         for e in elements:
-            elementgroups.append(re.search(r'\b(\d+)\.(\w+)@(\w+\d).+\b', e).groups())
+            elementgroups.append(re.search(r'\b(\d+)\.(\w+)@(\w+\d).*\b', e).groups())
         fedset = sorted(list(set([e[0] for e in elementgroups])))
         # print elementgroups
         # print fedset
-        self.federates = [FederateLite(name = 'F'+i, context = self, costSGL = costSGL, costISL = costISL, storagePenalty = storagePenalty) for i in fedset]
+
+        # print("generate federates: storage penalty and federates:", storagePenalty, fedset)
+        for i, f in enumerate(fedset):
+            if storagePenalty[i] == -2:
+                self.federates.append(FederateLearning(name='F'+str(i+1), context=self, costSGL=costSGL[i], costISL=costISL[i]))
+            else:
+                self.federates.append(FederateLite(name = 'F'+str(i+1), context = self, costSGL = costSGL[i], costISL = costISL[i], storagePenalty = storagePenalty[i]))
         for element in elementgroups:
+            # print(element)
             index = fedset.index(element[0])
-            self.federates[index].addElement(element[1], element[2])
+            self.federates[index].addElement(element=element[1], location=element[2], capacity = ofs.capacity)
 
         for f in self.federates:
             self.elements += f.getElements()[:]

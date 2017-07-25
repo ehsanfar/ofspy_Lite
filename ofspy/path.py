@@ -48,9 +48,10 @@ class Path():
     #         self.pathBid = None
     #         self.pathPrice = None
     #     # print("update pathBid:", self.nodelist, self.pathBid)
-    def updateBid(self, linkbids):
+    def updateBid(self, linkbids, linkbids2 = []):
         self.linkbidlist = linkbids
         self.pathPrice = self.pathBid = sum(linkbids)
+        self.pathBid2 = sum(linkbids2)
 
     def updatePrice(self, price):
         self.pathPrice = price

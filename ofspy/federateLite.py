@@ -1,9 +1,10 @@
 import re
 from .elementLite import Satellite, GroundStation
+from .qlearner import Qlearner
 
 
 class FederateLite():
-    def __init__(self, name, context, initialCash=0, costSGL = 200., costISL = 100., storagePenalty = -1):
+    def __init__(self, name, context, initialCash=0, costSGL = 200., costISL = 100., storagePenalty = 100):
         """
         @param name: the name of this federate
         @type name: L{str}
@@ -42,6 +43,7 @@ class FederateLite():
         self.uniqueBundles = []
         self.nodeElementDict = {}
 
+
     def getElements(self):
         """
         Gets the elementlist controlled by this controller.
@@ -58,13 +60,13 @@ class FederateLite():
         return self.tasks
 
 
-    def ticktock(self, time):
+    def ticktock(self):
         """
         Ticks this federate in a simulation.
         @param sim: the simulator
         """
         # print "federete tick tock"
-        self.time = time
+        self.time = self.context.time
         for element in self.elements:
             element.ticktock()
 
@@ -94,23 +96,29 @@ class FederateLite():
     def getTransCounter(self):
         return self.transcounter
 
-    def getStorageCostList(self, taskvaluelist, section):
+    def getStorageCostList(self, element, taskvaluelist = None):
         # print("federate storage penalty:", self.storagePenalty)
+        # if self.storagePenalty == -2:
+        #     return self.qlearner.run(element)
+
         if self.storagePenalty>=0:
             return 6*[self.storagePenalty]
 
-        assert section in range(1, 7)
-        storagecostlist = []
-        temptime = self.time
-        # print("storage cost pickup probability:", self.pickupProbability)
-        for i in range(1, 7):
-            # print(i, section, len(self.taskduration), len(self.taskvalue),len(taskvaluelist))
-            storagecostlist.append(self.pickupProbability*(self.taskvalue[section]/self.taskduration[section]) + taskvaluelist[i-1] - taskvaluelist[min(i, 5)])
-            temptime += 1
-            section = section%6+1
+        # if element.capacity - element.content >= 1:
+        #     return 6 * [0]
+        #
+        # assert section in range(1, 7)
+        # storagecostlist = []
+        # temptime = self.time
+        # # print("storage cost pickup probability:", self.pickupProbability)
+        # for i in range(1, 7):
+        #     # print(i, section, len(self.taskduration), len(self.taskvalue),len(taskvaluelist))
+        #     storagecostlist.append(self.pickupProbability*(self.taskvalue[section]/self.taskduration[section]) + taskvaluelist[i-1] - taskvaluelist[min(i, 5)])
+        #     temptime += 1
+        #     section = section%6+1
 
-        # print("storage cost:", [int(e) for e in storagecostlist])
-        return storagecostlist
+            # print("storage cost:", [int(e) for e in storagecostlist])
+        # return storagecostlist
 
     def discardTask(self):
         for e in self.elements:
@@ -145,7 +153,7 @@ class FederateLite():
         task.pathcost = 0.
         self.finishTask(task)
 
-    def addElement(self, element, location):
+    def addElement(self, element, location, capacity):
         orbit, section = (re.search(r'(\w)\w+(\d)', location).group(1), int(re.search(r'(\w)\w+(\d)', location).group(2)))
         if 'Ground' in element:
             gs = GroundStation(self, 'GS.%s.%d'%(self.name, len(self.stations)+1), location, 600)
@@ -153,7 +161,8 @@ class FederateLite():
             self.stations.append(gs)
 
         elif 'Sat' in element:
-            ss = Satellite(self, 'S%s.%s.%d'%(orbit, self.name, len(self.satellites)+1), location, 800)
+            ss = Satellite(federate=self, name = 'S%s.%s.%d'%(orbit, self.name, len(self.satellites)+1),
+                           location=location, cost = 800 ,capacity=capacity)
             self.elements.append(ss)
             self.satellites.append(ss)
 
@@ -201,6 +210,60 @@ class FederateLite():
             ubundle.setGenOppCost(opportunitycost)
         else:
             self.uniqueBundles.append(keybundle)
+
+
+
+
+class FederateLearning(FederateLite):
+    def __init__(self, name, context, initialCash=0, costSGL = 200., costISL = 100., storagePenalty = -2):
+        super().__init__(name, context, initialCash=0, costSGL = 200., costISL = 100., storagePenalty = storagePenalty)
+        self.qlearner = Qlearner(self, numericactions=list(range(0, 1001, 100)), memoryset=list(range(3)))
+        self.rewards = 0.
+
+
+    def getStorageCostList(self, element):
+        # print("federate storage penalty:", self.storagePenalty)
+        return self.qlearner.getAction(element)
+
+    def finishTask(self, task):
+        path = task.path
+        taskvalue = task.getValue(self.time) - path.getPathPrice()
+        self.cash += taskvalue
+        # print("active tasks:", [t.taskid for t in self.activeTasks])
+        # print("finish task:", task.taskid, task.elementOwner.name, task.federateOwner.name, self.name)
+
+        assert task in self.activeTasks
+        section = task.getSection()
+        assert self.time >= task.initTime
+        duration = max(1, self.time - task.initTime)
+        assert section in range(1, 7)
+
+        # print "Finished tasks (section, taskvalue, taskduration):", section, taskvalue, duration
+        self.taskduration[section] = (self.taskduration[section]*self.taskcounter[section] + duration)/(self.taskcounter[section] + 1.)
+        self.taskvalue[section]  = (self.taskvalue[section]*self.taskcounter[section] + taskvalue)/(self.taskcounter[section] + 1.)
+        self.taskcounter[section] += 1
+        # print("finishtask: pickup opp and task counter:", sum(list(self.taskcounter.values())), self.pickupOpportunities)
+        self.rewards += taskvalue
+        self.activeTasks.remove(task)
+
+
+    def ticktock(self):
+        """
+        Ticks this federate in a simulation.
+        @param sim: the simulator
+        """
+        # print "federete tick tock"
+        # for element in self.elements:
+        #     if element.isSpace():
+        #         self.qlearner.update_q(element, self.rewards)
+
+        self.time = self.context.time
+        for element in self.elements:
+            element.ticktock()
+            if element.isSpace():
+                self.qlearner.update_q(element, self.rewards)
+
+        self.rewards = 0.
 
 
 

@@ -261,9 +261,9 @@ def returnCompatiblePaths(pathlist):
 def returnAvgPathCost(taskPathDict):
     tasksumcostnum = [(min([p.pathPrice for p in paths]), len(paths), taskid) for taskid, paths in taskPathDict.items()]
     # tasksumcostnum = [(min([len(p.nodelist) for p in paths]), len(paths), taskid) for taskid, paths in taskPathDict.items()]
-    avgcosttask = [(x, z) for x,y,z in tasksumcostnum]
+    avgcosttask = sorted([(x, z) for x,y,z in tasksumcostnum])
     # print("avg cost task:", avgcosttask)
-    return sorted(avgcosttask)
+    return avgcosttask
 
 def combineBundles(bundles):
     alltasks = []
@@ -273,6 +273,19 @@ def combineBundles(bundles):
         allpaths.extend(list(b.pathlist))
 
     return alltasks, allpaths
+
+
+def generateFops(costrange, storange):
+    fops = []
+    for cost in costrange:
+        costsgl = cost
+        costisl = cost
+
+        for sto in storange:
+            stopen = sto
+            for sto2 in storange:
+                stopen2 = sto2
+                yield ["x%d,%d,%d" % (costsgl, costisl, stopen2), "x%d,%d,%d" % (costsgl, costisl, stopen), "x%d,%d,%d" % (costsgl, costisl, sotpen)]
 
     #
     # for path in pathlist[0]:

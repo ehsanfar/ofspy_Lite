@@ -7,6 +7,7 @@ import pymongo
 # from scoop import futures
 import sys, os
 import re
+import random
 
 # add ofspy to system path
 sys.path.append(os.path.abspath('..'))
@@ -18,8 +19,7 @@ import json
 
 
 
-def execute(dbHost, dbPort, dbName, start, stop, cases, numPlayers,
-            initialCash, numTurns, ops, fops):
+def execute(dbHost, dbPort, start, stop, design, numPlayers, numTurns, fops, capacity):
     """
     Executes a general experiment.
     @param dbHost: the database host
@@ -32,8 +32,8 @@ def execute(dbHost, dbPort, dbName, start, stop, cases, numPlayers,
     @type start: L{int}
     @param stop: the stopping seed
     @type stop: L{int}
-    @param cases: the list of designs to execute
-    @type cases: L{list}
+    @param design: the list of designs to execute
+    @type design: L{list}
     @param numPlayers: the number of players
     @type numPlayers: L{int}
     @param initialCash: the initial cash
@@ -46,15 +46,15 @@ def execute(dbHost, dbPort, dbName, start, stop, cases, numPlayers,
     @param fops: the federation operations definition
     @type fops: L{str}
     """
-    # print "cases:", cases
+    # print "design:", design
     # print start, stop
-    executions = [(dbHost, dbPort, dbName,
+    executions = [(dbHost, dbPort,
                    [e for e in elements.split(' ') if e != ''],
-                   numPlayers, initialCash, numTurns, seed, ops, fops)
-                  for (seed, elements) in itertools.product(range(start, stop), cases)]
+                   numPlayers, numTurns, seed, fops, capacity)
+                  for (seed, elements) in itertools.product(range(start, stop), design)]
     numComplete = 0.0
-    logging.info('Executing {} cases with seeds from {} to {} for {} total executions.'
-                 .format(len(cases), start, stop, len(executions)))
+    logging.info('Executing {} design with seeds from {} to {} for {} total executions.'
+                 .format(len(design), start, stop, len(executions)))
     # for results in futures.map(queryCase, executions):
     # results = futures.map(queryCase, executions)
     # print(len(list(executions)))
@@ -69,7 +69,7 @@ def execute(dbHost, dbPort, dbName, start, stop, cases, numPlayers,
     # This line calculates the average of each element of each tuple for all the lists in the results, in other words assuming that each tuple of each results shows one seed of the same identity
     # print [[sum(x)/float(N) for x in zip(*l)] for l in [[l[j] for l in results] for j in range(N)]]
 
-def queryCase(dbHost, dbPort, dbName, elements, numPlayers, initialCash, numTurns, seed, ops, fops):
+def queryCase(dbHost, dbPort, elements, numPlayers, numTurns, seed, fops, capacity):
     """
     Queries and retrieves existing results or executes an OFS simulation.
     @param dbHost: the database host
@@ -99,40 +99,29 @@ def queryCase(dbHost, dbPort, dbName, elements, numPlayers, initialCash, numTurn
     #              numTurns, seed, ops, fops)
     experiment = "Storage Penalty"
     global db
+    dbName = None
     # dbHost = socket.gethostbyname(socket.gethostname())
     dbHost = "127.0.0.1"
     # dbHost = "155.246.119.30"
     # print dbHost, dbPort, dbName, db
     # print "fops:", fops
-    if re.match('x\d+,\d+,.+', fops) is not None:
-        args = re.search('x(\d+),(\d+),([-v\d]+)', fops)
-        costSGL = int(args.group(1))
-        costISL = int(args.group(2))
-        storagePenalty = int(args.group(3))
-
-    else:
-        costSGL = 0
-        costISL = 0
-        storagePenalty = -1
-
     # print costISL, costSGL
 
     if db is None and dbHost is None:
         # print "db is None adn dbHOst is None"
-        return executeCase(elements, numPlayers, initialCash,
-                 numTurns, seed, ops, fops)
+        return executeCase(elements, numPlayers,
+                 numTurns, seed, ops, fops, capacity)
     elif db is None and dbHost is not None:
         # print "read from database"
         db = pymongo.MongoClient(dbHost, dbPort).ofs
 
     query = {u'experiment': experiment,
              u'elementlist': ' '.join(elements),
+             u'fops': fops,
              u'numPlayers': numPlayers,
              u'numTurns': numTurns,
              u'seed': seed,
-             u'storagePenalty': storagePenalty,
-             u'costSGL': costSGL,
-             u'costISL': costISL,
+             u'capacity': capacity,
              }
 
     doc = None
@@ -142,24 +131,23 @@ def queryCase(dbHost, dbPort, dbName, elements, numPlayers, initialCash, numTurn
         db.results.remove(query) #this is temporary, should be removed afterwards
         doc = db.results.find_one(query)
         if doc:
-            print("Found in DB,elements, storage, sgl, isl, results: ")
-            print([len(doc['elementlist'])]+[doc[k] for k in ['storagePenalty','costSGL', 'costISL', 'results']])
+            # print("Found in DB,elements, storage, sgl, isl, results: ")
+            print([len(doc['elementlist'])]+[doc[k] for k in ['fops', 'capacity', 'results']])
         if doc is None:
-            results = executeCase(elements, numPlayers, initialCash, numTurns, seed, ops, fops)
+            results = executeCase(elements, numPlayers, numTurns, seed, fops, capacity)
 
             doc = {u'experiment': experiment,
                    u'elementlist': ' '.join(elements),
+                   u'fops': fops,
                    u'numPlayers': numPlayers,
                    u'numTurns': numTurns,
                    u'seed': seed,
-                   u'storagePenalty': storagePenalty,
-                   u'costSGL': costSGL,
-                   u'costISL': costISL,
+                   u'capacity': capacity,
                    u'results': json.dumps(results),
                     }
             # print("Not Found in DB", doc['results'])
-            print("Not in DB,elements, storage, sgl, isl, results: ")
-            print([len(doc['elementlist'].split(' '))] + [doc[k] for k in ['storagePenalty', 'costSGL', 'costISL', 'results']])
+            # print("Not in DB,elements, storage, sgl, isl, results: ")
+            print([len(doc['elementlist'])] + [doc[k] for k in ['fops', 'capacity','results']])
             db.results.insert_one(doc)
 
         if dbName is not None:
@@ -168,7 +156,7 @@ def queryCase(dbHost, dbPort, dbName, elements, numPlayers, initialCash, numTurn
     return [tuple(result) for result in doc[u'results']]
 
 
-def executeCase(elements, numPlayers, initialCash, numTurns, seed, ops, fops):
+def executeCase(elements, numPlayers, numTurns, seed, fops, capacity):
     """
     Executes an OFS simulation.
     @param elements: the design specifications
@@ -189,18 +177,29 @@ def executeCase(elements, numPlayers, initialCash, numTurns, seed, ops, fops):
     # print "ofs-exp-vs elementlist: ", elementlist
     #
     # return OFSL(elementlist=elementlist, numPlayers=numPlayers, initialCash=initialCash, numTurns=numTurns, seed=seed, ops=ops, fops=fops).execute()
-    ofsl = OFSL(elements=elements, numPlayers=numPlayers, numTurns=numTurns, seed=seed, ops=ops, fops=fops)
+    ofsl = OFSL(elements=elements, numPlayers=numPlayers, numTurns=numTurns, seed=seed, fops=fops, capacity = capacity)
     return ofsl.execute()
 
 
-def fopsGen():
-    costSGLList = list(range(100, 1001, 100))
-    # costISLList = [c/2. for c in costSGLList]
-    storagePenalty = list(range(100, 1001, 200))+[-1]
-    for sgl in costSGLList:
-        for s in storagePenalty:
-            yield "x%d,%d,%d"%(sgl, sgl, s)
+def fopsGen(costrange, storange, numplayers):
+    # costSGLList = list(range(0, 1001, 200))
+    # # costISLList = [c/2. for c in costSGLList]
+    # storagePenalty = list(range(0, 1001, 200))+[-1]
+    for sgl in costrange:
+        for s in storange:
+            yield (numplayers-1)*["x%d,%d,%d"%(sgl, sgl, s)]+["x%d,%d,%d"%(sgl, sgl, -2)]
 
+def generateFops(costrange, storange):
+    fops = []
+    for cost in costrange:
+        costsgl = cost
+        costisl = cost
+
+        for sto in storange:
+            stopen = sto
+            for sto2 in storange:
+                stopen2 = sto2
+                yield ["x%d,%d,%d" % (costsgl, costisl, stopen2), "x%d,%d,%d" % (costsgl, costisl, stopen), "x%d,%d,%d" % (costsgl, costisl, stopen)]
 
 if __name__ == '__main__':
 
@@ -211,15 +210,15 @@ if __name__ == '__main__':
                         help='simulation duration (number of turns)')
     parser.add_argument('-p', '--numPlayers', type=int, default=None,
                         help='number of players')
-    parser.add_argument('-i', '--initialCash', type=int, default=None,
-                        help='initial cash')
-    parser.add_argument('-o', '--ops', type=str, default='d6',
-                        help='federate operations model specification')
+    parser.add_argument('-c', '--capacity', type=int, default=2.,
+                        help='satellite capacity')
+    # parser.add_argument('-o', '--ops', type=str, default='d6',
+    #                     help='federate operations model specification')
     parser.add_argument('-f', '--fops', type=str, default='',
                         help='federation operations model specification')
-    parser.add_argument('-l', '--logging', type=str, default='error',
-                        choices=['debug', 'info', 'warning', 'error'],
-                        help='logging level')
+    # parser.add_argument('-l', '--logging', type=str, default='error',
+    #                     choices=['debug', 'info', 'warning', 'error'],
+    #                     help='logging level')
     parser.add_argument('-s', '--start', type=int, default=0,
                         help='starting random number seed')
     parser.add_argument('-t', '--stop', type=int, default=20,
@@ -243,28 +242,21 @@ if __name__ == '__main__':
     # hardcoded_designs = [x.strip() for x in hardcoded_designs]
     hardcoded_designs = (
         # "1.GroundSta@SUR1,oSGL 2.GroundSta@SUR3,oSGL 1.MediumSat@MEO3,VIS,SAR,oSGL,oISL  2.MediumSat@MEO5,VIS,SAR,oSGL,oISL",
-        "1.SmallSat@MEO6,oSGL,oISL 1.MediumSat@MEO4,VIS,SAR,oSGL,oISL 2.SmallSat@MEO2,oSGL,oISL 2.MediumSat@MEO1,VIS,SAR,oSGL,oISL 1.GroundSta@SUR1,oSGL 2.GroundSta@SUR4,oSGL",
-        # "1.SmasllSat@MEO6,oSGL,oISL 1.SmallSat@MEO5,oSGL,oISL 1.LargeSat@MEO4,VIS,SAR,DAT,oSGL,oISL 2.SmallSat@MEO3,oSGL,oISL 2.SmallSat@MEO2,oSGL,oISL 2.LargeSat@MEO1,VIS,SAR,DAT,oSGL,oISL 1.GroundSta@SUR1,oSGL 2.GroundSta@SUR4,oSGL",
-        # "1.SmallSat@MEO6,oSGL,oISL 1.MediumSat@MEO5,DAT,oSGL,oISL 1.MediumSat@MEO4,VIS,SAR,oSGL,oISL 2.SmallSat@MEO3,oSGL,oISL 2.MediumSat@MEO2,DAT,oSGL,oISL 2.MediumSat@MEO1,VIS,SAR,oSGL,oISL 1.GroundSta@SUR1,oSGL 2.GroundSta@SUR4,oSGL",
-        # "1.SmallSat@MEO6,oSGL,oISL 1.MediumSat@MEO5,DAT,oSGL,oISL 1.LargeSat@MEO4,VIS,SAR,DAT,oSGL,oISL 2.SmallSat@MEO3,oSGL,oISL 2.MediumSat@MEO2,DAT,oSGL,oISL 2.LargeSat@MEO1,VIS,SAR,DAT,oSGL,oISL 1.GroundSta@SUR1,oSGL 2.GroundSta@SUR4,oSGL",
-        "1.SmallSat@LEO6,oSGL,oISL 1.MediumSat@MEO5,VIS,SAR,oSGL,oISL 1.MediumSat@MEO4,VIS,SAR,oSGL,oISL 2.SmallSat@MEO3,oSGL,oISL 2.MediumSat@MEO2,VIS,SAR,oSGL,oISL 2.MediumSat@MEO1,VIS,SAR,oSGL,oISL 1.GroundSta@SUR1,oSGL 2.GroundSta@SUR4,oSGL",
-        # "1.SmallSat@MEO6,oSGL,oISL 1.MediumSat@MEO5,VIS,SAR,oSGL,oISL 1.LargeSat@MEO4,VIS,SAR,DAT,oSGL,oISL 2.SmallSat@MEO3,oSGL,oISL 2.MediumSat@MEO2,VIS,SAR,oSGL,oISL 2.LargeSat@MEO1,VIS,SAR,DAT,oSGL,oISL 1.GroundSta@SUR1,oSGL 2.GroundSta@SUR4,oSGL",
-        # "1.MediumSat@MEO6,VIS,oSGL,oISL 1.MediumSat@MEO5,VIS,oSGL,oISL 1.LargeSat@MEO4,VIS,SAR,DAT,oSGL,oISL 2.MediumSat@MEO3,VIS,oSGL,oISL 2.MediumSat@MEO2,VIS,oSGL,oISL 2.LargeSat@MEO1,VIS,SAR,DAT,oSGL,oISL 1.GroundSta@SUR1,oSGL 2.GroundSta@SUR4,oSGL",
-        # "1.MediumSat@MEO6,VIS,oSGL,oISL 1.MediumSat@MEO5,VIS,DAT,oSGL,oISL 1.LargeSat@MEO4,VIS,SAR,DAT,oSGL,oISL 2.MediumSat@MEO3,VIS,oSGL,oISL 2.MediumSat@MEO2,VIS,DAT,oSGL,oISL 2.LargeSat@MEO1,VIS,SAR,DAT,oSGL,oISL 1.GroundSta@SUR1,oSGL 2.GroundSta@SUR4,oSGL",
-        # "1.MediumSat@MEO6,VIS,SAR,oSGL,oISL 1.MediumSat@MEO5,VIS,SAR,oSGL,oISL 1.LargeSat@MEO4,VIS,SAR,DAT,oSGL,oISL 2.MediumSat@MEO3,VIS,SAR,oSGL,oISL 2.MediumSat@MEO2,VIS,SAR,oSGL,oISL 2.LargeSat@MEO1,VIS,SAR,DAT,oSGL,oISL 1.GroundSta@SUR1,oSGL 2.GroundSta@SUR4,oSGL",
-        #
-        "1.GroundSta@SUR%d,oSGL 2.GroundSta@SUR%d,oSGL 3.GroundSta@SUR%d,oSGL 1.SmallSat@MEO%d,oSGL,oISL 1.MediumSat@MEO%d,VIS,SAR,oSGL,oISL 2.SmallSat@LEO%d,oSGL,oISL 2.MediumSat@MEO%d,VIS,SAR,oSGL,oISL 3.SmallSat@LEO%d,oSGL,oISL 3.MediumSat@MEO%d,VIS,SAR,oSGL,oISL"%(1,4,5,1,3,6,4,5,2),
-        # "1.GroundSta@SUR%d,oSGL 2.GroundSta@SUR%d,oSGL 3.GroundSta@SUR%d,oSGL 1.SmallSat@MEO%d,oSGL,oISL 1.SmallSat@MEO%d,oSGL,oISL 1.LargeSat@MEO%d,VIS,SAR,DAT,oSGL,oISL 2.SmallSat@MEO%d,oSGL,oISL 2.SmallSat@MEO%d,oSGL,oISL 2.LargeSat@MEO%d,VIS,SAR,DAT,oSGL,oISL 3.SmallSat@MEO%d,oSGL,oISL 3.SmallSat@MEO%d,oSGL,oISL 3.LargeSat@MEO%d,VIS,SAR,DAT,oSGL,oISL"%(1,3,5,1,3,6,3,5,2,5,1,4),
-        # "1.GroundSta@SUR%d,oSGL 2.GroundSta@SUR%d,oSGL 3.GroundSta@SUR%d,oSGL 1.SmallSat@MEO%d,oSGL,oISL 1.MediumSat@MEO%d,DAT,oSGL,oISL 1.MediumSat@MEO%d,VIS,SAR,oSGL,oISL 2.SmallSat@MEO%d,oSGL,oISL 2.MediumSat@MEO%d,DAT,oSGL,oISL 2.MediumSat@MEO%d,VIS,SAR,oSGL,oISL 3.SmallSat@MEO%d,oSGL,oISL 3.MediumSat@MEO%d,DAT,oSGL,oISL 3.MediumSat@MEO%d,VIS,SAR,oSGL,oISL"%(1,3,5,1,3,6,3,5,2,5,1,4),
-        # "1.GroundSta@SUR%d,oSGL 2.GroundSta@SUR%d,oSGL 3.GroundSta@SUR%d,oSGL 1.SmallSat@MEO%d,oSGL,oISL 1.MediumSat@MEO%d,VIS,SAR,oSGL,oISL 1.MediumSat@MEO%d,VIS,SAR,oSGL,oISL 2.SmallSat@MEO%d,oSGL,oISL 2.MediumSat@MEO%d,VIS,SAR,oSGL,oISL 2.MediumSat@MEO%d,VIS,SAR,oSGL,oISL 3.SmallSat@MEO%d,oSGL,oISL 3.MediumSat@MEO%d,VIS,SAR,oSGL,oISL 3.MediumSat@MEO%d,VIS,SAR,oSGL,oISL"%(1,3,5,1,3,6,3,5,2,5,1,4),
-        "1.GroundSta@SUR%d,oSGL 2.GroundSta@SUR%d,oSGL 3.GroundSta@SUR%d,oSGL 1.SmallSat@MEO%d,oSGL,oISL 1.MediumSat@MEO%d,DAT,oSGL,oISL 1.LargeSat@MEO%d,VIS,SAR,DAT,oSGL,oISL 2.SmallSat@MEO%d,oSGL,oISL 2.MediumSat@MEO%d,DAT,oSGL,oISL 2.LargeSat@MEO%d,VIS,SAR,DAT,oSGL,oISL 3.SmallSat@MEO%d,oSGL,oISL 3.MediumSat@MEO%d,DAT,oSGL,oISL 3.LargeSat@MEO%d,VIS,SAR,DAT,oSGL,oISL"%(1,3,5,1,3,6,3,5,2,5,1,4),
-        #  "1.GroundSta@SUR%d,oSGL 2.GroundSta@SUR%d,oSGL 3.GroundSta@SUR%d,oSGL 1.SmallSat@MEO%d,oSGL,oISL 1.MediumSat@MEO%d,VIS,SAR,oSGL,oISL 1.LargeSat@MEO%d,VIS,SAR,DAT,oSGL,oISL 2.SmallSat@MEO%d,oSGL,oISL 2.MediumSat@MEO%d,VIS,SAR,oSGL,oISL 2.LargeSat@MEO%d,VIS,SAR,DAT,oSGL,oISL 3.SmallSat@MEO%d,oSGL,oISL 3.MediumSat@MEO%d,VIS,SAR,oSGL,oISL 3.LargeSat@MEO%d,VIS,SAR,DAT,oSGL,oISL"%(1,3,5,1,3,6,3,5,2,5,1,4),
+        "1.Sat@MEO6 1.Sat@MEO4 2.Sat@MEO2 2.Sat@MEO1 1.GroundSta@SUR1 2.GroundSta@SUR4",
+        "1.Sat@MEO6 1.Sat@MEO5 1.Sat@MEO4 2.Sat@MEO3 2.Sat@MEO2 2.Sat@MEO1 1.GroundSta@SUR1 2.GroundSta@SUR4",
+        "1.Sat@LEO6 1.Sat@MEO5 1.Sat@MEO4 2.Sat@MEO3 2.Sat@MEO2 2.Sat@MEO1 1.GroundSta@SUR1 2.GroundSta@SUR4",
+        "1.GroundSta@SUR%d 2.GroundSta@SUR%d 3.GroundSta@SUR%d 1.Sat@MEO%d 1.Sat@MEO%d 2.Sat@LEO%d 2.Sat@MEO%d 3.Sat@LEO%d 3.Sat@MEO%d"%(1,4,5,1,3,6,4,5,2),
+        # "1.GroundSta@SUR%d 2.GroundSta@SUR%d 3.GroundSta@SUR%d 1.Sat@MEO%d 1.Sat@MEO%d 1.Sat@MEO%d 2.Sat@MEO%d 2.Sat@MEO%d 2.Sat@MEO%d 3.Sat@MEO%d 3.Sat@MEO%d 3.Sat@MEO%d"%(1,3,5,1,3,6,3,5,2,5,1,4),
+         # "1.GroundSta@SUR%d,oSGL 2.GroundSta@SUR%d,oSGL 3.GroundSta@SUR%d,oSGL 1.SmallSat@MEO%d,oSGL,oISL 1.MediumSat@MEO%d,VIS,SAR,oSGL,oISL 1.LargeSat@MEO%d,VIS,SAR,DAT,oSGL,oISL 2.SmallSat@MEO%d,oSGL,oISL 2.MediumSat@MEO%d,VIS,SAR,oSGL,oISL 2.LargeSat@MEO%d,VIS,SAR,DAT,oSGL,oISL 3.SmallSat@MEO%d,oSGL,oISL 3.MediumSat@MEO%d,VIS,SAR,oSGL,oISL 3.LargeSat@MEO%d,VIS,SAR,DAT,oSGL,oISL"%(1,3,5,1,3,6,3,5,2,5,1,4),
         # "1.GroundSta@SUR%d,oSGL 2.GroundSta@SUR%d,oSGL 3.GroundSta@SUR%d,oSGL 1.MediumSat@MEO%d,VIS,oSGL,oISL 1.MediumSat@MEO%d,VIS,oSGL,oISL 1.LargeSat@MEO%d,VIS,SAR,DAT,oSGL,oISL 2.MediumSat@MEO%d,VIS,oSGL,oISL 2.MediumSat@MEO%d,VIS,oSGL,oISL 2.LargeSat@MEO%d,VIS,SAR,DAT,oSGL,oISL 3.MediumSat@MEO%d,VIS,oSGL,oISL 3.MediumSat@MEO%d,VIS,oSGL,oISL 3.LargeSat@MEO%d,VIS,SAR,DAT,oSGL,oISL"%(1,3,5,1,3,6,3,5,2,5,1,4),
         # "1.GroundSta@SUR%d,oSGL 2.GroundSta@SUR%d,oSGL 3.GroundSta@SUR%d,oSGL 1.MediumSat@MEO%d,VIS,oSGL,oISL 1.MediumSat@MEO%d,VIS,DAT,oSGL,oISL 1.LargeSat@MEO%d,VIS,SAR,DAT,oSGL,oISL 2.MediumSat@MEO%d,VIS,oSGL,oISL 2.MediumSat@MEO%d,VIS,DAT,oSGL,oISL 2.LargeSat@MEO%d,VIS,SAR,DAT,oSGL,oISL 3.MediumSat@MEO%d,VIS,oSGL,oISL 3.MediumSat@MEO%d,VIS,DAT,oSGL,oISL 3.LargeSat@MEO%d,VIS,SAR,DAT,oSGL,oISL"%(1,3,5,1,3,6,3,5,2,5,1,4),
         # "1.GroundSta@SUR%d,oSGL 2.GroundSta@SUR%d,oSGL 3.GroundSta@SUR%d,oSGL 1.MediumSat@MEO%d,VIS,SAR,oSGL,oISL 1.MediumSat@MEO%d,VIS,SAR,oSGL,oISL 1.LargeSat@MEO%d,VIS,SAR,DAT,oSGL,oISL 2.MediumSat@MEO%d,VIS,SAR,oSGL,oISL 2.MediumSat@MEO%d,VIS,SAR,oSGL,oISL 2.LargeSat@MEO%d,VIS,SAR,DAT,oSGL,oISL 3.MediumSat@MEO%d,VIS,SAR,oSGL,oISL 3.MediumSat@MEO%d,VIS,SAR,oSGL,oISL 3.LargeSat@MEO%d,VIS,SAR,DAT,oSGL,oISL"%(1,3,5,1,3,6,3,5,2,5,1,4),
     )
     experiment = 'auctioneer'
+    # hardcoded_designs = list(hardcoded_designs)
+    # random.shuffle(hardcoded_designs)
     for design in hardcoded_designs:
+        print('')
         # print design
         if '4.' in design:
             numPlayers = 4
@@ -273,15 +265,25 @@ if __name__ == '__main__':
         else:
             numPlayers = 2
 
-        stop = args.start + 1
+        args.stop = args.start + 1
+        argsdict = vars(args)
+        argsdict['design'] = [design]
+        # argsdict.pop('logging')
+        # argsdict.pop('dbName')
 
-
-        for fops in fopsGen():
+        costrange = list(range(200, 301, 200))
+        storange = list(range(200, 301, 200))
+        for fops in fopsGen(costrange, storange, numPlayers):
             # print(fops)
-            execute(args.dbHost, args.dbPort, None, args.start, stop,
-                    [design],
-                    numPlayers, args.initialCash, args.numTurns,
-                    None, fops)
+            # print(argsdict)
+            argsdict['fops'] = json.dumps(fops)
+
+            execute(**argsdict)
+
+            # execute(args.dbHost, args.dbPort, None, args.start, args.stop,
+            #         [design],
+            #         numPlayers, args.initialCash, args.numTurns,
+            #         None, fops)
 
         # for ops, fops in [('d6,a,1', 'x')]:#[('n', 'd6,a,1'), ('d6,a,1', 'n'), ('d6,a,1', 'x')]:#[('d6,a,1', 'x')]:#
         #     if 'x' in fops:

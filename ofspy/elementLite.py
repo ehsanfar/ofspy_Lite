@@ -40,10 +40,17 @@ class Element():
             return self.section
 
     def ticktock(self):
-        if 'LEO' in self.location:
-            self.section = (self.section + 2 - 1)%6 + 1
-        elif 'MEO' in self.location:
-            self.section = (self.section + 1 - 1)%6 + 1
+        if self.isSpace():
+            if 'LEO' in self.location:
+                self.section = (self.section + 2 - 1)%6 + 1
+            elif 'MEO' in self.location:
+                self.section = (self.section + 1 - 1)%6 + 1
+
+
+            self.timeStateDict[self.federateOwner.time] = (self.capacity - self.content, self.section)
+            # print("element time state dict:", self.name, self.federateOwner.time, self.timeStateDict[self.federateOwner.time])
+
+
 
 
     def getDesignCost(self):
@@ -106,12 +113,13 @@ class GroundStation(Element):
 
 
 class Satellite(Element):
-    def __init__(self, federate, name, location, cost, capacity=1.):
+    def __init__(self, federate, name, location, cost, capacity=2.):
         Element.__init__(self, federate, name, location, cost)
         self.capacity = capacity
         self.content = 0.
         self.queuedTasks = queue.Queue()
         self.elementGraph = None
+        self.timeStateDict = {}
 
     def getCapacity(self):
         return self.capacity
@@ -154,6 +162,7 @@ class Satellite(Element):
             # print("Element collect new tasks")
             # print("new task:", self.federateOwner.name, self.name)
             nextTask = Task(time=self.federateOwner.time, id=context.getTaskid(), federate=self.federateOwner, element=self)
+            # print("new task id:", nextTask.taskid)
 
             taskvaluelist = [nextTask.getValue(self.federateOwner.time + i, inittime=self.federateOwner.time) for i in
                              range(6)]
@@ -173,7 +182,9 @@ class Satellite(Element):
     def pickupTask(self, task):
         # print("pickcup tasks:", self.federateOwner.name, self.name)
         staticpath, deltatime2 = convertPath2StaticPath(task.path)
+        # print(task.path.nodelist)
         self.saveTask(task, deltatime2)
+        # print("pickup task id:", task.taskid)
         self.federateOwner.reportPickup(task)
 
 
