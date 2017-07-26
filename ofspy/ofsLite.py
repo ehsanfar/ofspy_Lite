@@ -40,22 +40,32 @@ class OFSL(object):
             # print self.time
             self.time = t
             self.context.ticktock(self)
+        #
+        # if not plt.fignum_exists(1):
+        #     plt.figure(1)
+        #     plt.ion()
+        #     plt.show()
+        #
+        # plt.clf()
+        figs = []
+        for i, f in enumerate(self.context.federates):
+            if not plt.fignum_exists(i):
+                figs.append(plt.figure(i))
+                plt.ion()
+                plt.show()
 
-        if not plt.fignum_exists(1):
-            plt.figure(1)
-            plt.ion()
-            plt.show()
-
-        plt.clf()
-
-        # plt.figure()
-        for f in self.context.federates:
+            plt.clf()
             if f.storagePenalty == -2:
                 actionlist = f.qlearner.actionlist
         #
-        plt.plot(actionlist)
-        plt.draw()
-        plt.waitforbuttonpress()
+                plt.plot(actionlist)
+                plt.draw()
+                plt.savefig("Evolution_%d_%s.png" % (sum(self.costSGL)/float(len(self.costSGL)), f.name), bbox_inches='tight')
+
+        for f in figs:
+            plt.close(f)
+
+                # plt.waitforbuttonpress()
 
         # plt.show()
         # time.sleep(1)

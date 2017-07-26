@@ -99,7 +99,7 @@ class ElementG():
             self.Graph.add_edge(name1, name2, weight= s)
 
     def updateGraph(self, context, taskvaluelist):
-        self.storagePenalty = deque(self.elementOwner.federateOwner.getStorageCostList(self.elementOwner))
+        self.storagePenalty = deque(self.elementOwner.federateOwner.getStorageCostList(self.elementOwner, taskvaluelist=taskvaluelist))
         torder = self.elementOwner.federateOwner.time%6
         self.storagePenalty.rotate(-torder)
         # print(self.storagePenalty)

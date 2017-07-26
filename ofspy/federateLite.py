@@ -104,21 +104,19 @@ class FederateLite():
         if self.storagePenalty>=0:
             return 6*[self.storagePenalty]
 
-        # if element.capacity - element.content >= 1:
-        #     return 6 * [0]
-        #
+        section = element.section
         # assert section in range(1, 7)
-        # storagecostlist = []
-        # temptime = self.time
-        # # print("storage cost pickup probability:", self.pickupProbability)
-        # for i in range(1, 7):
-        #     # print(i, section, len(self.taskduration), len(self.taskvalue),len(taskvaluelist))
-        #     storagecostlist.append(self.pickupProbability*(self.taskvalue[section]/self.taskduration[section]) + taskvaluelist[i-1] - taskvaluelist[min(i, 5)])
-        #     temptime += 1
-        #     section = section%6+1
+        storagecostlist = []
+        temptime = self.time
+        # print("storage cost pickup probability:", self.pickupProbability)
+        for i in range(1, 7):
+            # print(i, section, len(self.taskduration), len(self.taskvalue),len(taskvaluelist))
+            storagecostlist.append(self.pickupProbability*(self.taskvalue[section]/self.taskduration[section]) + taskvaluelist[i-1] - taskvaluelist[min(i, 5)])
+            temptime += 1
+            section = section%6+1
 
             # print("storage cost:", [int(e) for e in storagecostlist])
-        # return storagecostlist
+        return storagecostlist
 
     def discardTask(self):
         for e in self.elements:
@@ -216,12 +214,12 @@ class FederateLite():
 
 class FederateLearning(FederateLite):
     def __init__(self, name, context, initialCash=0, costSGL = 200., costISL = 100., storagePenalty = -2):
-        super().__init__(name, context, initialCash=0, costSGL = 200., costISL = 100., storagePenalty = storagePenalty)
+        super().__init__(name, context, initialCash=0, costSGL = costSGL, costISL = costISL, storagePenalty = storagePenalty)
         self.qlearner = Qlearner(self, numericactions=list(range(0, 1001, 100)), memoryset=list(range(3)))
         self.rewards = 0.
 
 
-    def getStorageCostList(self, element):
+    def getStorageCostList(self, element, taskvaluelist = None):
         # print("federate storage penalty:", self.storagePenalty)
         return self.qlearner.getAction(element)
 

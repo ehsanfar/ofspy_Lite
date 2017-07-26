@@ -128,6 +128,7 @@ def queryCase(dbHost, dbPort, elements, numPlayers, numTurns, seed, fops, capaci
     if dbName is not None:
         doc = db[dbName].find_one(query)
     if doc is None:
+        # if '-1' in doc['fops'] or '-2' in doc['fops']:
         db.results.remove(query) #this is temporary, should be removed afterwards
         doc = db.results.find_one(query)
         if doc:
@@ -186,8 +187,12 @@ def fopsGen(costrange, storange, numplayers):
     # # costISLList = [c/2. for c in costSGLList]
     # storagePenalty = list(range(0, 1001, 200))+[-1]
     for sgl in costrange:
-        for s in storange:
-            yield (numplayers-1)*["x%d,%d,%d"%(sgl, sgl, s)]+["x%d,%d,%d"%(sgl, sgl, -2)]
+        # for s in storange:
+        #     # yield ["x%d,%d,%d"%(sgl, sgl, -2)] + (numplayers-1)*["x%d,%d,%d"%(sgl, sgl, s)]
+        #     yield numplayers* ["x%d,%d,%d"%(sgl, sgl, s)]
+
+        yield numplayers * ["x%d,%d,%d" % (sgl, sgl, -2)]
+        # yield numplayers * ["x%d,%d,%d" % (sgl, sgl, -1)]
 
 def generateFops(costrange, storange):
     fops = []
@@ -244,7 +249,7 @@ if __name__ == '__main__':
         # "1.GroundSta@SUR1,oSGL 2.GroundSta@SUR3,oSGL 1.MediumSat@MEO3,VIS,SAR,oSGL,oISL  2.MediumSat@MEO5,VIS,SAR,oSGL,oISL",
         "1.Sat@MEO6 1.Sat@MEO4 2.Sat@MEO2 2.Sat@MEO1 1.GroundSta@SUR1 2.GroundSta@SUR4",
         "1.Sat@MEO6 1.Sat@MEO5 1.Sat@MEO4 2.Sat@MEO3 2.Sat@MEO2 2.Sat@MEO1 1.GroundSta@SUR1 2.GroundSta@SUR4",
-        "1.Sat@LEO6 1.Sat@MEO5 1.Sat@MEO4 2.Sat@MEO3 2.Sat@MEO2 2.Sat@MEO1 1.GroundSta@SUR1 2.GroundSta@SUR4",
+        # "1.Sat@LEO6 1.Sat@MEO5 1.Sat@MEO4 2.Sat@MEO3 2.Sat@MEO2 2.Sat@MEO1 1.GroundSta@SUR1 2.GroundSta@SUR4",
         "1.GroundSta@SUR%d 2.GroundSta@SUR%d 3.GroundSta@SUR%d 1.Sat@MEO%d 1.Sat@MEO%d 2.Sat@LEO%d 2.Sat@MEO%d 3.Sat@LEO%d 3.Sat@MEO%d"%(1,4,5,1,3,6,4,5,2),
         # "1.GroundSta@SUR%d 2.GroundSta@SUR%d 3.GroundSta@SUR%d 1.Sat@MEO%d 1.Sat@MEO%d 1.Sat@MEO%d 2.Sat@MEO%d 2.Sat@MEO%d 2.Sat@MEO%d 3.Sat@MEO%d 3.Sat@MEO%d 3.Sat@MEO%d"%(1,3,5,1,3,6,3,5,2,5,1,4),
          # "1.GroundSta@SUR%d,oSGL 2.GroundSta@SUR%d,oSGL 3.GroundSta@SUR%d,oSGL 1.SmallSat@MEO%d,oSGL,oISL 1.MediumSat@MEO%d,VIS,SAR,oSGL,oISL 1.LargeSat@MEO%d,VIS,SAR,DAT,oSGL,oISL 2.SmallSat@MEO%d,oSGL,oISL 2.MediumSat@MEO%d,VIS,SAR,oSGL,oISL 2.LargeSat@MEO%d,VIS,SAR,DAT,oSGL,oISL 3.SmallSat@MEO%d,oSGL,oISL 3.MediumSat@MEO%d,VIS,SAR,oSGL,oISL 3.LargeSat@MEO%d,VIS,SAR,DAT,oSGL,oISL"%(1,3,5,1,3,6,3,5,2,5,1,4),
@@ -271,8 +276,8 @@ if __name__ == '__main__':
         # argsdict.pop('logging')
         # argsdict.pop('dbName')
 
-        costrange = list(range(200, 301, 200))
-        storange = list(range(200, 301, 200))
+        costrange = list(range(0, 801, 200))
+        storange = list(range(0, 801, 200))
         for fops in fopsGen(costrange, storange, numPlayers):
             # print(fops)
             # print(argsdict)

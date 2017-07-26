@@ -97,6 +97,7 @@ class Auctioneer():
         self.currenttasks = []
         self.costSGLDict = {f.name: f.getCost('oSGL') for f in self.context.federates}
         self.costISLDict = {f.name: f.getCost('oISL') for f in self.context.federates}
+        # print(self.costSGLDict)
         # print("elements:",[e.name for e in self.context.elements])
         for element in self.context.elements:
             if element.isSpace():
