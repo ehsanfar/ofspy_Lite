@@ -4,7 +4,7 @@ from .qlearner import Qlearner
 
 
 class FederateLite():
-    def __init__(self, name, context, initialCash=0, costSGL = 200., costISL = 100., storagePenalty = 100):
+    def __init__(self, name, context, costSGL, costISL, storagePenalty = 100):
         """
         @param name: the name of this federate
         @type name: L{str}
@@ -19,8 +19,8 @@ class FederateLite():
         """
         self.context = context
         self.name = name
-        self.initialCash = initialCash
-        self.cash = self.initialCash
+        # self.initialCash = initialCash
+        self.cash = 0 #self.initialCash
         self.elements = []
         self.satellites = []
         self.stations = []
@@ -42,6 +42,8 @@ class FederateLite():
         self.pickupProbability = context.pickupProbability
         self.uniqueBundles = []
         self.nodeElementDict = {}
+
+        self.learning = False
 
 
     def getElements(self):
@@ -125,12 +127,26 @@ class FederateLite():
                     self.defaultTask(self, stask)
 
     def reportPickup(self, task):
+        self.context.addPickup(task.taskid)
         self.activeTasks.add(task)
 
     def finishTask(self, task):
         path = task.path
-        taskvalue = task.getValue(self.time) - path.getPathPrice()
+        taskvalue = task.getValue(self.time)
         self.cash += taskvalue
+        # assert path.pathBid == sum(path.linkbidlist)
+        tempcost = 0
+        for cost, federate in zip(path.linkbidlist, path.linkfederatelist):
+            if federate is not self:
+                tempcost += cost
+                federate.cash += cost
+                self.cash -= cost
+
+        assert path.pathBid == tempcost
+        # print("finished:", taskvalue)
+        self.context.totalcash += taskvalue
+
+
         assert task in self.activeTasks
         section = task.getSection()
         assert self.time >= task.initTime
@@ -142,6 +158,10 @@ class FederateLite():
         self.taskvalue[section]  = (self.taskvalue[section]*self.taskcounter[section] + taskvalue)/(self.taskcounter[section] + 1.)
         self.taskcounter[section] += 1
         # print("finishtask: pickup opp and task counter:", sum(list(self.taskcounter.values())), self.pickupOpportunities)
+        # if self.learning:
+        #     print("self.rewards:", self.rewards)
+        #     self.rewards += taskvalue
+
         self.activeTasks.remove(task)
 
     def defaultTask(self, task):
@@ -213,10 +233,11 @@ class FederateLite():
 
 
 class FederateLearning(FederateLite):
-    def __init__(self, name, context, initialCash=0, costSGL = 200., costISL = 100., storagePenalty = -2):
-        super().__init__(name, context, initialCash=0, costSGL = costSGL, costISL = costISL, storagePenalty = storagePenalty)
+    def __init__(self, name, context, costSGL, costISL, storagePenalty = -2):
+        super().__init__(name, context, costSGL = costSGL, costISL = costISL, storagePenalty = storagePenalty)
         self.qlearner = Qlearner(self, numericactions=list(range(0, 1001, 100)), memoryset=list(range(3)))
         self.rewards = 0.
+        self.leanring = True
 
 
     def getStorageCostList(self, element, taskvaluelist = None):
@@ -225,8 +246,13 @@ class FederateLearning(FederateLite):
 
     def finishTask(self, task):
         path = task.path
-        taskvalue = task.getValue(self.time) - path.getPathPrice()
+        taskvalue = task.getValue(self.time)
         self.cash += taskvalue
+        for cost, federate in zip(path.linkbidlist, path.linkfederatelist):
+            if federate is not self:
+                federate.cash += cost
+                self.cash -= cost
+
         # print("active tasks:", [t.taskid for t in self.activeTasks])
         # print("finish task:", task.taskid, task.elementOwner.name, task.federateOwner.name, self.name)
 
@@ -259,6 +285,7 @@ class FederateLearning(FederateLite):
         for element in self.elements:
             element.ticktock()
             if element.isSpace():
+                # print("self. rewrds:",self.rewards)
                 self.qlearner.update_q(element, self.rewards)
 
         self.rewards = 0.

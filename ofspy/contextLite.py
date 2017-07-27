@@ -36,11 +36,15 @@ class ContextLite():
         self.auctioneer = None
         self.nodeElementDict = {}
         self.nodeFederateDict = {}
+        self.pickeduptasks = set([])
+        self.taskperturn = 100
+        self.totalcash = 0.
 
     def init(self, ofs):
         self.time = ofs.initTime
         self.initTime = ofs.initTime
         self.maxTime = ofs.maxTime
+        self.links = ofs.links
 
         self.masterStream = random.Random(self.seed)
         self.shuffleStream = random.Random(self.masterStream.random())
@@ -114,6 +118,7 @@ class ContextLite():
         self.deliverTasks()
         # self.updatePickupProbablity()
         self.propagate()
+        # print("context finished task counter:", len(self.pickeduptasks))
 
         # print "Context - Assigned Tasks:", self.taskid
         # print self.time, [a.getLocation() for a in self.elementlist]
@@ -166,6 +171,15 @@ class ContextLite():
         # graphorder = self.Graph.graphOrder
         for federate in self.federates:
             federate.deliverTasks(self)
+
+    def addPickup(self, tasksid):
+        assert tasksid not in self.pickeduptasks
+        self.pickeduptasks.add(tasksid)
+
+    def canpickup(self):
+        if len(self.pickeduptasks)>self.taskperturn*self.time:
+            return False
+        return True
 
 
 

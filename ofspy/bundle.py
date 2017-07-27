@@ -80,7 +80,7 @@ class PathBundle():
             self.updateTime()
             self.bundleBid = sum([path.pathBid for path in self.pathlist])
             self.bundleRevenue = sum([task.getValue(self.time + path.deltatime) for task, path in zip(self.tasklist, self.pathlist)])
-            self.bundleCost = sum([path.getPathPrice() for path in self.pathlist])
+            self.bundleCost = sum([path.pathCost for path in self.pathlist])
         # self.updateTime()
         # print("Path bundle time:", self.time)
         # self.tasklist = [path.task for path in pathlist]
@@ -98,20 +98,20 @@ class PathBundle():
     def updateValues(self):
         # print([p.nodelist for p in self.pathlist])
         # print([path.pathBid for path in self.pathlist])
-        self.bundleBid = sum([path.getPathBid() for path in self.pathlist])
-        self.bundleCost = sum([path.getPathPrice() for path in self.pathlist])
+        self.bundleBid = sum([path.pathBid for path in self.pathlist])
+        self.bundleCost = sum([path.pathCost for path in self.pathlist])
         self.tasklist = [path.task for path in self.pathlist]
-        self.taskProfit = {path.task.taskid: path.task.getValue(self.time) - path.getPathPrice() for path in self.pathlist}
+        self.taskProfit = {path.task.taskid: path.task.getValue(self.time) - path.pathCost for path in self.pathlist}
 
     def updateRevenue(self):
         self.bundleRevenue = sum([path.task.getValue(self.time) for path in self.pathlist])
 
-    def getBundleProfit(self):
+    def getBundleRevenue(self):
         return self.bundleRevenue# - self.bundleCost
 
-    def getTaskProfit(self, task):
-        # print("Path list and task dict:", [p.nodelist for p in self.pathlist], self.taskProfit)
-        return self.taskProfit[task.taskid] if task.taskid in self.taskProfit else 0.
+    # def getTaskProfit(self, task):
+    #     # print("Path list and task dict:", [p.nodelist for p in self.pathlist], self.taskProfit)
+    #     return self.taskProfit[task.taskid] if task.taskid in self.taskProfit else 0.
 
     def getTaskList(self):
         return self.tasklist

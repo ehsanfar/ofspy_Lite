@@ -2,6 +2,7 @@ import numpy as np
 from itertools import product
 import random
 from collections import deque, defaultdict
+from .generalFunctions import *
 import math
 
 class Qlearner():
@@ -12,7 +13,7 @@ class Qlearner():
         self.q = np.zeros((len(self.states), len(numericactions)))
 
         self.gamma = 0.9
-        self.alpha = 0.2
+        self.alpha = 0.8
         # self.n_states = len(self.stateDict)
         # self.n_actions = len(numericactions)
         self.actions = numericactions
@@ -75,8 +76,8 @@ class Qlearner():
         newactions[1::2] = meanactionslist
 
         # print(newcolums)
-        self.q = np.concatenate(newcolums, 1)
-        self.actions = np.array(newactions)
+        self.q = np.column_stack(newcolums)
+        self.actions = newactions
 
     def getAction(self, element):
         self.time = element.federateOwner.time
@@ -99,7 +100,9 @@ class Qlearner():
             lastaction = self.elementAction[element.name][0]
             lastindex = self.actions.index(lastaction)
         else:
-            lastindex = (1+len(self.actions))//2
+            # lastindex = (1+len(self.actions))//2
+            avgcost = 1.*sum(list(self.federate.costDic.values()))/len(list(self.federate.costDic.values()))
+            lastindex = findClosestIndex(avgcost,self.actions)
 
         # newepsilon = self.epsilon*max(0.1, (1 - self.time/3000))
         if self.random_state.rand() < self.epsilon or np.sum(self.q[current_state]) <= 0:

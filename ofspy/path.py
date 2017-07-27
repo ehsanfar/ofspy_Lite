@@ -6,6 +6,8 @@ class Path():
         self.linklist = convertPath2Edge(nodelist)
         self.elementOwner = element
         self.elementlist = [element.federateOwner.context.nodeElementDict[n[:-2]] for n in nodelist]
+        self.nodeElementDict = {n:e for n,e in zip(self.nodelist, self.elementlist)}
+        self.linkfederatelist = [self.nodeElementDict[tup[1]].federateOwner for tup in self.linklist]
         self.deltatimelist = self.updateDeltaTime()
         self.deltatime = max(self.deltatimelist)
         # self.timelist = []
@@ -15,9 +17,12 @@ class Path():
         # self.federateBundleDict = {}
         # self.edgebundles = []
         self.task = None
+        self.linkcostlist = []
         self.linkbidlist = []
+        # self.linkpricelist = []
+        self.pathCost = None
         self.pathBid = None
-        self.pathPrice = None
+        # self.pathPrice = None
 
     def __call__(self, task):
         self.task = task
@@ -50,23 +55,25 @@ class Path():
     #     # print("update pathBid:", self.nodelist, self.pathBid)
     def updateBid(self, linkbids, linkbids2 = []):
         self.linkbidlist = linkbids
-        self.pathPrice = self.pathBid = sum(linkbids)
-        self.pathBid2 = sum(linkbids2)
+        self.pathBid = sum(linkbids)
+        # self.pathBid2 = sum(linkbids2)
 
-    def updatePrice(self, price):
-        self.pathPrice = price
+    def updateCost(self, linkcosts):
+        self.linkcostlist = linkcosts
+        self.pathCost = sum(linkcosts)
+        # self.pathPrice = price
 
     def updateBundles(self, federatebundledict):
         self.federateBundleDict = federatebundledict
         self.edgebundles = list(federatebundledict.values())
 
-    def getPathBid(self):
-        if self.pathBid is None:
-            self.updateValues()
-        return self.pathBid
+    # def getPathBid(self):
+    #     if self.pathBid is None:
+    #         self.updateValues()
+    #     return self.pathBid
 
-    def getPathPrice(self):
-        return self.pathPrice
+    # def getPathPrice(self):
+    #     return self.pathPrice
 
     def getNodeList(self):
         return self.nodelist

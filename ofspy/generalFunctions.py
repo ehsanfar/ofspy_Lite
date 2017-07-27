@@ -3,6 +3,7 @@ import numpy as np
 import networkx as nx
 import re
 import math
+from collections import Counter, defaultdict
 # from .bundle import PathBundle
 
 def checkEqual2(iterator):
@@ -234,19 +235,43 @@ def findAllPaths(G, sources, destinations):
 # class Path():
 #     def __init__(self, l):
 #         self.linklist = l
+def findClosestIndex(value, valulist):
+    abslist = [abs(v-value) for v in valulist]
+    return abslist.index(min(abslist))
 
-def returnCompatiblePaths(pathlist):
+
+def addDict2Dict(dict1, dict2):
+    dict3 = dict1.copy()
+    for d, c in dict2.items():
+        dict3[d] += c
+    return dict3
+
+def returnCompatiblePaths(pathlist, linkcounter, maxlink = 1):
     # for path in pathlist[0]
+
+    # print("length of pathlist:", len(pathlist))
     if pathlist:
-        queue = [(0, [], set([]))]
+        queue = [(0, [], linkcounter)]
         while queue:
             n, histpath, s = queue.pop(0)
             # print("length of pathlist and n:", len(pathlist), n)
             # if n == len(pathlist) - 1:
             #     yield histpath
             # else:
-            nextpaths = [path for path in pathlist[n] if not s.intersection(set(path.linklist))]
-            # print("current path, next path:\n", [e.linklist for e in histpath],'\n', [p.linklist for p in nextpaths])
+            nextpaths = []
+            for path in pathlist[n]:
+                newcounter = Counter(path.linklist)
+                combinedcounter = addDict2Dict(s, newcounter)
+                valueset = list(combinedcounter.values())
+                # print("counter value set:", valueset)
+                # print(combinedcounter)
+                if max(valueset) <= maxlink:
+                    nextpaths.append(path)
+                # else:
+                #     print(max(valueset))
+
+            # print(len(pathlist[n]), len(nextpaths))
+            # print("current path, next pathf:\n", [e.linklist for e in histpath],'\n', [p.linklist for p in nextpaths])
             # print("set:", s)
             n += 1
             for np in nextpaths:
@@ -254,12 +279,13 @@ def returnCompatiblePaths(pathlist):
                 if n == len(pathlist):
                     yield histpath + [np]
                 else:
-                    scopy = s.union(set(np.linklist))
-                    queue.append((n, histpath + [np], scopy))
+                    # scopy = s.union(set(np.linklist))
+                    combinedcounter = addDict2Dict(s, newcounter)
+                    queue.append((n, histpath + [np], combinedcounter))
 
 
 def returnAvgPathCost(taskPathDict):
-    tasksumcostnum = [(min([p.pathPrice for p in paths]), len(paths), taskid) for taskid, paths in taskPathDict.items()]
+    tasksumcostnum = [(min([p.pathCost for p in paths]), len(paths), taskid) for taskid, paths in taskPathDict.items()]
     # tasksumcostnum = [(min([len(p.nodelist) for p in paths]), len(paths), taskid) for taskid, paths in taskPathDict.items()]
     avgcosttask = sorted([(x, z) for x,y,z in tasksumcostnum])
     # print("avg cost task:", avgcosttask)

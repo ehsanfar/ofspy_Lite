@@ -1,12 +1,12 @@
 import re
-from collections import defaultdict
+from collections import defaultdict, Counter
 from .bundle import PathBundle
 import itertools
 import time
 from .generalFunctions import returnCompatiblePaths
 
 class Auction():
-    def __init__(self, auctioneer, time, taskslist):
+    def __init__(self, auctioneer, time, taskslist, links):
         self.auctioneer = auctioneer
         self.tasklist = taskslist
         self.time = time
@@ -15,6 +15,7 @@ class Auction():
         self.taskDict = {t.taskid: t for t in taskslist}
         self.compatibleBundles = []
         self.bestPathBundle = None
+        self.maxlink = links
 
 
     def inquirePrice(self):
@@ -36,21 +37,28 @@ class Auction():
             elementOwner = path.elementOwner
             ownername = path.elementOwner.federateOwner.name
             linkbids = []
+            linkcosts = []
 
             for link in path.linklist:
                 fname = re.search(r'.+\.(F\d)\..+', link[1]).group(1)
                 if fname == ownername:
                     cost = elementOwner.elementG.Graph[link[0]][link[1]]['weight']
                     # print(elementOwner.name, link, cost)
+                    linkbids.append(0)
                 else:
                     cost = self.auctioneer.costSGLDict[fname] if 'GS' in link[1] else self.auctioneer.costISLDict[fname]
+                    linkbids.append(cost)
 
-                linkbids.append(cost)
+                linkcosts.append(cost)
+
             path.updateBid(linkbids)
+            path.updateCost(linkcosts)
+            # print("path bids vs path cost:", path.linklist, path.linkbidlist, path.linkcostlist)
             # print("all tasks:", [t.taskid for t in self.tasklist])
             for task in self.tasklist:
                 if task.elementOwner.name == path.elementOwner.name:
-                    if path.pathBid < task.getValue(task.initTime + path.deltatime):
+                    # print("path cost:", path.pathCost, task.getValue(task.initTime + path.deltatime), path.pathCost < task.getValue(task.initTime + path.deltatime))
+                    if path.pathCost < task.getValue(task.initTime + path.deltatime):
                         self.taskPathDict[task.taskid].append(path)
 
         # print("tasksPathDict length:", [len(set(v)) for v in self.taskPathDict.values()])
@@ -79,6 +87,8 @@ class Auction():
             self.findCompatiblePaths()
 
         possible_bundles = self.compatibleBundles
+        if not self.compatibleBundles:
+            return False
         # print("length of compatible bundles:", len(self.compatibleBundles))
 
         path_bundle_cost = [b.bundleCost for b in possible_bundles]
@@ -135,6 +145,7 @@ class Auction():
         # print("Length of possible bundles:", len(possible_bundles))
         # # print([t.length for t in possible_bundles])
         self.compatibleBundles = list(self.returnFeasibleBundles(taskspaths))
+        # print(self.compatibleBundles)
         # return possible_bundles
 
     # def checkPathCombinations(self, plist):
@@ -184,6 +195,14 @@ class Auction():
         plist = [tp[1] for tp in taskspaths]
         ntasks = len(taskspaths)
         combinations =  []
+
+        time = self.auctioneer.context.time
+        timelink = {t: v for t, v in self.auctioneer.timeOccupiedLinkDict.items() if t >= time}
+        links = list([e[0] for e in timelink.values()])
+        # print
+        linkcounter = defaultdict(int, Counter(links))
+        # print("link counter:", time, linkcounter, set(list(linkcounter.values())))
+
         for n in range(1,ntasks+1):
             tempcombinations = itertools.combinations(range(ntasks), n)
             combinations += list(tempcombinations)
@@ -193,7 +212,7 @@ class Auction():
             taskcomblist = [tlist[i] for i in c]
             pathcomblist = [plist[i] for i in c]
             # linkset = set([])
-            for comb in returnCompatiblePaths(pathcomblist):
+            for comb in returnCompatiblePaths(pathcomblist, linkcounter, maxlink=self.maxlink):
                 # print(c, comb)
                 bundle = PathBundle(tuple([self.taskDict[id] for id in taskcomblist]), comb)
                 # print("bundle length:", c, len(comb), bundle.length)

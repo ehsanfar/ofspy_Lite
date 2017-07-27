@@ -19,7 +19,7 @@ import json
 
 
 
-def execute(dbHost, dbPort, start, stop, design, numPlayers, numTurns, fops, capacity):
+def execute(dbHost, dbPort, start, stop, design, numPlayers, numTurns, fops, capacity, links):
     """
     Executes a general experiment.
     @param dbHost: the database host
@@ -50,7 +50,7 @@ def execute(dbHost, dbPort, start, stop, design, numPlayers, numTurns, fops, cap
     # print start, stop
     executions = [(dbHost, dbPort,
                    [e for e in elements.split(' ') if e != ''],
-                   numPlayers, numTurns, seed, fops, capacity)
+                   numPlayers, numTurns, seed, fops, capacity, links)
                   for (seed, elements) in itertools.product(range(start, stop), design)]
     numComplete = 0.0
     logging.info('Executing {} design with seeds from {} to {} for {} total executions.'
@@ -69,7 +69,7 @@ def execute(dbHost, dbPort, start, stop, design, numPlayers, numTurns, fops, cap
     # This line calculates the average of each element of each tuple for all the lists in the results, in other words assuming that each tuple of each results shows one seed of the same identity
     # print [[sum(x)/float(N) for x in zip(*l)] for l in [[l[j] for l in results] for j in range(N)]]
 
-def queryCase(dbHost, dbPort, elements, numPlayers, numTurns, seed, fops, capacity):
+def queryCase(dbHost, dbPort, elements, numPlayers, numTurns, seed, fops, capacity, links):
     """
     Queries and retrieves existing results or executes an OFS simulation.
     @param dbHost: the database host
@@ -97,7 +97,7 @@ def queryCase(dbHost, dbPort, elements, numPlayers, numTurns, seed, fops, capaci
     # print "elementlist:", elementlist
     # executeCase(elementlist, numPlayers, initialCash,
     #              numTurns, seed, ops, fops)
-    experiment = "Storage Penalty"
+    experiment = "Storage Penalty v2"
     global db
     dbName = None
     # dbHost = socket.gethostbyname(socket.gethostname())
@@ -122,6 +122,7 @@ def queryCase(dbHost, dbPort, elements, numPlayers, numTurns, seed, fops, capaci
              u'numTurns': numTurns,
              u'seed': seed,
              u'capacity': capacity,
+             u'links': links,
              }
 
     doc = None
@@ -129,13 +130,13 @@ def queryCase(dbHost, dbPort, elements, numPlayers, numTurns, seed, fops, capaci
         doc = db[dbName].find_one(query)
     if doc is None:
         # if '-1' in doc['fops'] or '-2' in doc['fops']:
-        db.results.remove(query) #this is temporary, should be removed afterwards
+        # db.results.remove(query) #this is temporary, should be removed afterwards
         doc = db.results.find_one(query)
         if doc:
             # print("Found in DB,elements, storage, sgl, isl, results: ")
-            print([len(doc['elementlist'])]+[doc[k] for k in ['fops', 'capacity', 'results']])
+            print([len(doc['elementlist'])]+[doc[k] for k in ['fops', 'capacity', 'links','results']])
         if doc is None:
-            results = executeCase(elements, numPlayers, numTurns, seed, fops, capacity)
+            results = executeCase(elements, numPlayers, numTurns, seed, fops, capacity, links)
 
             doc = {u'experiment': experiment,
                    u'elementlist': ' '.join(elements),
@@ -144,11 +145,12 @@ def queryCase(dbHost, dbPort, elements, numPlayers, numTurns, seed, fops, capaci
                    u'numTurns': numTurns,
                    u'seed': seed,
                    u'capacity': capacity,
+                   u'links': links,
                    u'results': json.dumps(results),
                     }
             # print("Not Found in DB", doc['results'])
             # print("Not in DB,elements, storage, sgl, isl, results: ")
-            print([len(doc['elementlist'])] + [doc[k] for k in ['fops', 'capacity','results']])
+            print([len(doc['elementlist'])] + [doc[k] for k in ['fops', 'capacity', 'links', 'results']])
             db.results.insert_one(doc)
 
         if dbName is not None:
@@ -157,7 +159,7 @@ def queryCase(dbHost, dbPort, elements, numPlayers, numTurns, seed, fops, capaci
     return [tuple(result) for result in doc[u'results']]
 
 
-def executeCase(elements, numPlayers, numTurns, seed, fops, capacity):
+def executeCase(elements, numPlayers, numTurns, seed, fops, capacity, links):
     """
     Executes an OFS simulation.
     @param elements: the design specifications
@@ -178,7 +180,7 @@ def executeCase(elements, numPlayers, numTurns, seed, fops, capacity):
     # print "ofs-exp-vs elementlist: ", elementlist
     #
     # return OFSL(elementlist=elementlist, numPlayers=numPlayers, initialCash=initialCash, numTurns=numTurns, seed=seed, ops=ops, fops=fops).execute()
-    ofsl = OFSL(elements=elements, numPlayers=numPlayers, numTurns=numTurns, seed=seed, fops=fops, capacity = capacity)
+    ofsl = OFSL(elements=elements, numPlayers=numPlayers, numTurns=numTurns, seed=seed, fops=fops, capacity = capacity, links = links)
     return ofsl.execute()
 
 
@@ -217,6 +219,8 @@ if __name__ == '__main__':
                         help='number of players')
     parser.add_argument('-c', '--capacity', type=int, default=2.,
                         help='satellite capacity')
+    parser.add_argument('-l', '--links', type=int, default=2.,
+                        help='links per edge')
     # parser.add_argument('-o', '--ops', type=str, default='d6',
     #                     help='federate operations model specification')
     parser.add_argument('-f', '--fops', type=str, default='',
@@ -248,7 +252,7 @@ if __name__ == '__main__':
     hardcoded_designs = (
         # "1.GroundSta@SUR1,oSGL 2.GroundSta@SUR3,oSGL 1.MediumSat@MEO3,VIS,SAR,oSGL,oISL  2.MediumSat@MEO5,VIS,SAR,oSGL,oISL",
         "1.Sat@MEO6 1.Sat@MEO4 2.Sat@MEO2 2.Sat@MEO1 1.GroundSta@SUR1 2.GroundSta@SUR4",
-        "1.Sat@MEO6 1.Sat@MEO5 1.Sat@MEO4 2.Sat@MEO3 2.Sat@MEO2 2.Sat@MEO1 1.GroundSta@SUR1 2.GroundSta@SUR4",
+        # "1.Sat@MEO6 1.Sat@MEO5 1.Sat@MEO4 2.Sat@MEO3 2.Sat@MEO2 2.Sat@MEO1 1.GroundSta@SUR1 2.GroundSta@SUR4",
         # "1.Sat@LEO6 1.Sat@MEO5 1.Sat@MEO4 2.Sat@MEO3 2.Sat@MEO2 2.Sat@MEO1 1.GroundSta@SUR1 2.GroundSta@SUR4",
         "1.GroundSta@SUR%d 2.GroundSta@SUR%d 3.GroundSta@SUR%d 1.Sat@MEO%d 1.Sat@MEO%d 2.Sat@LEO%d 2.Sat@MEO%d 3.Sat@LEO%d 3.Sat@MEO%d"%(1,4,5,1,3,6,4,5,2),
         # "1.GroundSta@SUR%d 2.GroundSta@SUR%d 3.GroundSta@SUR%d 1.Sat@MEO%d 1.Sat@MEO%d 1.Sat@MEO%d 2.Sat@MEO%d 2.Sat@MEO%d 2.Sat@MEO%d 3.Sat@MEO%d 3.Sat@MEO%d 3.Sat@MEO%d"%(1,3,5,1,3,6,3,5,2,5,1,4),
@@ -276,14 +280,17 @@ if __name__ == '__main__':
         # argsdict.pop('logging')
         # argsdict.pop('dbName')
 
-        costrange = list(range(0, 801, 200))
-        storange = list(range(0, 801, 200))
+        costrange = list(range(0, 1201, 200))
+        storange = list(range(0, 1201, 200))
         for fops in fopsGen(costrange, storange, numPlayers):
             # print(fops)
             # print(argsdict)
             argsdict['fops'] = json.dumps(fops)
-
-            execute(**argsdict)
+            for capacity in [1,2]:
+                for links in [1,2]:
+                    argsdict['capacity'] = capacity
+                    argsdict['links'] = links
+                    execute(**argsdict)
 
             # execute(args.dbHost, args.dbPort, None, args.start, args.stop,
             #         [design],

@@ -161,6 +161,10 @@ class Satellite(Element):
         if not self.isGEO():
             # print("Element collect new tasks")
             # print("new task:", self.federateOwner.name, self.name)
+            if not context.canpickup():
+                # print("Full")
+                return False
+
             nextTask = Task(time=self.federateOwner.time, id=context.getTaskid(), federate=self.federateOwner, element=self)
             # print("new task id:", nextTask.taskid)
 
