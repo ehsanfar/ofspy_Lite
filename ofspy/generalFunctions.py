@@ -313,6 +313,40 @@ def generateFops(costrange, storange):
                 stopen2 = sto2
                 yield ["x%d,%d,%d" % (costsgl, costisl, stopen2), "x%d,%d,%d" % (costsgl, costisl, stopen), "x%d,%d,%d" % (costsgl, costisl, sotpen)]
 
+
+def calGaussianKernel(x, y, M, N, scale = 0.8):
+
+    sigma1 = scale*M/6.
+    sigma2 = scale*N/10.
+
+    kernelmesh = np.zeros((M, N))
+    for i in range(M):
+        for j in range(N):
+            delta1 = min(abs(x-i), M-abs(x-i))
+            delta2 = abs(y-j)
+            kernelmesh[i, j] = math.exp(-delta1**2/(2*sigma1**2)-delta2**2/(2*sigma2**2))
+
+    kernelmesh = kernelmesh/sum(sum(kernelmesh))
+    return kernelmesh
+
+
+# print(calGaussianKernel(0,7,6,10, 0.6))
+
+# x = y = 0
+# N = 10
+# M = 6
+# kernelmesh = np.zeros((M, N))
+# for i in range(N):
+#     for j in range(M):
+#         delta1 = min(abs(x-i), N-abs(x-i))
+#         delta2 = min(abs(y-j), M - abs(y-j))
+#         kernelmesh[j, i] = calGaussianKernel(delta1, delta2)
+#
+# kernelmesh = np.round(kernelmesh/sum(sum(kernelmesh)), 3)
+# print(sum(sum(kernelmesh)))
+# print(kernelmesh)
+
+
     #
     # for path in pathlist[0]:
     #     print(path)

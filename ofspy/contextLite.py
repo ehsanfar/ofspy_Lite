@@ -2,7 +2,7 @@ import random
 import numpy as np
 from .task import Task
 import queue
-from .federateLite import FederateLite, FederateLearning
+from .federateLite import FederateLite, FederateLearning, FederateLearning2
 import re
 
 from .graph import SuperG
@@ -41,6 +41,7 @@ class ContextLite():
         self.totalcash = 0.
 
     def init(self, ofs):
+        self.ofs = ofs
         self.time = ofs.initTime
         self.initTime = ofs.initTime
         self.maxTime = ofs.maxTime
@@ -150,10 +151,13 @@ class ContextLite():
 
         # print("generate federates: storage penalty and federates:", storagePenalty, fedset)
         for i, f in enumerate(fedset):
-            if storagePenalty[i] == -2:
+            if costSGL[i] == -2:
+                self.federates.append(FederateLearning2(name='F' + str(i + 1), context=self))
+            elif storagePenalty[i] == -2:
                 self.federates.append(FederateLearning(name='F'+str(i+1), context=self, costSGL=costSGL[i], costISL=costISL[i]))
             else:
                 self.federates.append(FederateLite(name = 'F'+str(i+1), context = self, costSGL = costSGL[i], costISL = costISL[i], storagePenalty = storagePenalty[i]))
+
         for element in elementgroups:
             # print(element)
             index = fedset.index(element[0])

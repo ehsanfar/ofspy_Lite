@@ -172,8 +172,8 @@ class Satellite(Element):
                              range(6)]
             # print("Element tasks value list:", taskvaluelist)
             self.elementG.updateGraph(context, taskvaluelist=taskvaluelist)
-
-            edges = self.elementG.Graph.edges()
+            #
+            # edges = self.elementG.Graph.edges()
 
 
             self.federateOwner.pickupOpportunities += 1

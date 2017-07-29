@@ -16,6 +16,8 @@ class Auction():
         self.compatibleBundles = []
         self.bestPathBundle = None
         self.maxlink = links
+        self.auctionFederates = set([])
+        # self.federateset = []
 
 
     def inquirePrice(self):
@@ -31,6 +33,13 @@ class Auction():
 
 
         self.pathlist = [e.elementG.orderPathDict[self.time%6] for e in elementset]
+
+        # auctionlinklist = [e for l in [path.nodelist for path in self.pathlist] for e in l]
+        # for fed in federateset:
+        #     fed.updateCost(auctionlinklist)
+        self.auctioneer.costSGLDict = {f.name: f.getCost('oSGL') for f in self.auctioneer.context.federates}
+        self.auctioneer.costISLDict = {f.name: f.getCost('oISL') for f in self.auctioneer.context.federates}
+
         self.pathlist = [e for l in self.pathlist for e in l]
         # print("pathlist:", self.pathlist)
         for path in self.pathlist:
@@ -43,13 +52,21 @@ class Auction():
                 fname = re.search(r'.+\.(F\d)\..+', link[1]).group(1)
                 if fname == ownername:
                     cost = elementOwner.elementG.Graph[link[0]][link[1]]['weight']
+
                     # print(elementOwner.name, link, cost)
                     linkbids.append(0)
                 else:
+                    self.auctionFederates.add(fname)
                     cost = self.auctioneer.costSGLDict[fname] if 'GS' in link[1] else self.auctioneer.costISLDict[fname]
                     linkbids.append(cost)
 
+                    # print('link cost:', cost)
+
                 linkcosts.append(cost)
+
+
+            # if path.elementOwner.federateOwner.storagePenalty == -1:
+            #     print(path.elementOwner.federateOwner.storagePenalty, linkbids, linkcosts)
 
             path.updateBid(linkbids)
             path.updateCost(linkcosts)
@@ -113,6 +130,13 @@ class Auction():
                 # print(time, link)
                 # print(defaultdict)
                 self.auctioneer.updateTimeLinks(time, link)
+
+        federateDict = {f.name: f for f in self.auctioneer.context.federates}
+        for fed in self.auctionFederates:
+            federate = federateDict[fed]
+            if federate.costlearning:
+               federate.updateBestBundle(self.bestPathBundle)
+
         return True
 
     def findCompatiblePaths(self, tasklist = None):

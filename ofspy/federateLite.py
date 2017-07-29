@@ -1,10 +1,10 @@
 import re
 from .elementLite import Satellite, GroundStation
-from .qlearner import Qlearner
+from .qlearner import QlearnerStorage, QlearnerCost
 
 
 class FederateLite():
-    def __init__(self, name, context, costSGL, costISL, storagePenalty = 100):
+    def __init__(self, name, context, costSGL, costISL, storagePenalty = 100, strategy = 1):
         """
         @param name: the name of this federate
         @type name: L{str}
@@ -43,7 +43,11 @@ class FederateLite():
         self.uniqueBundles = []
         self.nodeElementDict = {}
 
-        self.learning = False
+        self.storagelearning = False
+        self.costlearning = False
+        self.stochastic = False
+        # self.strategyDict = {1: 'QLearning'}
+        self.strategy = strategy
 
 
     def getElements(self):
@@ -75,10 +79,20 @@ class FederateLite():
     def setCost(self, protocol, cost):
         self.costDic[protocol] = cost
 
-    def getCost(self, protocol, federate = None):
+    def getCost(self, protocol = None, task = None, federate = None):
         # print(self.name, federate.name, self.name == federate.name, self.costDic[protocol])
         if federate and self.name == federate.name:
             return 0.
+
+
+        if self.stochastic:
+            c = max(0.01, min(self.costDic[protocol] / 1200., 0.99))
+            alpha = c/(1-c)
+            beta = 1.
+            ret = 1200*self.context.masterStream.betavariate(alpha, beta)
+            # print(self.costDic[protocol], ret)
+            return ret
+
 
         return self.costDic[protocol]
         # key = '{}-{}'.format(federate, protocol)
@@ -101,7 +115,7 @@ class FederateLite():
     def getStorageCostList(self, element, taskvaluelist = None):
         # print("federate storage penalty:", self.storagePenalty)
         # if self.storagePenalty == -2:
-        #     return self.qlearner.run(element)
+        #     return self.qlearnerstorage.run(element)
 
         if self.storagePenalty>=0:
             return 6*[self.storagePenalty]
@@ -118,6 +132,7 @@ class FederateLite():
             section = section%6+1
 
             # print("storage cost:", [int(e) for e in storagecostlist])
+        # print("storage penalty -1:", storagecostlist)
         return storagecostlist
 
     def discardTask(self):
@@ -235,41 +250,44 @@ class FederateLite():
 class FederateLearning(FederateLite):
     def __init__(self, name, context, costSGL, costISL, storagePenalty = -2):
         super().__init__(name, context, costSGL = costSGL, costISL = costISL, storagePenalty = storagePenalty)
-        self.qlearner = Qlearner(self, numericactions=list(range(0, 1001, 100)), memoryset=list(range(3)))
+        print("storage penalty:", self.storagePenalty)
+        self.qlearnerstorage = QlearnerStorage(self, numericactions=list(range(0, 1101, 100)), states =list(range(int(self.context.ofs.capacity)+1)))
         self.rewards = 0.
-        self.leanring = True
+        self.storagelearning = True
 
 
     def getStorageCostList(self, element, taskvaluelist = None):
         # print("federate storage penalty:", self.storagePenalty)
-        return self.qlearner.getAction(element)
+        storagepanalty = self.qlearnerstorage.getAction(element)
+        # print("storage penalty -2:", storagepanalty)
+        return storagepanalty
 
     def finishTask(self, task):
-        path = task.path
+        # path = task.path
+        # taskvalue = task.getValue(self.time)
+        # self.cash += taskvalue
+        # for cost, federate in zip(path.linkbidlist, path.linkfederatelist):
+        #     if federate is not self:
+        #         federate.cash += cost
+        #         self.cash -= cost
+        #
+        # # print("active tasks:", [t.taskid for t in self.activeTasks])
+        # # print("finish task:", task.taskid, task.elementOwner.name, task.federateOwner.name, self.name)
+        #
+        # assert task in self.activeTasks
+        # section = task.getSection()
+        # assert self.time >= task.initTime
+        # duration = max(1, self.time - task.initTime)
+        # assert section in range(1, 7)
+        #
+        # # print "Finished tasks (section, taskvalue, taskduration):", section, taskvalue, duration
+        # self.taskduration[section] = (self.taskduration[section]*self.taskcounter[section] + duration)/(self.taskcounter[section] + 1.)
+        # self.taskvalue[section]  = (self.taskvalue[section]*self.taskcounter[section] + taskvalue)/(self.taskcounter[section] + 1.)
+        # self.taskcounter[section] += 1
+        # self.activeTasks.remove(task)
+        super().finishTask(task)
         taskvalue = task.getValue(self.time)
-        self.cash += taskvalue
-        for cost, federate in zip(path.linkbidlist, path.linkfederatelist):
-            if federate is not self:
-                federate.cash += cost
-                self.cash -= cost
-
-        # print("active tasks:", [t.taskid for t in self.activeTasks])
-        # print("finish task:", task.taskid, task.elementOwner.name, task.federateOwner.name, self.name)
-
-        assert task in self.activeTasks
-        section = task.getSection()
-        assert self.time >= task.initTime
-        duration = max(1, self.time - task.initTime)
-        assert section in range(1, 7)
-
-        # print "Finished tasks (section, taskvalue, taskduration):", section, taskvalue, duration
-        self.taskduration[section] = (self.taskduration[section]*self.taskcounter[section] + duration)/(self.taskcounter[section] + 1.)
-        self.taskvalue[section]  = (self.taskvalue[section]*self.taskcounter[section] + taskvalue)/(self.taskcounter[section] + 1.)
-        self.taskcounter[section] += 1
-        # print("finishtask: pickup opp and task counter:", sum(list(self.taskcounter.values())), self.pickupOpportunities)
         self.rewards += taskvalue
-        self.activeTasks.remove(task)
-
 
     def ticktock(self):
         """
@@ -279,16 +297,49 @@ class FederateLearning(FederateLite):
         # print "federete tick tock"
         # for element in self.elements:
         #     if element.isSpace():
-        #         self.qlearner.update_q(element, self.rewards)
+        #         self.qlearnerstorage.update_q(element, self.rewards)
 
         self.time = self.context.time
         for element in self.elements:
             element.ticktock()
             if element.isSpace():
                 # print("self. rewrds:",self.rewards)
-                self.qlearner.update_q(element, self.rewards)
+                self.qlearnerstorage.update_q(element, self.rewards)
 
         self.rewards = 0.
+
+
+class FederateLearning2(FederateLearning):
+    def __init__(self, name, context, storagePenalty = -2):
+        super().__init__(name, context, costSGL=0, costISL=0, storagePenalty = storagePenalty)
+        self.qlearnercost = QlearnerCost(self, numericactions=list(range(0, 1101, 100)))
+        self.costlearning = True
+        self.currentcost = 0.
+
+    def getCost(self, protocol = None, federate = None):
+        # print(self.name, federate.name, self.name == federate.name, self.costDic[protocol])
+        if federate and self.name == federate.name:
+            return 0.
+
+        self.currentcost = self.qlearnercost.getAction()
+        return self.currentcost
+
+    def updateBestBundle(self, bestbundle):
+        tasklist = bestbundle.tasklist
+        reward = 0.
+        for task in tasklist:
+            path = task.path
+            if task.federateOwner is self:
+                reward += task.getValue(self.time+path.deltatime) - path.pathBid
+            else:
+                for cost, federate in zip(path.linkbidlist, path.linkfederatelist):
+                    if federate is self:
+                        reward += cost
+
+        self.qlearnercost.update_q(self.currentcost, reward)
+
+
+
 
 
 

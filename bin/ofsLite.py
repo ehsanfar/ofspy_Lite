@@ -97,7 +97,7 @@ def queryCase(dbHost, dbPort, elements, numPlayers, numTurns, seed, fops, capaci
     # print "elementlist:", elementlist
     # executeCase(elementlist, numPlayers, initialCash,
     #              numTurns, seed, ops, fops)
-    experiment = "Storage Penalty v2"
+    experiment = "Adaptive Cost"
     global db
     dbName = None
     # dbHost = socket.gethostbyname(socket.gethostname())
@@ -118,7 +118,6 @@ def queryCase(dbHost, dbPort, elements, numPlayers, numTurns, seed, fops, capaci
     query = {u'experiment': experiment,
              u'elementlist': ' '.join(elements),
              u'fops': fops,
-             u'numPlayers': numPlayers,
              u'numTurns': numTurns,
              u'seed': seed,
              u'capacity': capacity,
@@ -141,7 +140,6 @@ def queryCase(dbHost, dbPort, elements, numPlayers, numTurns, seed, fops, capaci
             doc = {u'experiment': experiment,
                    u'elementlist': ' '.join(elements),
                    u'fops': fops,
-                   u'numPlayers': numPlayers,
                    u'numTurns': numTurns,
                    u'seed': seed,
                    u'capacity': capacity,
@@ -188,25 +186,26 @@ def fopsGen(costrange, storange, numplayers):
     # costSGLList = list(range(0, 1001, 200))
     # # costISLList = [c/2. for c in costSGLList]
     # storagePenalty = list(range(0, 1001, 200))+[-1]
-    for sgl in costrange:
-        # for s in storange:
-        #     # yield ["x%d,%d,%d"%(sgl, sgl, -2)] + (numplayers-1)*["x%d,%d,%d"%(sgl, sgl, s)]
-        #     yield numplayers* ["x%d,%d,%d"%(sgl, sgl, s)]
+    yield numplayers * ["x%d,%d" % (-2, -2)]
+    # for sgl in costrange:
+    #     for s in storange:
+    #         # yield ["x%d,%d,%d"%(sgl, sgl, -2)] + (numplayers-1)*["x%d,%d,%d"%(sgl, sgl, s)]
+    #         yield numplayers* ["x%d,%d"%(sgl, s)]
+    #
+    #     yield numplayers * ["x%d,%d" % (sgl, -2)]
+    #     yield numplayers * ["x%d,%d" % (sgl, -1)]
 
-        yield numplayers * ["x%d,%d,%d" % (sgl, sgl, -2)]
-        # yield numplayers * ["x%d,%d,%d" % (sgl, sgl, -1)]
-
-def generateFops(costrange, storange):
-    fops = []
-    for cost in costrange:
-        costsgl = cost
-        costisl = cost
-
-        for sto in storange:
-            stopen = sto
-            for sto2 in storange:
-                stopen2 = sto2
-                yield ["x%d,%d,%d" % (costsgl, costisl, stopen2), "x%d,%d,%d" % (costsgl, costisl, stopen), "x%d,%d,%d" % (costsgl, costisl, stopen)]
+# def generateFops(costrange, storange):
+#     fops = []
+#     for cost in costrange:
+#         costsgl = cost
+#         costisl = cost
+#
+#         for sto in storange:
+#             stopen = sto
+#             for sto2 in storange:
+#                 stopen2 = sto2
+#                 yield ["x%d,%d,%d" % (costsgl, costisl, stopen2), "x%d,%d,%d" % (costsgl, costisl, stopen), "x%d,%d,%d" % (costsgl, costisl, stopen)]
 
 if __name__ == '__main__':
 

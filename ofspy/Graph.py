@@ -49,14 +49,14 @@ class SuperG():
                     telement = context.nodeElementDict[tx[:-2]]
                     relement = context.nodeElementDict[rx[:-2]]
                     if self.canTransmit(telement, relement):
-                        txowner = telement.federateOwner
-                        rxowner = relement.federateOwner
+                        # txowner = telement.federateOwner
+                        # rxowner = relement.federateOwner
                         cost = 0.
-                        if txowner != rxowner:
-                            if relement.isSpace():
-                                cost = rxowner.getCost('oISL', txowner)
-                            elif relement.isGround():
-                                cost = rxowner.getCost('oSGL', txowner)
+                        # if txowner != rxowner:
+                        #     if relement.isSpace():
+                        #         cost = rxowner.getCost('oISL', txowner)
+                        #     elif relement.isGround():
+                        #         cost = rxowner.getCost('oSGL', txowner)
 
                         # print("new edge:", telement.name, relement.name)
                         G.add_edge(tx, rx, weight=cost)
@@ -100,21 +100,22 @@ class ElementG():
 
     def updateGraph(self, context, taskvaluelist):
         self.storagePenalty = deque(self.elementOwner.federateOwner.getStorageCostList(self.elementOwner, taskvaluelist=taskvaluelist))
+
         torder = self.elementOwner.federateOwner.time%6
         self.storagePenalty.rotate(-torder)
         # print(self.storagePenalty)
-
-
-        edges = self.Graph.edges()
-        fedname = self.elementOwner.federateOwner.name
-        for e1, e2 in edges:
-            fname = re.search(r'.+\.(F\d)\..+', e2).group(1)
-            if fedname == fname:
-                self.Graph[e1][e2]['weight'] = 0.
-            elif 'GS' in e2:
-                self.Graph[e1][e2]['weight'] = context.auctioneer.costSGLDict[fname]
-            else:
-                self.Graph[e1][e2]['weight'] = context.auctioneer.costISLDict[fname]
+        # edges = self.Graph.edges()
+        # fedname = self.elementOwner.federateOwner.name
+        # for e1, e2 in edges:
+        #     fname = re.search(r'.+\.(F\d)\..+', e2).group(1)
+        #     if fedname == fname:
+        #         self.Graph[e1][e2]['weight'] = 0.
+        #     elif 'GS' in e2:
+        #         self.Graph[e1][e2]['weight'] = context.auctioneer.costSGLDict[fname]
+        #     else:
+        #         self.Graph[e1][e2]['weight'] = context.auctioneer.costISLDict[fname]
+        #
+        #     # print("updateGraph:", e1, e2, self.Graph[e1][e2]['weight'])
 
         for i, s in enumerate(self.storagePenalty):
             name1 = '%s.%d'%(self.elementOwner.name, i%6)

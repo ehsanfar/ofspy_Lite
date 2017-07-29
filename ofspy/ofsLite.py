@@ -19,9 +19,9 @@ class OFSL(object):
         # print("fops:", fops)
         # args = re.search('x(\d+),(\d+),([-v\d]+)', fops)
         fops = json.loads(fops)
-        self.costSGL = [int(re.search('x(\d+),(\d+),([-\d]+)', f).group(1)) for f in fops]
-        self.costISL = [int(re.search('x(\d+),(\d+),([-\d]+)', f).group(2)) for f in fops]
-        self.storagePenalty = [int(re.search('x(\d+),(\d+),([-\d]+)', f).group(3)) for f in fops]
+        self.costSGL = [int(re.search('x([-\d]+),([-\d]+)', f).group(1)) for f in fops]
+        self.costISL = self.costSGL
+        self.storagePenalty = [int(re.search('x([-\d]+),([-\d]+)', f).group(2)) for f in fops]
         self.capacity = int(capacity)
         self.links = links
 
@@ -52,23 +52,25 @@ class OFSL(object):
         #     plt.show()
         #
         # plt.clf()
-        figs = []
-        for i, f in enumerate(self.context.federates):
-            if not plt.fignum_exists(i):
-                figs.append(plt.figure(i))
-                plt.ion()
-                plt.show()
-
-            plt.clf()
-            if f.storagePenalty == -2:
-                actionlist = f.qlearner.actionlist
+        # figs = []
+        # print("figures")
+        # for i, f in enumerate(self.context.federates):
+        #     if not plt.fignum_exists(i):
+        #         figs.append(plt.figure(i))
+        #         plt.ion()
+        #         plt.show()
         #
-                plt.plot(actionlist)
-                plt.draw()
-                plt.savefig("Evolution_%d_%s.png" % (sum(self.costSGL)/float(len(self.costSGL)), f.name), bbox_inches='tight')
-
-        for f in figs:
-            plt.close(f)
+        #     plt.clf()
+        #     print(f.storagePenalty)
+        #     if f.storagePenalty == -2:
+        #         actionlist = f.qlearnerstorage.actionlist
+        # #
+        #         plt.plot(actionlist)
+        #         plt.draw()
+        #         plt.savefig("Evolution_%d_%s.png" % (sum(self.costSGL)/float(len(self.costSGL)), f.name), bbox_inches='tight')
+        #
+        # for f in figs:
+        #     plt.close(f)
 
                 # plt.waitforbuttonpress()
 
