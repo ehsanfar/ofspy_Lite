@@ -1,6 +1,5 @@
 import numpy as np
 from itertools import product
-import random
 from collections import deque, defaultdict
 from .generalFunctions import *
 from math import pi
@@ -17,7 +16,7 @@ class QLearner():
         # self.n_states = len(self.stateDict)
         # self.n_actions = len(numericactions)
         self.epsilon = 0.05
-        self.random_state = np.random.RandomState(seed)
+        self.random_state = federate.context.masterStream
         self.time = 0
         self.federate = federate
 
@@ -118,15 +117,15 @@ class QlearnerStorage(QLearner):
             # print("Action: cost vs action:", cost, self.actions[lastindex])
 
         # newepsilon = self.epsilon*max(0.1, (1 - self.time/3000))
-        if self.random_state.rand() < self.epsilon or np.sum(self.q[current_state]) <= 0:
-            action = random.choice(self.actions[max(0, lastindex-2):min(lastindex+3, len(self.actions))])
+        if self.random_state.random() < self.epsilon or np.sum(self.q[current_state]) <= 0:
+            action = self.random_state.choice(self.actions[max(0, lastindex-2):min(lastindex+3, len(self.actions))])
             # action = random.choice(self.actions)
         else:
             # if np.sum(self.q[current_state]) > 0:
             # print("q row:", [int(e) for e in self.q[current_state]])
             maxq = max(self.q[current_state])
             indices = [i for i, e in enumerate(self.q[current_state]) if e == maxq]
-            action = self.actions[random.choice(indices)]
+            action = self.actions[self.random_state.choice(indices)]
             # print("maximual action:", action)
 
         # print([element.name, current_state, self.actions.index(action), self.time])
@@ -142,6 +141,7 @@ class QlearnerCost(QLearner):
     def __init__(self, federate, numericactions, states=list(range(6)), seed=0):
         super().__init__(federate, numericactions, states, seed)
         self.stateActionDict = defaultdict(list)
+        self.priceEvolution = []
 
     def update_q(self, action, reward):
         # print("update action reward:", action, reward)
@@ -175,8 +175,8 @@ class QlearnerCost(QLearner):
             lastindex = 0
 
         # newepsilon = self.epsilon*max(0.1, (1 - self.time/3000))
-        if self.random_state.rand() < self.epsilon or np.sum(self.q[current_state]) <= 0:
-            action = random.choice(self.actions[max(0, lastindex-2):min(lastindex+3, len(self.actions))])
+        if self.random_state.random() < self.epsilon or np.sum(self.q[current_state]) <= 0:
+            action = self.random_state.choice(self.actions[max(0, lastindex-2):min(lastindex+3, len(self.actions))])
             # action = random.choice(self.actions)
         else:
             # if np.sum(self.q[current_state]) > 0:
@@ -189,14 +189,5 @@ class QlearnerCost(QLearner):
         self.stateActionDict[current_state] = (action, self.time)
 
         # print("cost action:", current_state, action)
+        self.priceEvolution.append((self.federate.time, action))
         return action
-
-
-
-
-
-
-
-
-
-

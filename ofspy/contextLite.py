@@ -37,7 +37,7 @@ class ContextLite():
         self.nodeElementDict = {}
         self.nodeFederateDict = {}
         self.pickeduptasks = set([])
-        self.taskperturn = 100
+        self.taskperturn = 1000
         self.totalcash = 0.
 
     def init(self, ofs):

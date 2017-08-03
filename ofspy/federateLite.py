@@ -1,6 +1,8 @@
 import re
+# import random
 from .elementLite import Satellite, GroundStation
 from .qlearner import QlearnerStorage, QlearnerCost
+from .generalFunctions import matchVariance
 
 
 class FederateLite():
@@ -86,10 +88,10 @@ class FederateLite():
 
 
         if self.stochastic:
-            c = max(0.01, min(self.costDic[protocol] / 1200., 0.99))
-            alpha = c/(1-c)
-            beta = 1.
-            ret = 1200*self.context.masterStream.betavariate(alpha, beta)
+            a = max(min(self.costDic[protocol], 1200-40), 40)
+            b = 1200 - a
+            a, b = matchVariance(a, b, 0.015)
+            ret = 1200*self.context.masterStream.betavariate(a, b)
             # print(self.costDic[protocol], ret)
             return ret
 
@@ -119,6 +121,9 @@ class FederateLite():
 
         if self.storagePenalty>=0:
             return 6*[self.storagePenalty]
+
+        elif self.storagePenalty == -3:
+            return self.context.masterStream.sample(range(1200), 6)
 
         section = element.section
         # assert section in range(1, 7)

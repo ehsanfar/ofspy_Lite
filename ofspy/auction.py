@@ -242,9 +242,6 @@ class Auction():
                 # print("bundle length:", c, len(comb), bundle.length)
                 yield bundle
 
-
-
-
         # return permutations
         # print("Unique products:", )
 

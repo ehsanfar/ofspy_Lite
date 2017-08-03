@@ -7,7 +7,7 @@ import pymongo
 # from scoop import futures
 import sys, os
 import re
-import random
+# import random
 
 # add ofspy to system path
 sys.path.append(os.path.abspath('..'))
@@ -97,7 +97,7 @@ def queryCase(dbHost, dbPort, elements, numPlayers, numTurns, seed, fops, capaci
     # print "elementlist:", elementlist
     # executeCase(elementlist, numPlayers, initialCash,
     #              numTurns, seed, ops, fops)
-    experiment = "Adaptive Cost"
+    experiment = "Storage Penalty Stochastic"
     global db
     dbName = None
     # dbHost = socket.gethostbyname(socket.gethostname())
@@ -129,7 +129,7 @@ def queryCase(dbHost, dbPort, elements, numPlayers, numTurns, seed, fops, capaci
         doc = db[dbName].find_one(query)
     if doc is None:
         # if '-1' in doc['fops'] or '-2' in doc['fops']:
-        # db.results.remove(query) #this is temporary, should be removed afterwards
+        db.results.remove(query) #this is temporary, should be removed afterwards
         doc = db.results.find_one(query)
         if doc:
             # print("Found in DB,elements, storage, sgl, isl, results: ")
@@ -186,14 +186,15 @@ def fopsGen(costrange, storange, numplayers):
     # costSGLList = list(range(0, 1001, 200))
     # # costISLList = [c/2. for c in costSGLList]
     # storagePenalty = list(range(0, 1001, 200))+[-1]
-    yield numplayers * ["x%d,%d" % (-2, -2)]
-    # for sgl in costrange:
-    #     for s in storange:
-    #         # yield ["x%d,%d,%d"%(sgl, sgl, -2)] + (numplayers-1)*["x%d,%d,%d"%(sgl, sgl, s)]
-    #         yield numplayers* ["x%d,%d"%(sgl, s)]
-    #
-    #     yield numplayers * ["x%d,%d" % (sgl, -2)]
-    #     yield numplayers * ["x%d,%d" % (sgl, -1)]
+    # yield numplayers * ["x%d,%d" % (-2, -2)]
+    for sgl in costrange:
+        for s in storange:
+            # yield ["x%d,%d,%d"%(sgl, sgl, -2)] + (numplayers-1)*["x%d,%d,%d"%(sgl, sgl, s)]
+            yield numplayers* ["x%d,%d"%(sgl, s)]
+
+        # yield numplayers * ["x%d,%d" % (sgl, -2)]
+        # yield numplayers * ["x%d,%d" % (sgl, -1)]
+        # yield numplayers * ["x%d,%d" % (sgl, -3)]
 
 # def generateFops(costrange, storange):
 #     fops = []

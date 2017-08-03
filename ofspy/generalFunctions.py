@@ -330,7 +330,16 @@ def calGaussianKernel(x, y, M, N, scale = 0.8):
     return kernelmesh
 
 
-# print(calGaussianKernel(0,7,6,10, 0.6))
+def matchVariance(a, b, var0):
+    # print(var0 ** 0.5)
+    # currentvar = a * b / ((a + b + 1.) * (a + b) ** 2)
+    # print(currentvar ** 0.5)
+    k = (a * b - var0 * (a + b) ** 2) / (var0 * (a + b) ** 3)
+    # print("a, b, coef:", a, b, k)
+    return (k * a, k * b)
+
+
+        # print(calGaussianKernel(0,7,6,10, 0.6))
 
 # x = y = 0
 # N = 10

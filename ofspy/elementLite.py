@@ -7,7 +7,7 @@ import queue
 from .task import Task
 from .graph import ElementG
 from .generalFunctions import *
-import random
+# import random
 
 class Element():
     def __init__(self, federate, name, location, cost=0):
