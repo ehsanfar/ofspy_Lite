@@ -88,11 +88,12 @@ class FederateLite():
 
 
         if self.stochastic:
-            a = max(min(self.costDic[protocol], 1200-40), 40)
-            b = 1200 - a
-            a, b = matchVariance(a, b, 0.015)
-            ret = 1200*self.context.masterStream.betavariate(a, b)
-            # print(self.costDic[protocol], ret)
+            # a = max(min(self.costDic[protocol], 1200-20), 20)
+            # b = 1200 - a
+            # a, b = matchVariance(a, b, 0.015)
+            # ret = 1200*self.context.masterStream.betavariate(a, b)
+            # # print(self.costDic[protocol], ret)
+            ret = 100*round(11*self.context.masterStream.random())
             return ret
 
 
@@ -138,7 +139,7 @@ class FederateLite():
 
             # print("storage cost:", [int(e) for e in storagecostlist])
         # print("storage penalty -1:", storagecostlist)
-        return storagecostlist
+        return [e/max(1,element.capacity-element.content) for e in storagecostlist]
 
     def discardTask(self):
         for e in self.elements:
@@ -255,7 +256,7 @@ class FederateLite():
 class FederateLearning(FederateLite):
     def __init__(self, name, context, costSGL, costISL, storagePenalty = -2):
         super().__init__(name, context, costSGL = costSGL, costISL = costISL, storagePenalty = storagePenalty)
-        print("storage penalty:", self.storagePenalty)
+        # print("storage penalty:", self.storagePenalty)
         self.qlearnerstorage = QlearnerStorage(self, numericactions=list(range(0, 1101, 100)), states =list(range(int(self.context.ofs.capacity)+1)))
         self.rewards = 0.
         self.storagelearning = True
@@ -314,19 +315,21 @@ class FederateLearning(FederateLite):
         self.rewards = 0.
 
 
-class FederateLearning2(FederateLearning):
-    def __init__(self, name, context, storagePenalty = -2):
+class FederateLearning2(FederateLite):
+    def __init__(self, name, context, storagePenalty = -1):
         super().__init__(name, context, costSGL=0, costISL=0, storagePenalty = storagePenalty)
         self.qlearnercost = QlearnerCost(self, numericactions=list(range(0, 1101, 100)))
         self.costlearning = True
         self.currentcost = 0.
+        self.costlist = []
 
     def getCost(self, protocol = None, federate = None):
         # print(self.name, federate.name, self.name == federate.name, self.costDic[protocol])
         if federate and self.name == federate.name:
             return 0.
 
-        self.currentcost = self.qlearnercost.getAction()
+        self.currentcost = 100*round(self.qlearnercost.getAction()/100.)
+        self.costlist.append(self.currentcost)
         return self.currentcost
 
     def updateBestBundle(self, bestbundle):

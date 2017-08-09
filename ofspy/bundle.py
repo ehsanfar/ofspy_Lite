@@ -112,6 +112,30 @@ class PathBundle():
     # def getTaskProfit(self, task):
     #     # print("Path list and task dict:", [p.nodelist for p in self.pathlist], self.taskProfit)
     #     return self.taskProfit[task.taskid] if task.taskid in self.taskProfit else 0.
+    '''
+    def getBundleAlternativeCost(self, federate, price):
+        alternativecost = 0.
+        # print("bundle bid:", self.bundleBid, self.bundleCost)
+        for path in self.pathlist:
+            # print("federates:", path.elementOwner.federateOwner.name, federate.name)
+            if path.elementOwner.federateOwner is federate:
+                # print("continue")
+                alternativecost += path.pathCost
+                continue
+
+            linkfederatelist = path.linkfederatelist[:]
+            linkcostlist = path.linkcostlist[:]
+            costlist = [bid for bid, fed in zip(linkcostlist, linkfederatelist) if fed is not federate]
+            newpricelinks = [price for fed in linkfederatelist if fed is federate]
+            # print([e.name for e in linkfederatelist])
+            # print(len(newpricelinks), len(bidlist), len(linkbidlist))
+            # print(price, sum(bidlist), sum(newpricelinks))
+            alternativecost += sum(costlist) + sum(newpricelinks)
+        # if alternativecost != self.bundleCost:
+        #     print("Bid vs new Bid:", len(self.pathlist), price, self.bundleCost, alternativecost)
+        return alternativecost
+    '''
+
 
     def getTaskList(self):
         return self.tasklist

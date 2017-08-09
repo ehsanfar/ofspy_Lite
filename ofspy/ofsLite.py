@@ -42,6 +42,28 @@ class OFSL(object):
             self.time = t
             self.context.ticktock(self)
 
+        figs = []
+        print("figures")
+        for i, f in enumerate(self.context.federates):
+            if not f.costlearning:
+                continue
+            if not plt.fignum_exists(i):
+                plt.figure(i)
+                plt.ion()
+                plt.show()
+
+            plt.clf()
+            # print(f.storagePenalty)
+            costlist = f.costlist
+    #
+            plt.plot(costlist)
+            plt.draw()
+            plt.show()
+            plt.savefig("cost_volution_%s_storagepenalty_%d.png" % (f.name, self.storagePenalty[0]), bbox_inches='tight')
+
+        #
+        # for f in figs:
+        #     plt.close(f)
         # print("number of finished tasks:", len(self.context.pickeduptasks))
         # print("total cash of task values:", self.context.totalcash)
         # print("sum of cash of federates:", sum([f.cash for f in self.context.federates]))

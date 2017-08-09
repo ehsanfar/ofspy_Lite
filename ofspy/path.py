@@ -63,6 +63,17 @@ class Path():
         self.pathCost = sum(linkcosts)
         # self.pathPrice = price
 
+    def updateWithFederateCost(self, fedcostdict):
+        newlinkcostlist = []
+        for linkcost, fed in zip(self.linkcostlist, self.linkfederatelist):
+            if fed is self.elementOwner.federateOwner:
+                newlinkcostlist.append(linkcost)
+            else:
+                newlinkcostlist.append(fedcostdict[fed.name])
+
+        self.linkcostlist = newlinkcostlist[:]
+        self.pathCost = sum(newlinkcostlist)
+
     def updateBundles(self, federatebundledict):
         self.federateBundleDict = federatebundledict
         self.edgebundles = list(federatebundledict.values())

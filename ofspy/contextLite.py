@@ -157,6 +157,8 @@ class ContextLite():
                 self.federates.append(FederateLearning(name='F'+str(i+1), context=self, costSGL=costSGL[i], costISL=costISL[i]))
             else:
                 self.federates.append(FederateLite(name = 'F'+str(i+1), context = self, costSGL = costSGL[i], costISL = costISL[i], storagePenalty = storagePenalty[i]))
+                if costSGL[i] == -3:
+                    self.federates[-1].stochastic = True
 
         for element in elementgroups:
             # print(element)

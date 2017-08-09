@@ -97,7 +97,7 @@ def queryCase(dbHost, dbPort, elements, numPlayers, numTurns, seed, fops, capaci
     # print "elementlist:", elementlist
     # executeCase(elementlist, numPlayers, initialCash,
     #              numTurns, seed, ops, fops)
-    experiment = "Storage Penalty Stochastic"
+    experiment = "Adaptive Cost"
     global db
     dbName = None
     # dbHost = socket.gethostbyname(socket.gethostname())
@@ -129,13 +129,18 @@ def queryCase(dbHost, dbPort, elements, numPlayers, numTurns, seed, fops, capaci
         doc = db[dbName].find_one(query)
     if doc is None:
         # if '-1' in doc['fops'] or '-2' in doc['fops']:
-        db.results.remove(query) #this is temporary, should be removed afterwards
+        # db.results.remove(query) #this is temporary, should be removed afterwards
         doc = db.results.find_one(query)
         if doc:
             # print("Found in DB,elements, storage, sgl, isl, results: ")
-            print([len(doc['elementlist'])]+[doc[k] for k in ['fops', 'capacity', 'links','results']])
+            print([doc[k] for k in ['elementlist', 'experiment', 'fops', 'capacity', 'links','results']])
         if doc is None:
-            results = executeCase(elements, numPlayers, numTurns, seed, fops, capacity, links)
+            if '-' not in fops:
+                M = 10
+            else:
+                M = 1
+
+            results = executeCase(elements, numPlayers, int(numTurns/M), seed, fops, capacity, links)
 
             doc = {u'experiment': experiment,
                    u'elementlist': ' '.join(elements),
@@ -144,11 +149,11 @@ def queryCase(dbHost, dbPort, elements, numPlayers, numTurns, seed, fops, capaci
                    u'seed': seed,
                    u'capacity': capacity,
                    u'links': links,
-                   u'results': json.dumps(results),
+                   u'results': json.dumps([(a,b*M) for a,b in results]),
                     }
             # print("Not Found in DB", doc['results'])
             # print("Not in DB,elements, storage, sgl, isl, results: ")
-            print([len(doc['elementlist'])] + [doc[k] for k in ['fops', 'capacity', 'links', 'results']])
+            print([doc[k] for k in ['elementlist', 'experiment', 'fops', 'capacity', 'links', 'results']])
             db.results.insert_one(doc)
 
         if dbName is not None:
@@ -188,13 +193,19 @@ def fopsGen(costrange, storange, numplayers):
     # storagePenalty = list(range(0, 1001, 200))+[-1]
     # yield numplayers * ["x%d,%d" % (-2, -2)]
     for sgl in costrange:
-        for s in storange:
-            # yield ["x%d,%d,%d"%(sgl, sgl, -2)] + (numplayers-1)*["x%d,%d,%d"%(sgl, sgl, s)]
-            yield numplayers* ["x%d,%d"%(sgl, s)]
+        # for s in storange:
+        #     # yield ["x%d,%d,%d"%(sgl, sgl, -2)] + (numplayers-1)*["x%d,%d,%d"%(sgl, sgl, s)]
+        #     yield numplayers* ["x%d,%d"%(sgl, s)]
 
         # yield numplayers * ["x%d,%d" % (sgl, -2)]
-        # yield numplayers * ["x%d,%d" % (sgl, -1)]
+        yield numplayers * ["x%d,%d" % (sgl, -1)]
         # yield numplayers * ["x%d,%d" % (sgl, -3)]
+
+def fopsGenAdaptive(costrange, numplayers):
+    for sgl in costrange:
+            # yield ["x%d,%d,%d"%(sgl, sgl, -2)] + (numplayers-1)*["x%d,%d,%d"%(sgl, sgl, s)]
+        yield numplayers * ["x%d,%d" % (sgl, -1)]
+        # yield 2*["x%d,%d" % (-2, -1)] + (numplayers-2)*["x%d,%d"%(sgl, -1)]
 
 # def generateFops(costrange, storange):
 #     fops = []
@@ -250,22 +261,22 @@ if __name__ == '__main__':
     #     #     hardcoded_designs.append(l)
     # hardcoded_designs = [x.strip() for x in hardcoded_designs]
     hardcoded_designs = (
-        # "1.GroundSta@SUR1,oSGL 2.GroundSta@SUR3,oSGL 1.MediumSat@MEO3,VIS,SAR,oSGL,oISL  2.MediumSat@MEO5,VIS,SAR,oSGL,oISL",
-        "1.Sat@MEO6 1.Sat@MEO4 2.Sat@MEO2 2.Sat@MEO1 1.GroundSta@SUR1 2.GroundSta@SUR4",
-        # "1.Sat@MEO6 1.Sat@MEO5 1.Sat@MEO4 2.Sat@MEO3 2.Sat@MEO2 2.Sat@MEO1 1.GroundSta@SUR1 2.GroundSta@SUR4",
-        # "1.Sat@LEO6 1.Sat@MEO5 1.Sat@MEO4 2.Sat@MEO3 2.Sat@MEO2 2.Sat@MEO1 1.GroundSta@SUR1 2.GroundSta@SUR4",
-        "1.GroundSta@SUR%d 2.GroundSta@SUR%d 3.GroundSta@SUR%d 1.Sat@MEO%d 1.Sat@MEO%d 2.Sat@LEO%d 2.Sat@MEO%d 3.Sat@LEO%d 3.Sat@MEO%d"%(1,4,5,1,3,6,4,5,2),
-        # "1.GroundSta@SUR%d 2.GroundSta@SUR%d 3.GroundSta@SUR%d 1.Sat@MEO%d 1.Sat@MEO%d 1.Sat@MEO%d 2.Sat@MEO%d 2.Sat@MEO%d 2.Sat@MEO%d 3.Sat@MEO%d 3.Sat@MEO%d 3.Sat@MEO%d"%(1,3,5,1,3,6,3,5,2,5,1,4),
-         # "1.GroundSta@SUR%d,oSGL 2.GroundSta@SUR%d,oSGL 3.GroundSta@SUR%d,oSGL 1.SmallSat@MEO%d,oSGL,oISL 1.MediumSat@MEO%d,VIS,SAR,oSGL,oISL 1.LargeSat@MEO%d,VIS,SAR,DAT,oSGL,oISL 2.SmallSat@MEO%d,oSGL,oISL 2.MediumSat@MEO%d,VIS,SAR,oSGL,oISL 2.LargeSat@MEO%d,VIS,SAR,DAT,oSGL,oISL 3.SmallSat@MEO%d,oSGL,oISL 3.MediumSat@MEO%d,VIS,SAR,oSGL,oISL 3.LargeSat@MEO%d,VIS,SAR,DAT,oSGL,oISL"%(1,3,5,1,3,6,3,5,2,5,1,4),
-        # "1.GroundSta@SUR%d,oSGL 2.GroundSta@SUR%d,oSGL 3.GroundSta@SUR%d,oSGL 1.MediumSat@MEO%d,VIS,oSGL,oISL 1.MediumSat@MEO%d,VIS,oSGL,oISL 1.LargeSat@MEO%d,VIS,SAR,DAT,oSGL,oISL 2.MediumSat@MEO%d,VIS,oSGL,oISL 2.MediumSat@MEO%d,VIS,oSGL,oISL 2.LargeSat@MEO%d,VIS,SAR,DAT,oSGL,oISL 3.MediumSat@MEO%d,VIS,oSGL,oISL 3.MediumSat@MEO%d,VIS,oSGL,oISL 3.LargeSat@MEO%d,VIS,SAR,DAT,oSGL,oISL"%(1,3,5,1,3,6,3,5,2,5,1,4),
-        # "1.GroundSta@SUR%d,oSGL 2.GroundSta@SUR%d,oSGL 3.GroundSta@SUR%d,oSGL 1.MediumSat@MEO%d,VIS,oSGL,oISL 1.MediumSat@MEO%d,VIS,DAT,oSGL,oISL 1.LargeSat@MEO%d,VIS,SAR,DAT,oSGL,oISL 2.MediumSat@MEO%d,VIS,oSGL,oISL 2.MediumSat@MEO%d,VIS,DAT,oSGL,oISL 2.LargeSat@MEO%d,VIS,SAR,DAT,oSGL,oISL 3.MediumSat@MEO%d,VIS,oSGL,oISL 3.MediumSat@MEO%d,VIS,DAT,oSGL,oISL 3.LargeSat@MEO%d,VIS,SAR,DAT,oSGL,oISL"%(1,3,5,1,3,6,3,5,2,5,1,4),
-        # "1.GroundSta@SUR%d,oSGL 2.GroundSta@SUR%d,oSGL 3.GroundSta@SUR%d,oSGL 1.MediumSat@MEO%d,VIS,SAR,oSGL,oISL 1.MediumSat@MEO%d,VIS,SAR,oSGL,oISL 1.LargeSat@MEO%d,VIS,SAR,DAT,oSGL,oISL 2.MediumSat@MEO%d,VIS,SAR,oSGL,oISL 2.MediumSat@MEO%d,VIS,SAR,oSGL,oISL 2.LargeSat@MEO%d,VIS,SAR,DAT,oSGL,oISL 3.MediumSat@MEO%d,VIS,SAR,oSGL,oISL 3.MediumSat@MEO%d,VIS,SAR,oSGL,oISL 3.LargeSat@MEO%d,VIS,SAR,DAT,oSGL,oISL"%(1,3,5,1,3,6,3,5,2,5,1,4),
+        # "1.GroundSta@SUR1 2.GroundSta@SUR4 1.Sat@MEO1 2.Sat@MEO3 1.Sat@LEO1 2.Sat@LEO2",
+        # "1.GroundSta@SUR1 2.GroundSta@SUR4 1.Sat@GEO1 1.Sat@MEO1 2.Sat@MEO3 1.Sat@LEO1 2.Sat@LEO2",
+        "1.GroundSta@SUR1 2.GroundSta@SUR4 1.Sat@MEO1 1.Sat@MEO4 2.Sat@MEO5 1.Sat@LEO1 2.Sat@LEO2",
+        # "1.GroundSta@SUR1 2.GroundSta@SUR4 1.Sat@MEO1 1.Sat@MEO3 1.Sat@MEO4 2.Sat@MEO5 2.Sat@MEO6",
+        "1.GroundSta@SUR1 2.GroundSta@SUR4 2.Sat@GEO4 1.Sat@MEO1 1.Sat@MEO4 2.Sat@MEO5 1.Sat@LEO1 2.Sat@LEO2",
+        # "1.GroundSta@SUR1 2.GroundSta@SUR3 3.GroundSta@SUR5 2.Sat@GEO3 1.Sat@MEO1 2.Sat@MEO3 3.Sat@MEO6 1.Sat@LEO2",
+        "1.GroundSta@SUR1 2.GroundSta@SUR3 3.GroundSta@SUR5 1.Sat@MEO1 1.Sat@MEO2 2.Sat@MEO3 2.Sat@MEO5 3.Sat@MEO6",
+        "1.GroundSta@SUR1 2.GroundSta@SUR3 3.GroundSta@SUR5 3.Sat@GEO5 1.Sat@MEO1 1.Sat@MEO2 2.Sat@MEO3 2.Sat@MEO5 3.Sat@MEO6",
+        "1.GroundSta@SUR1 2.GroundSta@SUR3 3.GroundSta@SUR5 1.Sat@MEO1 2.Sat@MEO2 3.Sat@MEO5 1.Sat@LEO2 2.Sat@LEO4 3.Sat@LEO6",
+        # "1.GroundSta@SUR1 2.GroundSta@SUR3 3.GroundSta@SUR5 1.Sat@GEO1 1.Sat@MEO1 2.Sat@MEO4 3.Sat@MEO5 1.Sat@LEO2 2.Sat@LEO4 3.Sat@LEO6",
     )
+
     experiment = 'auctioneer'
     # hardcoded_designs = list(hardcoded_designs)
     # random.shuffle(hardcoded_designs)
     for design in hardcoded_designs:
-        print('')
         # print design
         if '4.' in design:
             numPlayers = 4
@@ -280,17 +291,21 @@ if __name__ == '__main__':
         # argsdict.pop('logging')
         # argsdict.pop('dbName')
 
-        costrange = list(range(0, 1201, 200))
-        storange = list(range(0, 1201, 200))
-        for fops in fopsGen(costrange, storange, numPlayers):
+        # costrange = list(range(700, 701, 100))
+        # costrange = [-3]
+        costrange = [-3, 0, 1200, 600]
+        # costrange = [-2]
+        costrange = [-2, 600]
+        storange = list(range(0, 1201, 400))
+        for fops in fopsGenAdaptive(costrange, numPlayers):
             # print(fops)
             # print(argsdict)
             argsdict['fops'] = json.dumps(fops)
-            for capacity in [1,2]:
-                for links in [1,2]:
-                    argsdict['capacity'] = capacity
-                    argsdict['links'] = links
-                    execute(**argsdict)
+            for capacity,links in [(2,2)]:
+                # for links in [1,2]:
+                argsdict['capacity'] = capacity
+                argsdict['links'] = links
+                execute(**argsdict)
 
             # execute(args.dbHost, args.dbPort, None, args.start, args.stop,
             #         [design],

@@ -55,6 +55,23 @@ class Auctioneer():
     #
     #     self.pathlist.append(obj)
 
+    def runAlternative(self, auction, fedcostdict):
+        pathlist = [path for pathlist in auction.taskPathDict.values() for path in pathlist]
+        for path in pathlist:
+            path.updateWithFederateCost(fedcostdict)
+
+        taskcostlist = returnAvgPathCost(auction.taskPathDict)
+        bundles = []
+        for _, taskid in taskcostlist:
+            if auction.findBestBundleinAuction([taskid]):
+                newbundle = auction.bestPathBundle
+                bundles.append(newbundle)
+
+        alltasks, allpaths = combineBundles(bundles)
+        auction.bestPathBundle = PathBundle(alltasks, allpaths)
+        return auction.bestPathBundle
+
+
     def runAuction(self, tasklist):
         # print(tasklist)
         auction =  Auction(self, self.context.time, tasklist, self.links)
@@ -74,7 +91,8 @@ class Auctioneer():
         for _, taskid in taskcostlist:
             # print(taskid)
             # print("taskid:", taskid)
-            if auction.findBestBundle([taskid]):
+            # if auction.findBestBundle([taskid]):
+            if auction.findBestBundleinAuction([taskid]):
                 # print(self.context.time, self.timeOccupiedLinkDict)
                 newbundle = auction.bestPathBundle
                 # for path in newbundle.pathlist:

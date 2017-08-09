@@ -4,6 +4,8 @@ import networkx as nx
 import re
 import math
 from collections import Counter, defaultdict
+from matplotlib.font_manager import FontProperties
+
 # from .bundle import PathBundle
 
 def checkEqual2(iterator):
@@ -29,11 +31,13 @@ def convertLocation2xy(location):
     if 'SUR' in location:
         r = 0.5
     elif 'LEO' in location:
-        r = 1.5
+        r = 1.
     elif 'MEO' in location:
+        r = 1.5
+    elif "GEO" in location:
         r = 2
     else:
-        r = 2.25
+        r = 2.35
 
     sect = int(re.search(r'.+(\d)', location).group(1))
     tetha = +math.pi / 3 - (sect - 1) * math.pi / 3
@@ -86,6 +90,8 @@ def fillBetween3Points(a, b, c):
         # plt.plot(x2, y4, 'g')
         plt.fill_between(x1, y1, y2, color= col)
         plt.fill_between(x2, y3, y4, color= col)
+
+
 
 def drawGraph(graph, context):
     G = graph.graphList[graph.graphOrder]
@@ -174,6 +180,81 @@ def drawGraph(graph, context):
 
 # Figure is closed
 
+def drawGraphbyDesign(number, design):
+    elements = design.split(' ')
+    federates = set([int(e[0]) for e in elements])
+    federates_location_dict = defaultdict(list)
+    federates_type_dict = defaultdict(list)
+    federate_coordinates_dict = defaultdict(list)
+    my_dpi = 150
+    plt.figure(figsize=(800/my_dpi, 800/my_dpi), dpi=my_dpi)
+    for r in [4, 2.25, 1.]:
+        x = np.linspace(-1.0*r, 1.0*r, 50)
+        y = np.linspace(-1.0*r, 1.0*r, 50)
+        X, Y = np.meshgrid(x, y)
+        F = X ** 2 + Y ** 2 - r
+        plt.contour(X, Y, F, [0], colors='k', linewidths = 0.3, origin = 'lower', zorder = -1)
+
+    font = FontProperties()
+    font.set_style('italic')
+    font.set_weight('bold')
+    font.set_size('x-small')
+    for x,y,lab in [(0,0,'SUR'), (0, 1, "LEO"),(0, 1.5, 'MEO'),(0, 2, 'GEO')]:
+        # plt.annotate(lab, xy = (x,y), xytext = (x-0.2, y-0.1))
+        plt.text(x,y, ha="center", va="center", s = lab, bbox = dict(fc="w", ec="w", lw=2),fontproperties=font)
+
+    for i, (x, y) in enumerate([convertLocation2xy(e) for e in ['OOO'+str(i) for i in range(1,7)]]):
+        plt.text(x, y, ha="center", va="center", s=str(i+1), bbox=dict(fc="none", ec="none", lw=2), fontproperties=font)
+
+    font.set_size('medium')
+    plt.text(0, 2.3 , ha="left", va="center", s=r'$|\rightarrow \theta$', bbox=dict(fc="w", ec="w", lw=2), fontproperties=font)
+
+    types_dict = {'GroundSta': "G", 'Sat': 'S'}
+    colordict = {'F1': 'yellow', 'F2': 'lightcyan', 'F3': 'lightgrey'}
+    allpossiblelocations = []
+    for location in ['SUR', 'LEO', 'MEO', 'GEO']:
+        for i in range(1,7):
+            allpossiblelocations.append(location + str(i))
+
+    allpossiblecoordinates = [convertLocation2xy(e) for e in allpossiblelocations]
+    plt.scatter(*zip(*allpossiblecoordinates), marker = "H", s = 800, color = 'k', facecolors = 'w')
+    for f in federates:
+        types = [re.search(r'\d\.(.+)@(\w+\d)', e).group(1) for e in elements if '%d.' % f in e]
+        federates_type_dict['F%d'%f] = [types_dict[t] for t in types]
+        federates_location_dict['F%d'%f] = [re.search(r'(.+)@(\w+\d)', e).group(2) for e in elements if '%d.'%f in e]
+        federate_coordinates_dict['F%d'%f] = [convertLocation2xy(loc) for loc in federates_location_dict['F%d'%f]]
+        plt.scatter(*zip(*federate_coordinates_dict['F%d'%f]), marker = "H", s = 800, edgecolors = 'k', facecolors = colordict['F%d'%f], linewidth='3')
+        for x, y in federate_coordinates_dict['F%d'%f]:
+            plt.annotate('F%d'%f, xy = (x, y), xytext = (x-0.1, y-0.075))
+
+
+    plt.xticks([])
+    plt.yticks([])
+    rlim = 2.5
+    plt.xlim(-rlim, rlim)
+    plt.ylim(-rlim+0.2, rlim)
+    plt.axis('off')
+    des_roman_dict = {1: 'I', 2: 'II', 3:'III', 4:'IV', 5:'V'}
+    plt.savefig("Design_%s.pdf"%des_roman_dict[number], bbox_inches='tight')
+
+    # plt.show()
+
+hardcoded_designs = (
+        # "1.GroundSta@SUR1 2.GroundSta@SUR4 1.Sat@MEO1 2.Sat@MEO3 1.Sat@LEO1 2.Sat@LEO2",
+        # "1.GroundSta@SUR1 2.GroundSta@SUR4 1.Sat@GEO1 1.Sat@MEO1 2.Sat@MEO3 1.Sat@LEO1 2.Sat@LEO2",
+        "1.GroundSta@SUR1 2.GroundSta@SUR4 1.Sat@MEO1 1.Sat@MEO4 2.Sat@MEO5 1.Sat@LEO1 2.Sat@LEO2",
+        # "1.GroundSta@SUR1 2.GroundSta@SUR4 1.Sat@MEO1 1.Sat@MEO3 1.Sat@MEO4 2.Sat@MEO5 2.Sat@MEO6",
+        "1.GroundSta@SUR1 2.GroundSta@SUR4 2.Sat@GEO4 1.Sat@MEO1 1.Sat@MEO4 2.Sat@MEO5 1.Sat@LEO1 2.Sat@LEO2",
+        # "1.GroundSta@SUR1 2.GroundSta@SUR3 3.GroundSta@SUR5 2.Sat@GEO3 1.Sat@MEO1 2.Sat@MEO3 3.Sat@MEO6 1.Sat@LEO2",
+        "1.GroundSta@SUR1 2.GroundSta@SUR3 3.GroundSta@SUR5 1.Sat@MEO1 1.Sat@MEO2 2.Sat@MEO3 2.Sat@MEO5 3.Sat@MEO6",
+        "1.GroundSta@SUR1 2.GroundSta@SUR3 3.GroundSta@SUR5 3.Sat@GEO5 1.Sat@MEO1 1.Sat@MEO2 2.Sat@MEO3 2.Sat@MEO5 3.Sat@MEO6",
+        "1.GroundSta@SUR1 2.GroundSta@SUR3 3.GroundSta@SUR5 1.Sat@MEO1 2.Sat@MEO2 3.Sat@MEO5 1.Sat@LEO2 2.Sat@LEO4 3.Sat@LEO6",
+        # "1.GroundSta@SUR1 2.GroundSta@SUR3 3.GroundSta@SUR5 1.Sat@GEO1 1.Sat@MEO1 2.Sat@MEO4 3.Sat@MEO5 1.Sat@LEO2 2.Sat@LEO4 3.Sat@LEO6",
+    )
+
+for i, des in enumerate(hardcoded_designs):
+    drawGraphbyDesign(i+1, des)
+
 def drawGraphs(graph):
     # pos = None
 
@@ -250,6 +331,7 @@ def returnCompatiblePaths(pathlist, linkcounter, maxlink = 1):
     # for path in pathlist[0]
 
     # print("length of pathlist:", len(pathlist))
+    # print([p.linklist for p in pathlist[0]], linkcounter)
     if pathlist:
         queue = [(0, [], linkcounter)]
         while queue:
@@ -277,6 +359,7 @@ def returnCompatiblePaths(pathlist, linkcounter, maxlink = 1):
             for np in nextpaths:
                 # print("new path:", np.linklist)
                 if n == len(pathlist):
+                    # print([p.linklist for p in histpath + [np]])
                     yield histpath + [np]
                 else:
                     # scopy = s.union(set(np.linklist))

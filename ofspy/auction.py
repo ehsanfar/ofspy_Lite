@@ -139,6 +139,82 @@ class Auction():
 
         return True
 
+    def findBestBundleinAuction(self, tasklist = None):
+        # if compatiblebundles:
+        #     possible_bundles = compatiblebundles
+        # else:
+        #     if self.compatibleBundles:
+        #         possible_bundles = self.compatibleBundles
+        #     else:
+        #         self.findCompatiblePaths()
+        #         possible_bundles = self.compatibleBundles
+        #
+        # if not possible_bundles:
+        #     # self.bestPathBundle = None
+        #     return False
+        if tasklist:
+            self.findCompatiblePaths(tasklist)
+        else:
+            self.findCompatiblePaths()
+
+        possible_bundles = self.compatibleBundles
+        if not self.compatibleBundles:
+            return False
+        # print("length of compatible bundles:", len(self.compatibleBundles))
+
+        path_bundle_cost = [b.bundleCost for b in possible_bundles]
+        path_bundle_revenue = [b.bundleRevenue for b in possible_bundles]
+        path_bundle_profit = [x-y for (x,y) in zip(path_bundle_revenue, path_bundle_cost)]
+        path_bundle_length = [b.length for b in possible_bundles]
+        # print("pathbundle cost:", path_bundle_cost)
+        # sortedcost = sorted(list(zip(path_bundle_cost, possible_bundles)), reverse = True)
+        # print("sorted cost:", sortedcost)
+        # print(sorted(path_bundle_length, reverse = True))
+        sorted_revenue = sorted(list(zip(path_bundle_profit, possible_bundles)), reverse = True)
+        maxprofit_org = sorted_revenue[0][0]
+        self.bestPathBundle = sorted_revenue[0][1]
+        '''
+        for federate in self.auctioneer.context.federates:
+            cost_0 = [b.getBundleAlternativeCost(federate, price = 0) for b in possible_bundles]
+            cost_inf = [b.getBundleAlternativeCost(federate, price= 1100) for b in possible_bundles]
+            # if path_bundle_cost[0] == 540:
+            #     print("bid cost:", path_bundle_cost)
+            #     print("zero cos:", cost_0)
+            #     print("max cost:", cost_inf)
+            profit_0 = [x-y for (x,y) in zip(path_bundle_revenue, cost_0)]
+            profit_inf = [x-y for (x,y) in zip(path_bundle_revenue, cost_inf)]
+            sorted_0 = sorted(list(zip(profit_0, possible_bundles)), reverse=True)
+            sorted_inf = sorted(list(zip(profit_inf, possible_bundles)), reverse=True)
+            best_0 = sorted_0[0][1]
+            best_inf = sorted_inf[0][1]
+            maxprofit_0 = sorted_0[0][0]
+            maxprofit_inf = sorted_inf[0][0]
+            if len(set([maxprofit_0, maxprofit_org, maxprofit_inf]))>1:
+                print("Bundle profit inf - profit 0: ", federate.name, maxprofit_0, int(maxprofit_org), maxprofit_inf)
+                # print('')
+        # print("sorted revenue:", [(x, [p.nodelist for p in y.pathlist]) for x,y in sorted_revenue])
+        '''
+
+        # print("best path bundle:", self.bestPathBundle)
+        for path in self.bestPathBundle.pathlist:
+            # print("path noelsit:", path.nodelist)
+            path(next((task for task in self.tasklist if task.elementOwner.name == path.elementOwner.name)))
+            path.task.updatePath(path)
+            # path.updateTime()
+            timelink = list(zip([path.task.initTime + dt for dt in path.deltatimelist], path.linklist))
+            for time, link in timelink:
+                # print(time, link)
+                # print(defaultdict)
+                self.auctioneer.updateTimeLinks(time, link)
+
+        federateDict = {f.name: f for f in self.auctioneer.context.federates}
+        for fed in self.auctionFederates:
+            federate = federateDict[fed]
+            if federate.costlearning:
+               federate.updateBestBundle(self.bestPathBundle)
+
+        return True
+
     def findCompatiblePaths(self, tasklist = None):
         # # print("Compatible paths: tasks:", [(t, len(p)) for t, p in self.taskPathDict.items()])
         taskPathDict = {t: self.taskPathDict[t] for t in tasklist} if tasklist else self.taskPathDict
@@ -234,10 +310,12 @@ class Auction():
         for c in combinations:
             # print(c)
             taskcomblist = [tlist[i] for i in c]
+            # print("new bundle tasks:", taskcomblist)
             pathcomblist = [plist[i] for i in c]
+            # print("path combination list:", pathcomblist)
             # linkset = set([])
             for comb in returnCompatiblePaths(pathcomblist, linkcounter, maxlink=self.maxlink):
-                # print(c, comb)
+                # print(comb)
                 bundle = PathBundle(tuple([self.taskDict[id] for id in taskcomblist]), comb)
                 # print("bundle length:", c, len(comb), bundle.length)
                 yield bundle

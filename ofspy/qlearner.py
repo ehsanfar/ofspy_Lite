@@ -118,7 +118,7 @@ class QlearnerStorage(QLearner):
 
         # newepsilon = self.epsilon*max(0.1, (1 - self.time/3000))
         if self.random_state.random() < self.epsilon or np.sum(self.q[current_state]) <= 0:
-            action = self.random_state.choice(self.actions[max(0, lastindex-2):min(lastindex+3, len(self.actions))])
+            action = self.random_state.choice(self.actions[max(0, lastindex-1):min(lastindex+2, len(self.actions))])
             # action = random.choice(self.actions)
         else:
             # if np.sum(self.q[current_state]) > 0:
@@ -142,6 +142,8 @@ class QlearnerCost(QLearner):
         super().__init__(federate, numericactions, states, seed)
         self.stateActionDict = defaultdict(list)
         self.priceEvolution = []
+        self.federateAction = defaultdict(tuple)
+        self.inertia = 10
 
     def update_q(self, action, reward):
         # print("update action reward:", action, reward)
@@ -167,6 +169,9 @@ class QlearnerCost(QLearner):
         self.time = self.federate.time
         current_state = self.time%6
 
+        if self.federateAction[self.federate.name] and self.time - self.federateAction[self.federate.name][1] < self.inertia:
+            return self.federateAction[self.federate.name][0]
+
         if self.stateActionDict[current_state]:
             lastaction = self.stateActionDict[current_state][0]
             lastindex = self.actions.index(lastaction)
@@ -176,7 +181,7 @@ class QlearnerCost(QLearner):
 
         # newepsilon = self.epsilon*max(0.1, (1 - self.time/3000))
         if self.random_state.random() < self.epsilon or np.sum(self.q[current_state]) <= 0:
-            action = self.random_state.choice(self.actions[max(0, lastindex-2):min(lastindex+3, len(self.actions))])
+            action = self.random_state.choice(self.actions[max(0, lastindex-1):min(lastindex+2, len(self.actions))])
             # action = random.choice(self.actions)
         else:
             # if np.sum(self.q[current_state]) > 0:
@@ -189,5 +194,6 @@ class QlearnerCost(QLearner):
         self.stateActionDict[current_state] = (action, self.time)
 
         # print("cost action:", current_state, action)
-        self.priceEvolution.append((self.federate.time, action))
+        # self.priceEvolution.append((self.federate.time, action))
+        self.federateAction[self.federate.name] = (action, self.time)
         return action
