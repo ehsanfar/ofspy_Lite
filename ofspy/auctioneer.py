@@ -1,9 +1,10 @@
-from .generalFunctions import convertPath2Edge, returnAvgPathCost, combineBundles
+from .generalFunctions import convertPath2Edge, returnAvgPathCost, combineBundles, optimizeCost
 from .path import Path
-from .bundle import PathBundle
+from .bundle import PathBundle, PathBundleLite
 import itertools
 from .auction import Auction
-from collections import defaultdict
+from collections import defaultdict, Counter
+
 
 class Auctioneer():
     def __init__(self, context):
@@ -55,60 +56,88 @@ class Auctioneer():
     #
     #     self.pathlist.append(obj)
 
-    def runAlternative(self, auction, fedcostdict):
-        pathlist = [path for pathlist in auction.taskPathDict.values() for path in pathlist]
-        for path in pathlist:
-            path.updateWithFederateCost(fedcostdict)
-
-        taskcostlist = returnAvgPathCost(auction.taskPathDict)
-        bundles = []
-        for _, taskid in taskcostlist:
-            if auction.findBestBundleinAuction([taskid]):
-                newbundle = auction.bestPathBundle
-                bundles.append(newbundle)
-
-        alltasks, allpaths = combineBundles(bundles)
-        auction.bestPathBundle = PathBundle(alltasks, allpaths)
-        return auction.bestPathBundle
+    # def runAlternative(self, auction, fedcostdict):
+    #     pathlist = [path for pathlist in auction.taskPathDict.values() for path in pathlist]
+    #     for path in pathlist:
+    #         path.updateWithFederateCost(fedcostdict)
+    #
+    #     taskcostlist = returnAvgPathCost(auction.taskPathDict)
+    #     bundles = []
+    #     for _, taskid in taskcostlist:
+    #         if auction.findBestBundleinAuction([taskid]):
+    #             newbundle = auction.bestPathBundle
+    #             bundles.append(newbundle)
+    #
+    #     alltasks, allpaths = combineBundles(bundles)
+    #     auction.bestPathBundle = PathBundle(alltasks, allpaths)
+    #     return auction.bestPathBundle
 
 
     def runAuction(self, tasklist):
         # print(tasklist)
         auction =  Auction(self, self.context.time, tasklist, self.links)
-        auction.inquirePrice()
-        # print("length of time:", len(auction.taskPathDict))
-        # for t, links in self.timeOccupiedLinkDict.items():
-        #     print("time and links:", t, len(links))
-        #
-        # for t, paths in auction.taskPathDict.items():
-        #     print("time, task, deltatime:",self.context.time, t, [p.deltatime for p in paths], len(paths))
-        # if not auction.taskPathDict:
-        #     return None
+        initCostDict = {f.name: f.getCost('oSGL') for f in self.context.federates}
 
-        taskcostlist = returnAvgPathCost(auction.taskPathDict)
-        # print(taskcostlist)
-        bundles = []
-        for _, taskid in taskcostlist:
-            # print(taskid)
-            # print("taskid:", taskid)
-            # if auction.findBestBundle([taskid]):
-            if auction.findBestBundleinAuction([taskid]):
-                # print(self.context.time, self.timeOccupiedLinkDict)
-                newbundle = auction.bestPathBundle
-                # for path in newbundle.pathlist:
-                    # print(path.nodelist)
-                # print("best bundle path:", newbundle.tasklist, newbundle.pathlist)
-                bundles.append(newbundle)
-        # print(auction.bestPathBundle)
-        # print(bundles)
-        # print("bundles path, tasks:", [b.pathlist[0].task.taskid for b in bundles])
-        alltasks, allpaths = combineBundles(bundles)
-        # print([t.taskid for t in alltasks])
-        # print([p.task.taskid for p in allpaths])
-        auction.bestPathBundle = PathBundle(alltasks, allpaths)
-        # print(self.context.time)
-        # for path in auction.bestPathBundle.pathlist:
-        #     print(self.context.time, path.nodelist)
+        costDictList = []
+        costTupleList = []
+        casenameList = []
+        # for fed in initCostDict:
+        #     for cost in [0, 1100]:
+        #         tempdict = dict(initCostDict)
+        #         tempdict[fed] = cost
+        #         costDictList.append(tempdict)
+        #         # print(tempdict)
+        #         costTupleList.append(tuple([e for _, e in sorted(tempdict.items())]))
+        #         casenameList.append(fed+'_zero' if cost == 0 else fed + '_inf')
+        #
+        costDictList.append({f: 0 for f in initCostDict})
+        costTupleList.append(tuple(len(initCostDict)*[0]))
+        casenameList.append('T_zero')
+        # costDictList.append({f: 1100 for f in initCostDict})
+        # costTupleList.append(tuple(len(initCostDict)*[1100]))
+        # casenameList.append('T_inf')
+
+        costDictList.append(initCostDict)
+        costTupleList.append(tuple([e for _, e in sorted(initCostDict.items())]))
+        casenameList.append('Adaptive')
+
+        # print(costTupleList)
+        bestBundleDict = {}
+        federateCashDict = {}
+
+        # print("task list length:", len(tasklist))
+        for costDict, costTuple, casename in zip(costDictList, costTupleList, casenameList):
+            # print("Finding best bundle for cost:", costTuple)
+            auction.inquirePrice(costDict= costDict)
+            # print("task path dict:", len(auction.taskPathDict))
+            taskcostlist = returnAvgPathCost(auction.taskPathDict)
+            bundles = []
+            for _, taskid in taskcostlist:
+                if auction.findBestBundleinAuction([taskid]):
+                    newbundle = auction.bestPathBundle
+                    bundles.append(newbundle)
+
+            alltasks, allpaths = combineBundles(bundles)
+            auction.bestPathBundle = PathBundle(alltasks, allpaths)
+            bestBundleDict[casename] = auction.bestPathBundle#PathBundleLite(alltasks, allpaths)
+            # federateCashDict[casename] = bestBundleDict[costTuple].bundleRevenue
+
+        # priceDict = self.suggestPriceDict(initCostDict, federateCashDict, auction.bestPathBundle)
+        if self.context.ofs.auctioneer:
+            newprice = optimizeCost(initCostDict, bestBundleDict['Adaptive'], bestBundleDict['T_zero'])
+        else:
+            newprice = False
+
+        # print("initial price vs new price:", [e[1] for e in sorted(initCostDict.items())], [int(e) for e in newprice])
+        # for costtuple, pathbundlelite in bestBundleDict.items():
+        #     print("cost tuple:", costtuple, int(pathbundlelite.bundleBid), int(pathbundlelite.bundleCost), int(pathbundlelite.bundleRevenue))
+        if newprice:
+            bestBundle = bestBundleDict['T_zero']
+            for path in bestBundle.pathlist:
+                path.updateWithFederateBid(newprice)
+
+            bestBundle.updateValues()
+            auction.bestPathBundle = bestBundle
 
         return auction.bestPathBundle
 
@@ -134,9 +163,29 @@ class Auctioneer():
                 element = task.elementOwner
                 element.pickupTask(task)
 
-
-
-
+    # def suggestPriceDict(self, initCostDict, federateCashDict, bestBundle):
+    #     totalDeltaCash = federateCashDict['T_zero'] - federateCashDict['T_inf']
+    #     sumdeltaCash = 0
+    #     priceDict = dict(initCostDict)
+    #     linkCount = defaultdict(int)
+    #     pathlist = bestBundle.pathlist
+    #     for path in pathlist:
+    #         linkfederates = [e.name for e in path.linkfederatelist]
+    #         federateCount = Counter(linkfederates)
+    #         for f, c in federateCount.items():
+    #             linkCount[f] += c
+    #
+    #     print(linkCount)
+    #     for fed in initCostDict:
+    #         if fed not in linkCount:
+    #             continue
+    #
+    #         deltaCash = federateCashDict[fed + '_zero'] - federateCashDict[fed + '_inf']
+    #         sumdeltaCash += deltaCash
+    #         priceDict[fed] = max(priceDict[fed], deltaCash/float(linkCount[fed]))
+    #
+    #     print('sum of delta vs total cash:', sumdeltaCash, totalDeltaCash)
+    #     return priceDict
 
     #
     #

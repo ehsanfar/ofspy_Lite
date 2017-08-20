@@ -19,7 +19,7 @@ import json
 
 
 
-def execute(dbHost, dbPort, start, stop, design, numPlayers, numTurns, fops, capacity, links):
+def execute(dbHost, dbPort, experiment, start, stop, design, numPlayers, numTurns, fops, capacity, links):
     """
     Executes a general experiment.
     @param dbHost: the database host
@@ -48,7 +48,7 @@ def execute(dbHost, dbPort, start, stop, design, numPlayers, numTurns, fops, cap
     """
     # print "design:", design
     # print start, stop
-    executions = [(dbHost, dbPort,
+    executions = [(dbHost, dbPort, experiment,
                    [e for e in elements.split(' ') if e != ''],
                    numPlayers, numTurns, seed, fops, capacity, links)
                   for (seed, elements) in itertools.product(range(start, stop), design)]
@@ -69,7 +69,7 @@ def execute(dbHost, dbPort, start, stop, design, numPlayers, numTurns, fops, cap
     # This line calculates the average of each element of each tuple for all the lists in the results, in other words assuming that each tuple of each results shows one seed of the same identity
     # print [[sum(x)/float(N) for x in zip(*l)] for l in [[l[j] for l in results] for j in range(N)]]
 
-def queryCase(dbHost, dbPort, elements, numPlayers, numTurns, seed, fops, capacity, links):
+def queryCase(dbHost, dbPort, experiment, elements, numPlayers, numTurns, seed, fops, capacity, links):
     """
     Queries and retrieves existing results or executes an OFS simulation.
     @param dbHost: the database host
@@ -97,7 +97,7 @@ def queryCase(dbHost, dbPort, elements, numPlayers, numTurns, seed, fops, capaci
     # print "elementlist:", elementlist
     # executeCase(elementlist, numPlayers, initialCash,
     #              numTurns, seed, ops, fops)
-    experiment = "Adaptive Cost"
+    # experiment = experiment
     global db
     dbName = None
     # dbHost = socket.gethostbyname(socket.gethostname())
@@ -129,7 +129,7 @@ def queryCase(dbHost, dbPort, elements, numPlayers, numTurns, seed, fops, capaci
         doc = db[dbName].find_one(query)
     if doc is None:
         # if '-1' in doc['fops'] or '-2' in doc['fops']:
-        # db.results.remove(query) #this is temporary, should be removed afterwards
+        db.results.remove(query) #this is temporary, should be removed afterwards
         doc = db.results.find_one(query)
         if doc:
             # print("Found in DB,elements, storage, sgl, isl, results: ")
@@ -140,7 +140,7 @@ def queryCase(dbHost, dbPort, elements, numPlayers, numTurns, seed, fops, capaci
             else:
                 M = 1
 
-            results = executeCase(elements, numPlayers, int(numTurns/M), seed, fops, capacity, links)
+            results = executeCase(experiment, elements, numPlayers, int(numTurns/M), seed, fops, capacity, links)
 
             doc = {u'experiment': experiment,
                    u'elementlist': ' '.join(elements),
@@ -162,7 +162,7 @@ def queryCase(dbHost, dbPort, elements, numPlayers, numTurns, seed, fops, capaci
     return [tuple(result) for result in doc[u'results']]
 
 
-def executeCase(elements, numPlayers, numTurns, seed, fops, capacity, links):
+def executeCase(experiment, elements, numPlayers, numTurns, seed, fops, capacity, links):
     """
     Executes an OFS simulation.
     @param elements: the design specifications
@@ -183,7 +183,7 @@ def executeCase(elements, numPlayers, numTurns, seed, fops, capacity, links):
     # print "ofs-exp-vs elementlist: ", elementlist
     #
     # return OFSL(elementlist=elementlist, numPlayers=numPlayers, initialCash=initialCash, numTurns=numTurns, seed=seed, ops=ops, fops=fops).execute()
-    ofsl = OFSL(elements=elements, numPlayers=numPlayers, numTurns=numTurns, seed=seed, fops=fops, capacity = capacity, links = links)
+    ofsl = OFSL(experiment = experiment, elements=elements, numPlayers=numPlayers, numTurns=numTurns, seed=seed, fops=fops, capacity = capacity, links = links)
     return ofsl.execute()
 
 
@@ -193,18 +193,24 @@ def fopsGen(costrange, storange, numplayers):
     # storagePenalty = list(range(0, 1001, 200))+[-1]
     # yield numplayers * ["x%d,%d" % (-2, -2)]
     for sgl in costrange:
-        # for s in storange:
-        #     # yield ["x%d,%d,%d"%(sgl, sgl, -2)] + (numplayers-1)*["x%d,%d,%d"%(sgl, sgl, s)]
-        #     yield numplayers* ["x%d,%d"%(sgl, s)]
+        for s in storange:
+            # yield ["x%d,%d,%d"%(sgl, sgl, -2)] + (numplayers-1)*["x%d,%d,%d"%(sgl, sgl, s)]
+            yield numplayers* ["x%d,%d,%d"%(sgl, s, -1)]
+            # yield numplayers* ["x%d,%d,%d"%(-3, s, -1)]
 
-        # yield numplayers * ["x%d,%d" % (sgl, -2)]
-        yield numplayers * ["x%d,%d" % (sgl, -1)]
-        # yield numplayers * ["x%d,%d" % (sgl, -3)]
+        # yield numplayers * ["x%d,%d,%d" % (sgl, -1, -1)]
+
 
 def fopsGenAdaptive(costrange, numplayers):
     for sgl in costrange:
-            # yield ["x%d,%d,%d"%(sgl, sgl, -2)] + (numplayers-1)*["x%d,%d,%d"%(sgl, sgl, s)]
-        yield numplayers * ["x%d,%d" % (sgl, -1)]
+        if sgl == -2:
+            yield numplayers * ["x%d,%d,%d" % (sgl, -1, -1)]
+            yield numplayers * ["x%d,%d,%d" % (-2, -1, 1)]
+        else:
+            yield ["x%d,%d,%d"%(-2, -1, -1)] + (numplayers-1)*["x%d,%d,%d"%(sgl, -1, -1)]
+            yield 2 * ["x%d,%d,%d"%(-2, -1, -1)] + (numplayers - 2) * ["x%d,%d,%d"%(sgl, -1, -1)]
+            yield numplayers * ["x%d,%d,%d" % (sgl, -1, -1)]
+
         # yield 2*["x%d,%d" % (-2, -1)] + (numplayers-2)*["x%d,%d"%(sgl, -1)]
 
 # def generateFops(costrange, storange):
@@ -222,9 +228,9 @@ def fopsGenAdaptive(costrange, numplayers):
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description="This program runs an OFS experiment.")
-    # parser.add_argument('experiment', type=str, nargs='+',
-    #                     help='the experiment to run: masv or bvc')
-    parser.add_argument('-d', '--numTurns', type=int, default=24,
+    # parser.add_argument('-e', help = 'experiment to run', type=str, nargs='+', default= 'Adaptive'
+    #                     help='the experiment to run: adaptive, auctioneer')
+    parser.add_argument('-d', '--numTurns', type=int, default=2400,
                         help='simulation duration (number of turns)')
     parser.add_argument('-p', '--numPlayers', type=int, default=None,
                         help='number of players')
@@ -293,13 +299,31 @@ if __name__ == '__main__':
 
         # costrange = list(range(700, 701, 100))
         # costrange = [-3]
-        costrange = [-3, 0, 1200, 600]
+        # costrange = [-3, 0, 1200, 600]
         # costrange = [-2]
-        costrange = [-2, 600]
+        costrange = [-3, -2, 0, 1200, 600]
         storange = list(range(0, 1201, 400))
         for fops in fopsGenAdaptive(costrange, numPlayers):
+        # for fops in fopsGen(costrange, storange, numplayers):
             # print(fops)
             # print(argsdict)
+            reres = re.search(r'x([-\d]+),([-\d]+),([-\d]+)', fops[0])
+            sgl = int(reres.group(1))
+            strg = int(reres.group(2))
+            auc = int(reres.group(3))
+
+            argsdict['experiment'] = 'Adaptive Cost'
+            # if sgl == -2 :
+            #     argsdict['experiment'] = 'Adaptive Cost'
+            #
+            # elif strg == -1 and sgl > 0:
+            #     argsdict['experiment'] = 'Fixed Cost Storage Penalty'
+            #
+            # elif strg == -1 and sgl == -1:
+            #     argsdict['experiment'] = 'Stochastic Cost Storage Penalty'
+            if auc == 1:
+                argsdict['experiment'] = 'Adaptive Cost Auctioneer'
+
             argsdict['fops'] = json.dumps(fops)
             for capacity,links in [(2,2)]:
                 # for links in [1,2]:

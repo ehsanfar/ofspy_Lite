@@ -5,6 +5,9 @@ import re
 import math
 from collections import Counter, defaultdict
 from matplotlib.font_manager import FontProperties
+from matplotlib import gridspec
+from scipy.optimize import minimize
+
 
 # from .bundle import PathBundle
 
@@ -239,21 +242,6 @@ def drawGraphbyDesign(number, design):
 
     # plt.show()
 
-hardcoded_designs = (
-        # "1.GroundSta@SUR1 2.GroundSta@SUR4 1.Sat@MEO1 2.Sat@MEO3 1.Sat@LEO1 2.Sat@LEO2",
-        # "1.GroundSta@SUR1 2.GroundSta@SUR4 1.Sat@GEO1 1.Sat@MEO1 2.Sat@MEO3 1.Sat@LEO1 2.Sat@LEO2",
-        "1.GroundSta@SUR1 2.GroundSta@SUR4 1.Sat@MEO1 1.Sat@MEO4 2.Sat@MEO5 1.Sat@LEO1 2.Sat@LEO2",
-        # "1.GroundSta@SUR1 2.GroundSta@SUR4 1.Sat@MEO1 1.Sat@MEO3 1.Sat@MEO4 2.Sat@MEO5 2.Sat@MEO6",
-        "1.GroundSta@SUR1 2.GroundSta@SUR4 2.Sat@GEO4 1.Sat@MEO1 1.Sat@MEO4 2.Sat@MEO5 1.Sat@LEO1 2.Sat@LEO2",
-        # "1.GroundSta@SUR1 2.GroundSta@SUR3 3.GroundSta@SUR5 2.Sat@GEO3 1.Sat@MEO1 2.Sat@MEO3 3.Sat@MEO6 1.Sat@LEO2",
-        "1.GroundSta@SUR1 2.GroundSta@SUR3 3.GroundSta@SUR5 1.Sat@MEO1 1.Sat@MEO2 2.Sat@MEO3 2.Sat@MEO5 3.Sat@MEO6",
-        "1.GroundSta@SUR1 2.GroundSta@SUR3 3.GroundSta@SUR5 3.Sat@GEO5 1.Sat@MEO1 1.Sat@MEO2 2.Sat@MEO3 2.Sat@MEO5 3.Sat@MEO6",
-        "1.GroundSta@SUR1 2.GroundSta@SUR3 3.GroundSta@SUR5 1.Sat@MEO1 2.Sat@MEO2 3.Sat@MEO5 1.Sat@LEO2 2.Sat@LEO4 3.Sat@LEO6",
-        # "1.GroundSta@SUR1 2.GroundSta@SUR3 3.GroundSta@SUR5 1.Sat@GEO1 1.Sat@MEO1 2.Sat@MEO4 3.Sat@MEO5 1.Sat@LEO2 2.Sat@LEO4 3.Sat@LEO6",
-    )
-
-for i, des in enumerate(hardcoded_designs):
-    drawGraphbyDesign(i+1, des)
 
 def drawGraphs(graph):
     # pos = None
@@ -421,25 +409,217 @@ def matchVariance(a, b, var0):
     # print("a, b, coef:", a, b, k)
     return (k * a, k * b)
 
+initcostlist = linkCountList = federatelist = pathLinkCount = taskValueDict = linkCountList_A = None
+R_LiA = R_TiA = pathTaskValueList = pathlist = []
+
+def calTaskLinkRevenue(costlist, fi, federatelist, pathlist, pathLinkCount, linkCountDict, taskValueDict):
+    federatelinkcost = 0.
+    for path, federateCount in zip(pathlist, pathLinkCount):
+        if path.elementOwner.federateOwner.name == federatelist[fi]:
+            for fed, cost in zip(federatelist, costlist):
+                federatelinkcost += cost * federateCount[fed]
+
+    fed = federatelist[fi]
+    linkreveune = costlist[fi] * linkCountDict[fed]
+    # print(taskValueDict[fed] , pathCostDict[fed])
+    taskrevenue = taskValueDict[fed] - federatelinkcost
+
+    return (taskrevenue, linkreveune)
+
+class Constraint1():
+    def __init__(self, fi, linkCountDict, pathlist, initcostlist, federatelist, pathLinkCount, taskValueDict, R_LiA, R_TiA):
+        self.fi = fi
+        self.linkCountDict = linkCountDict
+        self.pathlist = pathlist
+        # self.inicostlist = initcostlist
+        self.federatelist = federatelist
+        self.pathLinkCount = pathLinkCount
+        self.taskValueDict = taskValueDict
+        self.R_LiA = R_LiA
+        self.R_TiA = R_TiA
+
+    def __call__(self, costlist):
+        R_Ti, R_Li = calTaskLinkRevenue(costlist, self.fi, self.federatelist, self.pathlist, self.pathLinkCount, self.linkCountDict, self.taskValueDict)
+        # print(self.fi, R_Li + R_Ti, self.R_LiA[self.fi] + self.R_TiA[self.fi])
+        return R_Li + R_Ti - self.R_LiA[self.fi] - self.R_TiA[self.fi]
+
+
+
+class Constraint2():
+    def __init__(self, pi, path, pathTaskValueList, pathLinkCount, federatelist):
+        self.pi = pi
+        self.path = path
+        self.pathTaskValueList = pathTaskValueList
+        self.pathLinkCount = pathLinkCount
+        self.federatelist = federatelist
+    def __call__(self, costlist):
+        self.federateCount = self.pathLinkCount[self.pi]
+        pathcost = sum([c for c, f in zip(self.path.linkcostlist, self.path.linkfederatelist) if f is self.path.elementOwner.federateOwner])
+        # print("Already path cost:", pathcost)
+        value = self.pathTaskValueList[self.pi]
+        for fed, cost in zip(self.federatelist, costlist):
+            pathcost += cost * self.federateCount[fed]
+
+        return value - pathcost
+
+def optimizeCost(initCostDict, adaptiveBestBundle, bestBundle):
+    global linkCountList
+    # global initcostlist, linkCountList, federatelist, pathLinkCount, taskValueDict, pathCostDict0, R_LiA, R_TiA
+    initCostItems = sorted(list(initCostDict.items()))
+    federatelist = [e[0] for e in initCostItems]
+    initcostlist = [e[1] for e in initCostItems]
+
+
+    # pathCostDict = defaultdict(int)
+    pathLinkCount = []
+    pathTaskValueList = []
+    linkCountDict = defaultdict(int)
+    taskValueDict = defaultdict(int)
+    # pathCostDict0 = defaultdict(int)
+    pathlist = bestBundle.pathlist
+    taskvalues = bestBundle.taskvalues
+
+    for taskvalue, path in zip(taskvalues, pathlist):
+        federateOwner = path.elementOwner.federateOwner.name
+        taskValueDict[federateOwner] += taskvalue
+        linkfederates = [e.name for e in path.linkfederatelist if federateOwner != e.name]
+        pathTaskValueList.append(taskvalue)
+        # print(federateOwner, [e.name for e in path.linkfederatelist], linkfederates)
+        federateCount = defaultdict(int, Counter(linkfederates))
+        pathLinkCount.append(federateCount)
+        for f, c in federateCount.items():
+            linkCountDict[f] += c
+
+    linkCountList = [e[1] for e in sorted(list(linkCountDict.items()))]
+    # print(linkCountDict, linkCountList)
+
+    pathLinkCount_A = []
+    linkCountDict_A = defaultdict(int)
+    taskValueDict_A = defaultdict(int)
+    # pathCostDict0 = defaultdict(int)
+    pathlist_A = adaptiveBestBundle.pathlist
+    taskvalues_A = adaptiveBestBundle.taskvalues
+
+    for taskvalue, path in zip(taskvalues_A, pathlist_A):
+        federateOwner = path.elementOwner.federateOwner.name
+        taskValueDict_A[federateOwner] += taskvalue
+        linkfederates = [e.name for e in path.linkfederatelist if federateOwner != e.name]
+        federateCount = defaultdict(int, Counter(linkfederates))
+        pathLinkCount_A.append(federateCount)
+        for f, c in federateCount.items():
+            linkCountDict_A[f] += c
+
+    # linkCountList_A = [e[1] for e in sorted(list(linkCountDict_A.items()))]
+    # print("Federate link Count list:", linkCountList_A)
+
+    # pathCostDict_A = defaultdict(int)
+    # pathCostDict_A[federateOwner] = sum([federateCount[fed] * cost
+    #                                        for federateCount, fed, cost in zip(pathLinkCount_A, federatelist, initcostlist)])
+    R_LiA = []
+    R_TiA = []
+    for i in range(len(federatelist)):
+        Rt, Rl = calTaskLinkRevenue(initcostlist, i, federatelist, pathlist_A, pathLinkCount_A, linkCountDict_A, taskValueDict_A)
+        R_LiA.append(Rl)
+        R_TiA.append(Rt)
+
+    # print("Revenue Adaptive:", sum(R_TiA) + sum(R_LiA))
+
+    # print("zero and adaptive links:", linkCountDict, linkCountDict_A)
+
+    # print("Adaptive task and link revenue:", R_TiA, R_LiA)
+    def objective(costlist):
+        global linkCountList
+        # print("objective funciton :", )
+        # print(linkCountList)
+        return -1*sum([a*b for a,b in zip(costlist, linkCountList)])
+
+    conslist1 = [{'type': 'ineq', 'fun': Constraint1(i, linkCountDict, pathlist, initcostlist, federatelist, pathLinkCount, taskValueDict, R_LiA, R_TiA)} for i in range(len(initcostlist))]
+    conslist2 = [{'type': 'ineq', 'fun': Constraint2(i, path, pathTaskValueList, pathLinkCount, federatelist)} for i, path in enumerate(pathlist)]
+
+
+    # con1 = {'type': 'ineq', 'fun': constraint1}
+    # con2 = {'type': 'ineq', 'fun': constraint2}
+    # con3 = {'type': 'ineq', 'fun': constraint3}
+
+    cons = conslist1 + conslist2 # [con1, con2, con3][:len(initCostDict)]
+
+    bnds = [(min(0, 1100), 1101) for c in initcostlist]
+    # print("boundaries:", bnds)
+
+    # print("length of constraints:", len(initCostDict), len(cons))
+    templist = initcostlist[:]
+    initcostlist = [0 for i in range(len(initcostlist))]
+
+    sol = minimize(objective, initcostlist, method = 'SLSQP', bounds = bnds, constraints = cons)
+
+    # print("solution:", sol.x)
+    # print("constraints:")
+    # for con in cons:
+    if len(pathlist) != len(pathlist_A):
+        # if True:
+        # print(templist, [int(e) for e in sol.x])
+        # consresults = all([e >= 0 for e in [int(round(con['fun'](sol.x))) for con in cons]])
+        # print("Revenue 2, 1:", bestBundle.bundleRevenue, adaptiveBestBundle.bundleRevenue)
+        # print('')
+        return {'F%d' % (i+1): c for i, c in enumerate(list(sol.x))}
+    else:
+        return False
 
         # print(calGaussianKernel(0,7,6,10, 0.6))
 
-# x = y = 0
-# N = 10
-# M = 6
+# nactions = 12
+# nstates = 6
+# N = nactions * 10
+# M = nstates * 10
+# n = int(N/3)
+# m = int(2*M/3)
 # kernelmesh = np.zeros((M, N))
-# for i in range(N):
-#     for j in range(M):
-#         delta1 = min(abs(x-i), N-abs(x-i))
-#         delta2 = min(abs(y-j), M - abs(y-j))
-#         kernelmesh[j, i] = calGaussianKernel(delta1, delta2)
 #
-# kernelmesh = np.round(kernelmesh/sum(sum(kernelmesh)), 3)
+# kernelmesh = calGaussianKernel(m,n, M, N)
+#
 # print(sum(sum(kernelmesh)))
-# print(kernelmesh)
+# print(kernelmesh.shape)
+#
+# # f, (ax1, ax2) = plt.subplots(1, 2, sharex=False, sharey=True)
+# gs = gridspec.GridSpec(1, 2, width_ratios=[2, 1])
+# ax1 = plt.subplot(gs[0])
+# ax2 = plt.subplot(gs[1], sharey=ax1)
+# plt.setp(ax2.get_yticklabels(), visible=False)
+#
+# ax1.plot(100*kernelmesh[m, :], 'k--', zorder = -1)
+# ax1.text(1,0.21, ha="left", va="center", s = 'sector = 4')
+# ax1.axvline(m, zorder = -2)
+# x1 = [i for i in range(0, N-1, 10)]
+# y = list(100*kernelmesh[m,:])[::10]
+# ax1.scatter(x1, y, marker = 'o', s = 100, facecolors = 'w', edgecolors= 'k')
+# ax1.set_xlabel('action (k$)')
+# ax1.set_ylabel(r'Q learning factor: $\alpha$')
+# # ax1.set_title('sector = %d'%m)
+# ax2.plot(list(100*kernelmesh[:, n]), 'k--', zorder = -1)
+# ax2.axvline(n, zorder = -2)
+# ax2.text(1,0.21, ha="left", va="center", s = 'action = 0.4')
+#
+# x2 = [i for i in range(0, M-1, 10)]
+# y = list(100*kernelmesh[:, n])[::10]
+# ax2.scatter(x2, y, marker = 'o', s = 100, facecolors = 'w', edgecolors= 'k')
+# ax2.set_xlabel('states (sectors)')
+# # ax2.set_title('action = %1.1f'%(n/100.))
+# plt.sca(ax1)
+# plt.xticks(x1, [100*a/1000 for a in range(nactions)], rotation = 0)
+# plt.xlim(-5, N-5)
+#
+# plt.sca(ax2)
+# plt.xticks(x2, [(i+1) for i in range(nstates)], rotation = 0)
+# plt.xlim(-5, M-5)
+# plt.tight_layout()
+#
+# plt.savefig("Q_Gaussian_qupdate.pdf", bbox_inches='tight')
+# plt.suptitle('state-action-reward: (4, 0.4, 1)')
+# plt.subplots_adjust(top=0.93)
+# plt.show()
+#     #
 
 
-    #
     # for path in pathlist[0]:
     #     print(path)
     #     tempset = set(path.linklist)
@@ -489,3 +669,20 @@ def matchVariance(a, b, var0):
 #
 #
 # print findAllPathes(Graph, sources, destinations)
+
+
+# hardcoded_designs = (
+#         # "1.GroundSta@SUR1 2.GroundSta@SUR4 1.Sat@MEO1 2.Sat@MEO3 1.Sat@LEO1 2.Sat@LEO2",
+#         # "1.GroundSta@SUR1 2.GroundSta@SUR4 1.Sat@GEO1 1.Sat@MEO1 2.Sat@MEO3 1.Sat@LEO1 2.Sat@LEO2",
+#         "1.GroundSta@SUR1 2.GroundSta@SUR4 1.Sat@MEO1 1.Sat@MEO4 2.Sat@MEO5 1.Sat@LEO1 2.Sat@LEO2",
+#         # "1.GroundSta@SUR1 2.GroundSta@SUR4 1.Sat@MEO1 1.Sat@MEO3 1.Sat@MEO4 2.Sat@MEO5 2.Sat@MEO6",
+#         "1.GroundSta@SUR1 2.GroundSta@SUR4 2.Sat@GEO4 1.Sat@MEO1 1.Sat@MEO4 2.Sat@MEO5 1.Sat@LEO1 2.Sat@LEO2",
+#         # "1.GroundSta@SUR1 2.GroundSta@SUR3 3.GroundSta@SUR5 2.Sat@GEO3 1.Sat@MEO1 2.Sat@MEO3 3.Sat@MEO6 1.Sat@LEO2",
+#         "1.GroundSta@SUR1 2.GroundSta@SUR3 3.GroundSta@SUR5 1.Sat@MEO1 1.Sat@MEO2 2.Sat@MEO3 2.Sat@MEO5 3.Sat@MEO6",
+#         "1.GroundSta@SUR1 2.GroundSta@SUR3 3.GroundSta@SUR5 3.Sat@GEO5 1.Sat@MEO1 1.Sat@MEO2 2.Sat@MEO3 2.Sat@MEO5 3.Sat@MEO6",
+#         "1.GroundSta@SUR1 2.GroundSta@SUR3 3.GroundSta@SUR5 1.Sat@MEO1 2.Sat@MEO2 3.Sat@MEO5 1.Sat@LEO2 2.Sat@LEO4 3.Sat@LEO6",
+#         # "1.GroundSta@SUR1 2.GroundSta@SUR3 3.GroundSta@SUR5 1.Sat@GEO1 1.Sat@MEO1 2.Sat@MEO4 3.Sat@MEO5 1.Sat@LEO2 2.Sat@LEO4 3.Sat@LEO6",
+#     )
+#
+# for i, des in enumerate(hardcoded_designs):
+#     drawGraphbyDesign(i+1, des)

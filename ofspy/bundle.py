@@ -79,7 +79,9 @@ class PathBundle():
         if tasklist:
             self.updateTime()
             self.bundleBid = sum([path.pathBid for path in self.pathlist])
-            self.bundleRevenue = sum([task.getValue(self.time + path.deltatime) for task, path in zip(self.tasklist, self.pathlist)])
+            self.taskvalues = [task.getValue(self.time + path.deltatime) for task, path in zip(self.tasklist, self.pathlist)]
+            self.bundleRevenue = sum([task.getValue(self.time + path.deltatime)
+                                      for task, path in zip(self.tasklist, self.pathlist)])
             self.bundleCost = sum([path.pathCost for path in self.pathlist])
         # self.updateTime()
         # print("Path bundle time:", self.time)
@@ -154,5 +156,11 @@ class PathBundle():
 
 
 
+class PathBundleLite():
+    def __init__(self, tasklist, pathlist):
+        # self.tasklist = tuple(tasklist)
+        self.bundleBid = sum([path.pathBid for path in pathlist])
+        self.bundleRevenue = sum([task.getValue(task.initTime + path.deltatime) for task, path in zip(tasklist, pathlist)])
+        self.bundleCost = sum([path.pathCost for path in pathlist])
 
 

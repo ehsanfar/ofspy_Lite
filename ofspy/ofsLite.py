@@ -7,11 +7,11 @@ import time
 
 
 class OFSL(object):
-    def __init__(self, elements, numPlayers,
+    def __init__(self, experiment, elements, numPlayers,
                  numTurns, seed, fops, capacity, links):
 
         self.context = ContextLite()
-
+        self.experiment = experiment
         self.time = 0
         self.initTime = 0
         self.maxTime = numTurns
@@ -19,9 +19,10 @@ class OFSL(object):
         # print("fops:", fops)
         # args = re.search('x(\d+),(\d+),([-v\d]+)', fops)
         fops = json.loads(fops)
-        self.costSGL = [int(re.search('x([-\d]+),([-\d]+)', f).group(1)) for f in fops]
+        self.costSGL = [int(re.search('x([-\d]+),([-\d]+),([-\d]+)', f).group(1)) for f in fops]
         self.costISL = self.costSGL
-        self.storagePenalty = [int(re.search('x([-\d]+),([-\d]+)', f).group(2)) for f in fops]
+        self.storagePenalty = [int(re.search('x([-\d]+),([-\d]+),([-\d]+)', f).group(2)) for f in fops]
+        self.auctioneer = True if int(re.search('x([-\d]+),([-\d]+),([-\d]+)', fops[0]).group(3)) == 1 else False
         self.capacity = int(capacity)
         self.links = links
 

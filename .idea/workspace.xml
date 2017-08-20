@@ -2,17 +2,76 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="166a265d-386c-4c7c-8a28-513845ca2128" name="Default" comment="">
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/ofspy/test.py" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/bin/homebrew/Library/Homebrew/os/mac/pkgconfig/10.4/libcrypto.pc" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/bin/homebrew/Library/Homebrew/os/mac/pkgconfig/10.4/libcurl.pc" afterPath="" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/bin/cost_volution_F1_storagepenalty_-1.png" afterPath="$PROJECT_DIR$/bin/cost_volution_F1_storagepenalty_-1.png" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/bin/cost_volution_F2_storagepenalty_-1.png" afterPath="$PROJECT_DIR$/bin/cost_volution_F2_storagepenalty_-1.png" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/bin/cost_volution_F3_storagepenalty_-1.png" afterPath="$PROJECT_DIR$/bin/cost_volution_F3_storagepenalty_-1.png" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/bin/homebrew/Library/Homebrew/test/support/fixtures/bottles/testball_bottle-0.1.el_capitan.bottle.tar.gz" afterPath="$PROJECT_DIR$/bin/homebrew/Library/Homebrew/test/support/fixtures/bottles/testball_bottle-0.1.el_capitan.bottle.tar.gz" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/bin/homebrew/Library/Homebrew/test/support/fixtures/bottles/testball_bottle-0.1.high_sierra.bottle.tar.gz" afterPath="$PROJECT_DIR$/bin/homebrew/Library/Homebrew/test/support/fixtures/bottles/testball_bottle-0.1.high_sierra.bottle.tar.gz" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/bin/homebrew/Library/Homebrew/test/support/fixtures/bottles/testball_bottle-0.1.linux_x86_64.bottle.tar.gz" afterPath="$PROJECT_DIR$/bin/homebrew/Library/Homebrew/test/support/fixtures/bottles/testball_bottle-0.1.linux_x86_64.bottle.tar.gz" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/bin/homebrew/Library/Homebrew/test/support/fixtures/bottles/testball_bottle-0.1.macintosh_intel.bottle.tar.gz" afterPath="$PROJECT_DIR$/bin/homebrew/Library/Homebrew/test/support/fixtures/bottles/testball_bottle-0.1.macintosh_intel.bottle.tar.gz" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/bin/homebrew/Library/Homebrew/test/support/fixtures/bottles/testball_bottle-0.1.mavericks.bottle.tar.gz" afterPath="$PROJECT_DIR$/bin/homebrew/Library/Homebrew/test/support/fixtures/bottles/testball_bottle-0.1.mavericks.bottle.tar.gz" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/bin/homebrew/Library/Homebrew/test/support/fixtures/bottles/testball_bottle-0.1.mountain_lion.bottle.tar.gz" afterPath="$PROJECT_DIR$/bin/homebrew/Library/Homebrew/test/support/fixtures/bottles/testball_bottle-0.1.mountain_lion.bottle.tar.gz" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/bin/homebrew/Library/Homebrew/test/support/fixtures/bottles/testball_bottle-0.1.sierra.bottle.tar.gz" afterPath="$PROJECT_DIR$/bin/homebrew/Library/Homebrew/test/support/fixtures/bottles/testball_bottle-0.1.sierra.bottle.tar.gz" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/ofspy/Design_I.pdf" afterPath="$PROJECT_DIR$/ofspy/Design_I.pdf" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/ofspy/Design_II.pdf" afterPath="$PROJECT_DIR$/ofspy/Design_II.pdf" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/ofspy/Design_III.pdf" afterPath="$PROJECT_DIR$/ofspy/Design_III.pdf" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/ofspy/Design_IV.pdf" afterPath="$PROJECT_DIR$/ofspy/Design_IV.pdf" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/ofspy/Design_V.pdf" afterPath="$PROJECT_DIR$/ofspy/Design_V.pdf" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/bin/homebrew/Library/Homebrew/shims/scm/svn" afterPath="$PROJECT_DIR$/bin/homebrew/Library/Homebrew/shims/scm/svn" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/bin/homebrew/Library/Homebrew/shims/super/c++" afterPath="$PROJECT_DIR$/bin/homebrew/Library/Homebrew/shims/super/c++" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/bin/homebrew/Library/Homebrew/shims/super/c89" afterPath="$PROJECT_DIR$/bin/homebrew/Library/Homebrew/shims/super/c89" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/bin/homebrew/Library/Homebrew/shims/super/c99" afterPath="$PROJECT_DIR$/bin/homebrew/Library/Homebrew/shims/super/c99" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/bin/homebrew/Library/Homebrew/shims/super/clang" afterPath="$PROJECT_DIR$/bin/homebrew/Library/Homebrew/shims/super/clang" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/bin/homebrew/Library/Homebrew/shims/super/clang++" afterPath="$PROJECT_DIR$/bin/homebrew/Library/Homebrew/shims/super/clang++" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/bin/homebrew/Library/Homebrew/shims/super/cpp" afterPath="$PROJECT_DIR$/bin/homebrew/Library/Homebrew/shims/super/cpp" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/bin/homebrew/Library/Homebrew/shims/super/g++" afterPath="$PROJECT_DIR$/bin/homebrew/Library/Homebrew/shims/super/g++" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/bin/homebrew/Library/Homebrew/shims/super/g++-4.2" afterPath="$PROJECT_DIR$/bin/homebrew/Library/Homebrew/shims/super/g++-4.2" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/bin/homebrew/Library/Homebrew/shims/super/g++-4.3" afterPath="$PROJECT_DIR$/bin/homebrew/Library/Homebrew/shims/super/g++-4.3" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/bin/homebrew/Library/Homebrew/shims/super/g++-4.4" afterPath="$PROJECT_DIR$/bin/homebrew/Library/Homebrew/shims/super/g++-4.4" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/bin/homebrew/Library/Homebrew/shims/super/g++-4.5" afterPath="$PROJECT_DIR$/bin/homebrew/Library/Homebrew/shims/super/g++-4.5" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/bin/homebrew/Library/Homebrew/shims/super/g++-4.6" afterPath="$PROJECT_DIR$/bin/homebrew/Library/Homebrew/shims/super/g++-4.6" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/bin/homebrew/Library/Homebrew/shims/super/g++-4.7" afterPath="$PROJECT_DIR$/bin/homebrew/Library/Homebrew/shims/super/g++-4.7" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/bin/homebrew/Library/Homebrew/shims/super/g++-4.8" afterPath="$PROJECT_DIR$/bin/homebrew/Library/Homebrew/shims/super/g++-4.8" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/bin/homebrew/Library/Homebrew/shims/super/g++-4.9" afterPath="$PROJECT_DIR$/bin/homebrew/Library/Homebrew/shims/super/g++-4.9" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/bin/homebrew/Library/Homebrew/shims/super/g++-5" afterPath="$PROJECT_DIR$/bin/homebrew/Library/Homebrew/shims/super/g++-5" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/bin/homebrew/Library/Homebrew/shims/super/g++-6" afterPath="$PROJECT_DIR$/bin/homebrew/Library/Homebrew/shims/super/g++-6" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/bin/homebrew/Library/Homebrew/shims/super/g++-7" afterPath="$PROJECT_DIR$/bin/homebrew/Library/Homebrew/shims/super/g++-7" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/bin/homebrew/Library/Homebrew/shims/super/gcc" afterPath="$PROJECT_DIR$/bin/homebrew/Library/Homebrew/shims/super/gcc" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/bin/homebrew/Library/Homebrew/shims/super/gcc-4.2" afterPath="$PROJECT_DIR$/bin/homebrew/Library/Homebrew/shims/super/gcc-4.2" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/bin/homebrew/Library/Homebrew/shims/super/gcc-4.3" afterPath="$PROJECT_DIR$/bin/homebrew/Library/Homebrew/shims/super/gcc-4.3" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/bin/homebrew/Library/Homebrew/shims/super/gcc-4.4" afterPath="$PROJECT_DIR$/bin/homebrew/Library/Homebrew/shims/super/gcc-4.4" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/bin/homebrew/Library/Homebrew/shims/super/gcc-4.5" afterPath="$PROJECT_DIR$/bin/homebrew/Library/Homebrew/shims/super/gcc-4.5" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/bin/homebrew/Library/Homebrew/shims/super/gcc-4.6" afterPath="$PROJECT_DIR$/bin/homebrew/Library/Homebrew/shims/super/gcc-4.6" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/bin/homebrew/Library/Homebrew/shims/super/gcc-4.7" afterPath="$PROJECT_DIR$/bin/homebrew/Library/Homebrew/shims/super/gcc-4.7" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/bin/homebrew/Library/Homebrew/shims/super/gcc-4.8" afterPath="$PROJECT_DIR$/bin/homebrew/Library/Homebrew/shims/super/gcc-4.8" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/bin/homebrew/Library/Homebrew/shims/super/gcc-4.9" afterPath="$PROJECT_DIR$/bin/homebrew/Library/Homebrew/shims/super/gcc-4.9" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/bin/homebrew/Library/Homebrew/shims/super/gcc-5" afterPath="$PROJECT_DIR$/bin/homebrew/Library/Homebrew/shims/super/gcc-5" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/bin/homebrew/Library/Homebrew/shims/super/gcc-6" afterPath="$PROJECT_DIR$/bin/homebrew/Library/Homebrew/shims/super/gcc-6" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/bin/homebrew/Library/Homebrew/shims/super/gcc-7" afterPath="$PROJECT_DIR$/bin/homebrew/Library/Homebrew/shims/super/gcc-7" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/bin/homebrew/Library/Homebrew/shims/super/git" afterPath="$PROJECT_DIR$/bin/homebrew/Library/Homebrew/shims/super/git" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/bin/homebrew/Library/Homebrew/shims/super/gmake" afterPath="$PROJECT_DIR$/bin/homebrew/Library/Homebrew/shims/super/gmake" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/bin/homebrew/Library/Homebrew/shims/super/i686-apple-darwin11-llvm-g++-4.2" afterPath="$PROJECT_DIR$/bin/homebrew/Library/Homebrew/shims/super/i686-apple-darwin11-llvm-g++-4.2" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/bin/homebrew/Library/Homebrew/shims/super/i686-apple-darwin11-llvm-gcc-4.2" afterPath="$PROJECT_DIR$/bin/homebrew/Library/Homebrew/shims/super/i686-apple-darwin11-llvm-gcc-4.2" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/bin/homebrew/Library/Homebrew/shims/super/ld" afterPath="$PROJECT_DIR$/bin/homebrew/Library/Homebrew/shims/super/ld" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/bin/homebrew/Library/Homebrew/shims/super/llvm-g++" afterPath="$PROJECT_DIR$/bin/homebrew/Library/Homebrew/shims/super/llvm-g++" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/bin/homebrew/Library/Homebrew/shims/super/llvm-g++-4.2" afterPath="$PROJECT_DIR$/bin/homebrew/Library/Homebrew/shims/super/llvm-g++-4.2" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/bin/homebrew/Library/Homebrew/shims/super/llvm-gcc" afterPath="$PROJECT_DIR$/bin/homebrew/Library/Homebrew/shims/super/llvm-gcc" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/bin/homebrew/Library/Homebrew/shims/super/llvm-gcc-4.2" afterPath="$PROJECT_DIR$/bin/homebrew/Library/Homebrew/shims/super/llvm-gcc-4.2" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/bin/homebrew/Library/Homebrew/shims/super/llvm_clang" afterPath="$PROJECT_DIR$/bin/homebrew/Library/Homebrew/shims/super/llvm_clang" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/bin/homebrew/Library/Homebrew/shims/super/llvm_clang++" afterPath="$PROJECT_DIR$/bin/homebrew/Library/Homebrew/shims/super/llvm_clang++" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/bin/homebrew/Library/Homebrew/shims/super/svn" afterPath="$PROJECT_DIR$/bin/homebrew/Library/Homebrew/shims/super/svn" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/bin/ofsLite.py" afterPath="$PROJECT_DIR$/bin/ofsLite.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/ofspy/auction.py" afterPath="$PROJECT_DIR$/ofspy/auction.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/ofspy/auctioneer.py" afterPath="$PROJECT_DIR$/ofspy/auctioneer.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/ofspy/bundle.py" afterPath="$PROJECT_DIR$/ofspy/bundle.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/ofspy/contextLite.py" afterPath="$PROJECT_DIR$/ofspy/contextLite.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/ofspy/federateLite.py" afterPath="$PROJECT_DIR$/ofspy/federateLite.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/ofspy/generalFunctions.py" afterPath="$PROJECT_DIR$/ofspy/generalFunctions.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/ofspy/ofsLite.py" afterPath="$PROJECT_DIR$/ofspy/ofsLite.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/ofspy/path.py" afterPath="$PROJECT_DIR$/ofspy/path.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/ofspy/qlearner.py" afterPath="$PROJECT_DIR$/ofspy/qlearner.py" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -30,8 +89,8 @@
       <file leaf-file-name="ofsLite.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/bin/ofsLite.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="342">
-              <caret line="99" column="31" lean-forward="false" selection-start-line="99" selection-start-column="31" selection-end-line="99" selection-end-column="31" />
+            <state relative-caret-position="121">
+              <caret line="132" column="28" lean-forward="false" selection-start-line="132" selection-start-column="28" selection-end-line="132" selection-end-column="28" />
               <folding />
             </state>
           </provider>
@@ -40,23 +99,9 @@
       <file leaf-file-name="federateLite.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/ofspy/federateLite.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="1263">
-              <caret line="334" column="14" lean-forward="false" selection-start-line="334" selection-start-column="14" selection-end-line="334" selection-end-column="14" />
-              <folding>
-                <element signature="e#0#9#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="auction.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/ofspy/auction.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="2229">
-              <caret line="168" column="15" lean-forward="false" selection-start-line="168" selection-start-column="15" selection-end-line="168" selection-end-column="15" />
-              <folding>
-                <element signature="e#0#9#0" expanded="true" />
-              </folding>
+            <state relative-caret-position="180">
+              <caret line="340" column="18" lean-forward="true" selection-start-line="340" selection-start-column="18" selection-end-line="340" selection-end-column="18" />
+              <folding />
             </state>
           </provider>
         </entry>
@@ -64,28 +109,28 @@
       <file leaf-file-name="auctioneer.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/ofspy/auctioneer.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-573">
-              <caret line="89" column="20" lean-forward="false" selection-start-line="89" selection-start-column="20" selection-end-line="89" selection-end-column="20" />
+            <state relative-caret-position="510">
+              <caret line="138" column="37" lean-forward="true" selection-start-line="138" selection-start-column="37" selection-end-line="138" selection-end-column="37" />
               <folding />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="bundle.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/ofspy/bundle.py">
+      <file leaf-file-name="elementLite.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/ofspy/elementLite.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="2040">
-              <caret line="136" column="7" lean-forward="false" selection-start-line="136" selection-start-column="7" selection-end-line="136" selection-end-column="7" />
+            <state relative-caret-position="-2303">
+              <caret line="10" column="0" lean-forward="false" selection-start-line="10" selection-start-column="0" selection-end-line="10" selection-end-column="0" />
               <folding />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="path.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/ofspy/path.py">
+      <file leaf-file-name="auction.py" pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/ofspy/auction.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="585">
-              <caret line="39" column="16" lean-forward="false" selection-start-line="39" selection-start-column="10" selection-end-line="39" selection-end-column="16" />
+            <state relative-caret-position="1440">
+              <caret line="101" column="20" lean-forward="true" selection-start-line="101" selection-start-column="20" selection-end-line="101" selection-end-column="20" />
               <folding />
             </state>
           </provider>
@@ -94,32 +139,41 @@
       <file leaf-file-name="ofsLite.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/ofspy/ofsLite.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="855">
-              <caret line="61" column="0" lean-forward="false" selection-start-line="61" selection-start-column="0" selection-end-line="61" selection-end-column="0" />
+            <state relative-caret-position="300">
+              <caret line="24" column="103" lean-forward="false" selection-start-line="24" selection-start-column="103" selection-end-line="24" selection-end-column="103" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="bundle.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/ofspy/bundle.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="703">
+              <caret line="128" column="27" lean-forward="false" selection-start-line="128" selection-start-column="27" selection-end-line="128" selection-end-column="27" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="path.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/ofspy/path.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="293">
+              <caret line="76" column="27" lean-forward="true" selection-start-line="76" selection-start-column="27" selection-end-line="76" selection-end-column="27" />
               <folding>
-                <element signature="e#1#37#0" expanded="true" />
+                <marker date="1503191045000" expanded="true" signature="89:324" ph="..." />
+                <marker date="1503191045000" expanded="true" signature="3558:3584" ph="..." />
               </folding>
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="generalFunctions.py" pinned="false" current-in-tab="true">
+      <file leaf-file-name="generalFunctions.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/ofspy/generalFunctions.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="501">
-              <caret line="203" column="111" lean-forward="true" selection-start-line="203" selection-start-column="111" selection-end-line="203" selection-end-column="111" />
-              <folding>
-                <element signature="e#0#31#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="contextLite.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/ofspy/contextLite.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="2295">
-              <caret line="161" column="0" lean-forward="false" selection-start-line="161" selection-start-column="0" selection-end-line="161" selection-end-column="0" />
+            <state relative-caret-position="3033">
+              <caret line="567" column="36" lean-forward="true" selection-start-line="567" selection-start-column="36" selection-end-line="567" selection-end-column="36" />
               <folding />
             </state>
           </provider>
@@ -128,11 +182,9 @@
       <file leaf-file-name="qlearner.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/ofspy/qlearner.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="2145">
-              <caret line="147" column="11" lean-forward="false" selection-start-line="147" selection-start-column="11" selection-end-line="147" selection-end-column="11" />
-              <folding>
-                <element signature="e#0#18#0" expanded="true" />
-              </folding>
+            <state relative-caret-position="352">
+              <caret line="157" column="37" lean-forward="true" selection-start-line="157" selection-start-column="37" selection-end-line="157" selection-end-column="37" />
+              <folding />
             </state>
           </provider>
         </entry>
@@ -148,36 +200,36 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>Action  cos</find>
-      <find>Action  co</find>
-      <find>Action  c</find>
-      <find>Action</find>
-      <find>Action c</find>
-      <find>Act</find>
-      <find>a</find>
-      <find>action</find>
-      <find>actio</find>
-      <find>ac</find>
-      <find>A</find>
-      <find>Actio</find>
-      <find>Action:</find>
-      <find>Graph</find>
-      <find>self.random_state</find>
-      <find>import random</find>
-      <find>comb</find>
-      <find>random</find>
-      <find>self.masterStream</find>
-      <find>5.</find>
-      <find>-2</find>
-      <find>-</find>
-      <find>storage penalty: -2</find>
-      <find>storage penalty: -</find>
-      <find>storage penalty:</find>
-      <find>mask</find>
-      <find>positionsection</find>
-      <find>plt.save</find>
-      <find>printj(</find>
-      <find>print(</find>
+      <find>in</find>
+      <find>ini</find>
+      <find>initial</find>
+      <find>initial p</find>
+      <find>initial pri</find>
+      <find>initial pric</find>
+      <find>task list</find>
+      <find>pathlist</find>
+      <find>linkCountList</find>
+      <find>path</find>
+      <find>path.cost</find>
+      <find>path.cos</find>
+      <find>path.co</find>
+      <find>path.c</find>
+      <find>path.</find>
+      <find>path.linkCost</find>
+      <find>path.linkCos</find>
+      <find>path.linkC</find>
+      <find>path.link</find>
+      <find>path.linkcostli</find>
+      <find>path.linkcostlist</find>
+      <find>R</find>
+      <find>Reven</find>
+      <find>Revenue</find>
+      <find>Revenue A</find>
+      <find>Revenue</find>
+      <find>Revenue a</find>
+      <find>Revenue ada</find>
+      <find>Revenue adap</find>
+      <find>self.stochastic</find>
     </findStrings>
     <replaceStrings>
       <replace>graph.</replace>
@@ -197,29 +249,29 @@
         <option value="$PROJECT_DIR$/ofspy/Graph.py" />
         <option value="$PROJECT_DIR$/ofspy/node.py" />
         <option value="$PROJECT_DIR$/ofspy/task.py" />
-        <option value="$PROJECT_DIR$/ofspy/path.py" />
-        <option value="$PROJECT_DIR$/ofspy/auctioneer.py" />
         <option value="$PROJECT_DIR$/ofspy/graph.py" />
-        <option value="$PROJECT_DIR$/ofspy/ofsLite.py" />
         <option value="$PROJECT_DIR$/ofspy/elementLite.py" />
         <option value="$PROJECT_DIR$/ofspy/contextLite.py" />
         <option value="$PROJECT_DIR$/bin/ofsLite_exploreDesigns.py" />
-        <option value="$PROJECT_DIR$/ofspy/federateLite.py" />
         <option value="$PROJECT_DIR$/ofspy/qlearner.py" />
         <option value="$USER_HOME$/Downloads/contour_corner_mask.py" />
         <option value="$USER_HOME$/Downloads/contourf_demo.py" />
         <option value="$PROJECT_DIR$/ofspy/bundle.py" />
-        <option value="$PROJECT_DIR$/ofspy/auction.py" />
+        <option value="$PROJECT_DIR$/ofspy/test.py" />
+        <option value="$PROJECT_DIR$/ofspy/federateLite.py" />
+        <option value="$PROJECT_DIR$/ofspy/ofsLite.py" />
+        <option value="$PROJECT_DIR$/ofspy/auctioneer.py" />
+        <option value="$PROJECT_DIR$/ofspy/path.py" />
         <option value="$PROJECT_DIR$/ofspy/generalFunctions.py" />
         <option value="$PROJECT_DIR$/bin/ofsLite.py" />
+        <option value="$PROJECT_DIR$/ofspy/auction.py" />
       </list>
     </option>
   </component>
   <component name="ProjectFrameBounds">
-    <option name="x" value="106" />
-    <option name="y" value="384" />
-    <option name="width" value="1920" />
-    <option name="height" value="990" />
+    <option name="y" value="23" />
+    <option name="width" value="1440" />
+    <option name="height" value="823" />
   </component>
   <component name="ProjectView">
     <navigator currentView="ProjectPane" proportions="" version="1">
@@ -236,8 +288,6 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
-      <pane id="Scope" />
-      <pane id="Scratches" />
       <pane id="ProjectPane">
         <subPane>
           <PATH>
@@ -280,11 +330,13 @@
           </PATH>
         </subPane>
       </pane>
+      <pane id="Scratches" />
+      <pane id="Scope" />
     </panes>
   </component>
   <component name="PropertiesComponent">
     <property name="last_opened_file_path" value="$PROJECT_DIR$" />
-    <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
+    <property name="settings.editor.selected.configurable" value="preferences.editor" />
   </component>
   <component name="RunDashboard">
     <option name="ruleStates">
@@ -298,7 +350,7 @@
       </list>
     </option>
   </component>
-  <component name="RunManager" selected="Python.generalFunctions">
+  <component name="RunManager" selected="Python.test">
     <configuration default="false" name="qlearner" type="PythonConfigurationType" factoryName="Python" temporary="true">
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
@@ -366,6 +418,24 @@
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <module name="ofspy_Lite" />
       <option name="SCRIPT_NAME" value="$USER_HOME$/Downloads/contourf_demo.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <method />
+    </configuration>
+    <configuration default="false" name="test" type="PythonConfigurationType" factoryName="Python" temporary="true">
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/ofspy" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <module name="ofspy_Lite" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/ofspy/test.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -467,18 +537,20 @@
       <option name="_new_targetType" value="&quot;PATH&quot;" />
       <method />
     </configuration>
-    <list size="4">
+    <list size="5">
       <item index="0" class="java.lang.String" itemvalue="Python.qlearner" />
       <item index="1" class="java.lang.String" itemvalue="Python.generalFunctions" />
       <item index="2" class="java.lang.String" itemvalue="Python.contour_corner_mask" />
       <item index="3" class="java.lang.String" itemvalue="Python.contourf_demo" />
+      <item index="4" class="java.lang.String" itemvalue="Python.test" />
     </list>
     <recent_temporary>
-      <list size="4">
-        <item index="0" class="java.lang.String" itemvalue="Python.generalFunctions" />
-        <item index="1" class="java.lang.String" itemvalue="Python.contourf_demo" />
-        <item index="2" class="java.lang.String" itemvalue="Python.contour_corner_mask" />
-        <item index="3" class="java.lang.String" itemvalue="Python.qlearner" />
+      <list size="5">
+        <item index="0" class="java.lang.String" itemvalue="Python.test" />
+        <item index="1" class="java.lang.String" itemvalue="Python.generalFunctions" />
+        <item index="2" class="java.lang.String" itemvalue="Python.contourf_demo" />
+        <item index="3" class="java.lang.String" itemvalue="Python.contour_corner_mask" />
+        <item index="4" class="java.lang.String" itemvalue="Python.qlearner" />
       </list>
     </recent_temporary>
     <configuration default="true" type="tests" factoryName="Attests">
@@ -515,14 +587,14 @@
     <servers />
   </component>
   <component name="ToolWindowManager">
-    <frame x="106" y="384" width="1920" height="990" extended-state="0" />
+    <frame x="0" y="23" width="1440" height="823" extended-state="6" />
     <editor active="true" />
     <layout>
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.18423855" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.18888889" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="true" content_ui="tabs" />
       <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.26832017" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
-      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32919955" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.06523955" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="10" side_tool="false" content_ui="tabs" />
       <window_info id="Python Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="8" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
@@ -549,19 +621,17 @@
           <line>86</line>
           <option name="timeStamp" value="1" />
         </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/ofspy/auctioneer.py</url>
+          <line>199</line>
+          <option name="timeStamp" value="2" />
+        </line-breakpoint>
       </breakpoints>
-      <option name="time" value="2" />
+      <option name="time" value="3" />
     </breakpoint-manager>
     <watches-manager />
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/ofspy/elementLite.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1860">
-          <caret line="125" column="22" lean-forward="true" selection-start-line="125" selection-start-column="22" selection-end-line="125" selection-end-column="22" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/bin/ofsLite.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="3810">
@@ -582,9 +652,7 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="765">
           <caret line="54" column="33" lean-forward="true" selection-start-line="54" selection-start-column="33" selection-end-line="54" selection-end-column="33" />
-          <folding>
-            <element signature="e#0#9#0" expanded="true" />
-          </folding>
+          <folding />
         </state>
       </provider>
     </entry>
@@ -601,9 +669,7 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="225">
           <caret line="15" column="0" lean-forward="true" selection-start-line="15" selection-start-column="0" selection-end-line="15" selection-end-column="0" />
-          <folding>
-            <element signature="e#1#37#0" expanded="true" />
-          </folding>
+          <folding />
         </state>
       </provider>
     </entry>
@@ -644,9 +710,7 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="15">
           <caret line="1" column="36" lean-forward="false" selection-start-line="1" selection-start-column="36" selection-end-line="1" selection-end-column="36" />
-          <folding>
-            <element signature="e#1#37#0" expanded="true" />
-          </folding>
+          <folding />
         </state>
       </provider>
     </entry>
@@ -687,9 +751,7 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="15">
           <caret line="1" column="36" lean-forward="true" selection-start-line="1" selection-start-column="36" selection-end-line="1" selection-end-column="36" />
-          <folding>
-            <element signature="e#1#37#0" expanded="true" />
-          </folding>
+          <folding />
         </state>
       </provider>
     </entry>
@@ -719,13 +781,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/ofspy/task.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="675">
-          <caret line="45" column="27" lean-forward="false" selection-start-line="45" selection-start-column="27" selection-end-line="45" selection-end-column="27" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/../../../Ehsan_Twitter/text_analyzer.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="-1530">
@@ -741,45 +796,10 @@
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/bin/Evolution_400_F1.png" />
-    <entry file="file://$PROJECT_DIR$/ofspy/elementLite.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="150">
-          <caret line="10" column="0" lean-forward="false" selection-start-line="10" selection-start-column="0" selection-end-line="10" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/ofspy/graph.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="2400">
           <caret line="170" column="22" lean-forward="false" selection-start-line="170" selection-start-column="22" selection-end-line="170" selection-end-column="22" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/ofspy/qlearner.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="2145">
-          <caret line="147" column="11" lean-forward="false" selection-start-line="147" selection-start-column="11" selection-end-line="147" selection-end-column="11" />
-          <folding>
-            <element signature="e#0#18#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/ofspy/contextLite.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="2295">
-          <caret line="161" column="0" lean-forward="false" selection-start-line="161" selection-start-column="0" selection-end-line="161" selection-end-column="0" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/ofspy/ofsLite.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="855">
-          <caret line="61" column="0" lean-forward="false" selection-start-line="61" selection-start-column="0" selection-end-line="61" selection-end-column="0" />
-          <folding>
-            <element signature="e#1#37#0" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -792,65 +812,110 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/ofspy/auctioneer.py">
+    <entry file="file://$PROJECT_DIR$/ofspy/task.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-573">
-          <caret line="89" column="20" lean-forward="false" selection-start-line="89" selection-start-column="20" selection-end-line="89" selection-end-column="20" />
+        <state relative-caret-position="270">
+          <caret line="18" column="26" lean-forward="false" selection-start-line="18" selection-start-column="13" selection-end-line="18" selection-end-column="26" />
           <folding />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/ofspy/federateLite.py">
+    <entry file="file://$PROJECT_DIR$/ofspy/test.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1263">
-          <caret line="334" column="14" lean-forward="false" selection-start-line="334" selection-start-column="14" selection-end-line="334" selection-end-column="14" />
-          <folding>
-            <element signature="e#0#9#0" expanded="true" />
-          </folding>
+        <state relative-caret-position="360">
+          <caret line="24" column="12" lean-forward="false" selection-start-line="24" selection-start-column="12" selection-end-line="24" selection-end-column="12" />
+          <folding />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/ofspy/auction.py">
+    <entry file="file://$PROJECT_DIR$/ofspy/contextLite.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="2229">
-          <caret line="168" column="15" lean-forward="false" selection-start-line="168" selection-start-column="15" selection-end-line="168" selection-end-column="15" />
-          <folding>
-            <element signature="e#0#9#0" expanded="true" />
-          </folding>
+        <state relative-caret-position="2269">
+          <caret line="161" column="0" lean-forward="false" selection-start-line="161" selection-start-column="0" selection-end-line="161" selection-end-column="0" />
+          <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/ofspy/bundle.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="2040">
-          <caret line="136" column="7" lean-forward="false" selection-start-line="136" selection-start-column="7" selection-end-line="136" selection-end-column="7" />
+        <state relative-caret-position="703">
+          <caret line="128" column="27" lean-forward="false" selection-start-line="128" selection-start-column="27" selection-end-line="128" selection-end-column="27" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/ofspy/elementLite.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-2303">
+          <caret line="10" column="0" lean-forward="false" selection-start-line="10" selection-start-column="0" selection-end-line="10" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/ofspy/qlearner.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="352">
+          <caret line="157" column="37" lean-forward="true" selection-start-line="157" selection-start-column="37" selection-end-line="157" selection-end-column="37" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/ofspy/ofsLite.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="300">
+          <caret line="24" column="103" lean-forward="false" selection-start-line="24" selection-start-column="103" selection-end-line="24" selection-end-column="103" />
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/ofspy/path.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="585">
-          <caret line="39" column="16" lean-forward="false" selection-start-line="39" selection-start-column="10" selection-end-line="39" selection-end-column="16" />
+        <state relative-caret-position="293">
+          <caret line="76" column="27" lean-forward="true" selection-start-line="76" selection-start-column="27" selection-end-line="76" selection-end-column="27" />
+          <folding>
+            <marker date="1503191045000" expanded="true" signature="89:324" ph="..." />
+            <marker date="1503191045000" expanded="true" signature="3558:3584" ph="..." />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/ofspy/generalFunctions.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="3033">
+          <caret line="567" column="36" lean-forward="true" selection-start-line="567" selection-start-column="36" selection-end-line="567" selection-end-column="36" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/ofspy/federateLite.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="180">
+          <caret line="340" column="18" lean-forward="true" selection-start-line="340" selection-start-column="18" selection-end-line="340" selection-end-column="18" />
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/bin/ofsLite.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="342">
-          <caret line="99" column="31" lean-forward="false" selection-start-line="99" selection-start-column="31" selection-end-line="99" selection-end-column="31" />
+        <state relative-caret-position="121">
+          <caret line="132" column="28" lean-forward="false" selection-start-line="132" selection-start-column="28" selection-end-line="132" selection-end-column="28" />
           <folding />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/ofspy/generalFunctions.py">
+    <entry file="file://$PROJECT_DIR$/ofspy/auctioneer.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="501">
-          <caret line="203" column="111" lean-forward="true" selection-start-line="203" selection-start-column="111" selection-end-line="203" selection-end-column="111" />
-          <folding>
-            <element signature="e#0#31#0" expanded="true" />
-          </folding>
+        <state relative-caret-position="510">
+          <caret line="138" column="37" lean-forward="true" selection-start-line="138" selection-start-column="37" selection-end-line="138" selection-end-column="37" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/ofspy/auction.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1440">
+          <caret line="101" column="20" lean-forward="true" selection-start-line="101" selection-start-column="20" selection-end-line="101" selection-end-column="20" />
+          <folding />
         </state>
       </provider>
     </entry>

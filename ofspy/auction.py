@@ -1,6 +1,6 @@
 import re
 from collections import defaultdict, Counter
-from .bundle import PathBundle
+from .bundle import PathBundle, PathBundleLite
 import itertools
 import time
 from .generalFunctions import returnCompatiblePaths
@@ -20,7 +20,8 @@ class Auction():
         # self.federateset = []
 
 
-    def inquirePrice(self):
+    def inquirePrice(self, costDict):
+        self.taskPathDict = defaultdict(list)
         federateBundleDict = {}
         seen = set([])
         seen_add = seen.add
@@ -37,8 +38,7 @@ class Auction():
         # auctionlinklist = [e for l in [path.nodelist for path in self.pathlist] for e in l]
         # for fed in federateset:
         #     fed.updateCost(auctionlinklist)
-        self.auctioneer.costSGLDict = {f.name: f.getCost('oSGL') for f in self.auctioneer.context.federates}
-        self.auctioneer.costISLDict = {f.name: f.getCost('oISL') for f in self.auctioneer.context.federates}
+
 
         self.pathlist = [e for l in self.pathlist for e in l]
         # print("pathlist:", self.pathlist)
@@ -57,7 +57,7 @@ class Auction():
                     linkbids.append(0)
                 else:
                     self.auctionFederates.add(fname)
-                    cost = self.auctioneer.costSGLDict[fname] if 'GS' in link[1] else self.auctioneer.costISLDict[fname]
+                    cost = costDict[fname]# if 'GS' in link[1] else costISLDict[fname]
                     linkbids.append(cost)
 
                     # print('link cost:', cost)
@@ -76,6 +76,7 @@ class Auction():
                 if task.elementOwner.name == path.elementOwner.name:
                     # print("path cost:", path.pathCost, task.getValue(task.initTime + path.deltatime), path.pathCost < task.getValue(task.initTime + path.deltatime))
                     if path.pathCost < task.getValue(task.initTime + path.deltatime):
+
                         self.taskPathDict[task.taskid].append(path)
 
         # print("tasksPathDict length:", [len(set(v)) for v in self.taskPathDict.values()])
@@ -131,11 +132,11 @@ class Auction():
                 # print(defaultdict)
                 self.auctioneer.updateTimeLinks(time, link)
 
-        federateDict = {f.name: f for f in self.auctioneer.context.federates}
-        for fed in self.auctionFederates:
-            federate = federateDict[fed]
-            if federate.costlearning:
-               federate.updateBestBundle(self.bestPathBundle)
+        # federateDict = {f.name: f for f in self.auctioneer.context.federates}
+        # for fed in self.auctionFederates:
+        #     federate = federateDict[fed]
+        #     if federate.costlearning:
+        #        federate.updateBestBundle(self.bestPathBundle)
 
         return True
 

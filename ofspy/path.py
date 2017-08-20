@@ -53,26 +53,36 @@ class Path():
     #         self.pathBid = None
     #         self.pathPrice = None
     #     # print("update pathBid:", self.nodelist, self.pathBid)
-    def updateBid(self, linkbids, linkbids2 = []):
-        self.linkbidlist = linkbids
-        self.pathBid = sum(linkbids)
+    def updateBid(self, linkbids):
+        if isinstance(linkbids, dict):
+            self.linkbidlist = [linkbids[f] for f in self.linkfederatelist]
+        else:
+            self.linkbidlist = linkbids
+
+        self.pathBid = sum(self.linkbidlist)
         # self.pathBid2 = sum(linkbids2)
 
     def updateCost(self, linkcosts):
-        self.linkcostlist = linkcosts
+        if isinstance(linkcosts, dict):
+            self.linkcostlist = [linkcosts[f] for f in self.linkfederatelist]
+        else:
+            self.linkcostlist = linkcosts
+
         self.pathCost = sum(linkcosts)
         # self.pathPrice = price
 
-    def updateWithFederateCost(self, fedcostdict):
-        newlinkcostlist = []
+    def updateWithFederateBid(self, fedbiddict):
+        newlinkbidlist = []
+        # print(fedbiddict)
         for linkcost, fed in zip(self.linkcostlist, self.linkfederatelist):
             if fed is self.elementOwner.federateOwner:
-                newlinkcostlist.append(linkcost)
+                newlinkbidlist.append(0.)
+                # newlinkcostlist.append(linkcost)
             else:
-                newlinkcostlist.append(fedcostdict[fed.name])
+                newlinkbidlist.append(fedbiddict[fed.name])
 
-        self.linkcostlist = newlinkcostlist[:]
-        self.pathCost = sum(newlinkcostlist)
+        self.linkbidlist = newlinkbidlist[:]
+        self.pathBid = sum(newlinkbidlist)
 
     def updateBundles(self, federatebundledict):
         self.federateBundleDict = federatebundledict

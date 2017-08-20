@@ -47,7 +47,7 @@ class FederateLite():
 
         self.storagelearning = False
         self.costlearning = False
-        self.stochastic = False
+        self.stochastic = (costSGL == -3)
         # self.strategyDict = {1: 'QLearning'}
         self.strategy = strategy
 
@@ -93,8 +93,14 @@ class FederateLite():
             # a, b = matchVariance(a, b, 0.015)
             # ret = 1200*self.context.masterStream.betavariate(a, b)
             # # print(self.costDic[protocol], ret)
-            ret = 100*round(11*self.context.masterStream.random())
-            return ret
+            # ret = 100*round(11*self.context.masterStream.random())
+            numbercount = {0:1, 100: 2, 200: 3, 300:4, 400:5, 500: 6, 600: 7, 700:6, 800: 5, 900: 4, 1000: 3, 1100:2, 1200: 1}
+            numlist = []
+            for n, c in numbercount.items():
+                while c> 0:
+                    numlist.append(n)
+                    c -= 1
+            return self.context.masterStream.choice(numlist)
 
 
         return self.costDic[protocol]
@@ -340,9 +346,9 @@ class FederateLearning2(FederateLite):
             if task.federateOwner is self:
                 reward += task.getValue(self.time+path.deltatime) - path.pathBid
             else:
-                for cost, federate in zip(path.linkbidlist, path.linkfederatelist):
+                for bid, federate in zip(path.linkbidlist, path.linkfederatelist):
                     if federate is self:
-                        reward += cost
+                        reward += bid
 
         self.qlearnercost.update_q(self.currentcost, reward)
 
