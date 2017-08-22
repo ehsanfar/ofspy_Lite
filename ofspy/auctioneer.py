@@ -109,7 +109,7 @@ class Auctioneer():
         for costDict, costTuple, casename in zip(costDictList, costTupleList, casenameList):
             # print("Finding best bundle for cost:", costTuple)
             auction.inquirePrice(costDict= costDict)
-            # print("task path dict:", len(auction.taskPathDict))
+            # print(costDict, casename, "task path dict:", len(auction.taskPathDict))
             taskcostlist = returnAvgPathCost(auction.taskPathDict)
             bundles = []
             for _, taskid in taskcostlist:
@@ -118,19 +118,28 @@ class Auctioneer():
                     bundles.append(newbundle)
 
             alltasks, allpaths = combineBundles(bundles)
-            auction.bestPathBundle = PathBundle(alltasks, allpaths)
-            bestBundleDict[casename] = auction.bestPathBundle#PathBundleLite(alltasks, allpaths)
+            bundle = PathBundle(alltasks, allpaths)
+            # print(casename, len(bundle.pathlist))
+            bestBundleDict[casename] = bundle #auction.bestPathBundle#PathBundleLite(alltasks, allpaths)
             # federateCashDict[casename] = bestBundleDict[costTuple].bundleRevenue
 
         # priceDict = self.suggestPriceDict(initCostDict, federateCashDict, auction.bestPathBundle)
+        # if bestBundleDict['Adaptive'].bundleRevenue != bestBundleDict['T_zero'].bundleRevenue:
+        #     print(bestBundleDict['Adaptive'].bundleRevenue, bestBundleDict['T_zero'].bundleRevenue)
+            
         if self.context.ofs.auctioneer:
             newprice = optimizeCost(initCostDict, bestBundleDict['Adaptive'], bestBundleDict['T_zero'])
+            # print("Auctioneer true and new price:", newprice)
+
+            # if bestBundleDict['Adaptive'].pathlist != bestBundleDict['T_zero'].pathlist:
+            #     print(bestBundleDict['Adaptive'].bundleRevenue, bestBundleDict['T_zero'].bundleRevenue)
         else:
             newprice = False
 
         # print("initial price vs new price:", [e[1] for e in sorted(initCostDict.items())], [int(e) for e in newprice])
         # for costtuple, pathbundlelite in bestBundleDict.items():
         #     print("cost tuple:", costtuple, int(pathbundlelite.bundleBid), int(pathbundlelite.bundleCost), int(pathbundlelite.bundleRevenue))
+
         if newprice:
             bestBundle = bestBundleDict['T_zero']
             for path in bestBundle.pathlist:
@@ -138,6 +147,16 @@ class Auctioneer():
 
             bestBundle.updateValues()
             auction.bestPathBundle = bestBundle
+            # print("Auctioneer revenue vs adaptive revenue:", bestBundleDict['Adaptive'].bundleRevenue, bestBundle.bundleRevenue)
+        else:
+            bestBundle = bestBundleDict['Adaptive']
+            auction.bestPathBundle = bestBundle
+
+        federateDict = {f.name: f for f in self.context.federates}
+        for fed in auction.auctionFederates:
+            federate = federateDict[fed]
+            if federate.costlearning:
+               federate.updateBestBundle(auction.bestPathBundle)
 
         return auction.bestPathBundle
 

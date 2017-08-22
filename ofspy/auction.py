@@ -86,59 +86,59 @@ class Auction():
 
 
 
-    def findBestBundle(self, tasklist = None):
-        # if compatiblebundles:
-        #     possible_bundles = compatiblebundles
-        # else:
-        #     if self.compatibleBundles:
-        #         possible_bundles = self.compatibleBundles
-        #     else:
-        #         self.findCompatiblePaths()
-        #         possible_bundles = self.compatibleBundles
-        #
-        # if not possible_bundles:
-        #     # self.bestPathBundle = None
-        #     return False
-        if tasklist:
-            self.findCompatiblePaths(tasklist)
-        else:
-            self.findCompatiblePaths()
-
-        possible_bundles = self.compatibleBundles
-        if not self.compatibleBundles:
-            return False
-        # print("length of compatible bundles:", len(self.compatibleBundles))
-
-        path_bundle_cost = [b.bundleCost for b in possible_bundles]
-        path_bundle_revenue = [b.bundleRevenue for b in possible_bundles]
-        path_bundle_profit = [x-y for (x,y) in zip(path_bundle_revenue, path_bundle_cost)]
-        path_bundle_length = [b.length for b in possible_bundles]
-        # print("pathbundle cost:", path_bundle_cost)
-        # sortedcost = sorted(list(zip(path_bundle_cost, possible_bundles)), reverse = True)
-        # print("sorted cost:", sortedcost)
-        # print(sorted(path_bundle_length, reverse = True))
-        sorted_revenue = sorted(list(zip(path_bundle_profit, possible_bundles)), reverse = True)
-        # print("sorted revenue:", [(x, [p.nodelist for p in y.pathlist]) for x,y in sorted_revenue])
-        self.bestPathBundle = sorted_revenue[0][1]
-        # print("best path bundle:", self.bestPathBundle)
-        for path in self.bestPathBundle.pathlist:
-            # print("path noelsit:", path.nodelist)
-            path(next((task for task in self.tasklist if task.elementOwner.name == path.elementOwner.name)))
-            path.task.updatePath(path)
-            # path.updateTime()
-            timelink = list(zip([path.task.initTime + dt for dt in path.deltatimelist], path.linklist))
-            for time, link in timelink:
-                # print(time, link)
-                # print(defaultdict)
-                self.auctioneer.updateTimeLinks(time, link)
-
-        # federateDict = {f.name: f for f in self.auctioneer.context.federates}
-        # for fed in self.auctionFederates:
-        #     federate = federateDict[fed]
-        #     if federate.costlearning:
-        #        federate.updateBestBundle(self.bestPathBundle)
-
-        return True
+    # def findBestBundle(self, tasklist = None):
+    #     # if compatiblebundles:
+    #     #     possible_bundles = compatiblebundles
+    #     # else:
+    #     #     if self.compatibleBundles:
+    #     #         possible_bundles = self.compatibleBundles
+    #     #     else:
+    #     #         self.findCompatiblePaths()
+    #     #         possible_bundles = self.compatibleBundles
+    #     #
+    #     # if not possible_bundles:
+    #     #     # self.bestPathBundle = None
+    #     #     return False
+    #     if tasklist:
+    #         self.findCompatiblePaths(tasklist)
+    #     else:
+    #         self.findCompatiblePaths()
+    #
+    #     possible_bundles = self.compatibleBundles
+    #     if not self.compatibleBundles:
+    #         return False
+    #     # print("length of compatible bundles:", len(self.compatibleBundles))
+    #
+    #     path_bundle_cost = [b.bundleCost for b in possible_bundles]
+    #     path_bundle_revenue = [b.bundleRevenue for b in possible_bundles]
+    #     path_bundle_profit = [x-y for (x,y) in zip(path_bundle_revenue, path_bundle_cost)]
+    #     path_bundle_length = [b.length for b in possible_bundles]
+    #     # print("pathbundle cost:", path_bundle_cost)
+    #     # sortedcost = sorted(list(zip(path_bundle_cost, possible_bundles)), reverse = True)
+    #     # print("sorted cost:", sortedcost)
+    #     # print(sorted(path_bundle_length, reverse = True))
+    #     sorted_revenue = sorted(list(zip(path_bundle_profit, possible_bundles)), reverse = True)
+    #     # print("sorted revenue:", [(x, [p.nodelist for p in y.pathlist]) for x,y in sorted_revenue])
+    #     self.bestPathBundle = sorted_revenue[0][1]
+    #     # print("best path bundle:", self.bestPathBundle)
+    #     for path in self.bestPathBundle.pathlist:
+    #         # print("path noelsit:", path.nodelist)
+    #         path(next((task for task in self.tasklist if task.elementOwner.name == path.elementOwner.name)))
+    #         path.task.updatePath(path)
+    #         # path.updateTime()
+    #         timelink = list(zip([path.task.initTime + dt for dt in path.deltatimelist], path.linklist))
+    #         for time, link in timelink:
+    #             # print(time, link)
+    #             # print(defaultdict)
+    #             self.auctioneer.updateTimeLinks(time, link)
+    #
+    #     # federateDict = {f.name: f for f in self.auctioneer.context.federates}
+    #     # for fed in self.auctionFederates:
+    #     #     federate = federateDict[fed]
+    #     #     if federate.costlearning:
+    #     #        federate.updateBestBundle(self.bestPathBundle)
+    #
+    #     return True
 
     def findBestBundleinAuction(self, tasklist = None):
         # if compatiblebundles:
@@ -208,11 +208,11 @@ class Auction():
                 # print(defaultdict)
                 self.auctioneer.updateTimeLinks(time, link)
 
-        federateDict = {f.name: f for f in self.auctioneer.context.federates}
-        for fed in self.auctionFederates:
-            federate = federateDict[fed]
-            if federate.costlearning:
-               federate.updateBestBundle(self.bestPathBundle)
+        # federateDict = {f.name: f for f in self.auctioneer.context.federates}
+        # for fed in self.auctionFederates:
+        #     federate = federateDict[fed]
+        #     if federate.costlearning:
+        #        federate.updateBestBundle(self.bestPathBundle)
 
         return True
 

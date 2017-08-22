@@ -22,7 +22,8 @@ class OFSL(object):
         self.costSGL = [int(re.search('x([-\d]+),([-\d]+),([-\d]+)', f).group(1)) for f in fops]
         self.costISL = self.costSGL
         self.storagePenalty = [int(re.search('x([-\d]+),([-\d]+),([-\d]+)', f).group(2)) for f in fops]
-        self.auctioneer = True if int(re.search('x([-\d]+),([-\d]+),([-\d]+)', fops[0]).group(3)) == 1 else False
+        self.auctioneer = int(re.search('x([-\d]+),([-\d]+),([-\d]+)', fops[0]).group(3)) == 1
+        print("auctioneer:", int(re.search('x([-\d]+),([-\d]+),([-\d]+)', fops[0]).group(3)), self.auctioneer)
         self.capacity = int(capacity)
         self.links = links
 

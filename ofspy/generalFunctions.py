@@ -427,7 +427,7 @@ def calTaskLinkRevenue(costlist, fi, federatelist, pathlist, pathLinkCount, link
     return (taskrevenue, linkreveune)
 
 class Constraint1():
-    def __init__(self, fi, linkCountDict, pathlist, initcostlist, federatelist, pathLinkCount, taskValueDict, R_LiA, R_TiA):
+    def __init__(self, fi, linkCountDict, pathlist, federatelist, pathLinkCount, taskValueDict, R_LiA, R_TiA):
         self.fi = fi
         self.linkCountDict = linkCountDict
         self.pathlist = pathlist
@@ -438,8 +438,22 @@ class Constraint1():
         self.R_LiA = R_LiA
         self.R_TiA = R_TiA
 
+    def calTaskLinkRevenue(self, costlist, fi, federatelist, pathlist, pathLinkCount, linkCountDict, taskValueDict):
+        federatelinkcost = 0.
+        for path, federateCount in zip(pathlist, pathLinkCount):
+            if path.elementOwner.federateOwner.name == federatelist[fi]:
+                for fed, cost in zip(federatelist, costlist):
+                    federatelinkcost += cost * federateCount[fed]
+
+        fed = federatelist[fi]
+        linkreveune = costlist[fi] * linkCountDict[fed]
+        # print(taskValueDict[fed] , pathCostDict[fed])
+        taskrevenue = taskValueDict[fed] - federatelinkcost
+
+        return (taskrevenue, linkreveune)
+
     def __call__(self, costlist):
-        R_Ti, R_Li = calTaskLinkRevenue(costlist, self.fi, self.federatelist, self.pathlist, self.pathLinkCount, self.linkCountDict, self.taskValueDict)
+        R_Ti, R_Li = self.calTaskLinkRevenue(costlist, self.fi, self.federatelist, self.pathlist, self.pathLinkCount, self.linkCountDict, self.taskValueDict)
         # print(self.fi, R_Li + R_Ti, self.R_LiA[self.fi] + self.R_TiA[self.fi])
         return R_Li + R_Ti - self.R_LiA[self.fi] - self.R_TiA[self.fi]
 
@@ -454,13 +468,21 @@ class Constraint2():
         self.federatelist = federatelist
     def __call__(self, costlist):
         self.federateCount = self.pathLinkCount[self.pi]
-        pathcost = sum([c for c, f in zip(self.path.linkcostlist, self.path.linkfederatelist) if f is self.path.elementOwner.federateOwner])
+        # pathcost = sum([c for c, f in zip(self.path.linkcostlist, self.path.linkfederatelist) if f is self.path.elementOwner.federateOwner])
+        pathcost = 0.
         # print("Already path cost:", pathcost)
         value = self.pathTaskValueList[self.pi]
         for fed, cost in zip(self.federatelist, costlist):
             pathcost += cost * self.federateCount[fed]
 
         return value - pathcost
+
+class Objective():
+    def __init__(self, linkcostlist):
+        self.linkcostlist = linkcostlist
+
+    def __call__(self, costlist):
+        return -1*sum([a*b for a,b in zip(costlist, self.linkcostlist)])
 
 def optimizeCost(initCostDict, adaptiveBestBundle, bestBundle):
     global linkCountList
@@ -515,6 +537,8 @@ def optimizeCost(initCostDict, adaptiveBestBundle, bestBundle):
     # pathCostDict_A = defaultdict(int)
     # pathCostDict_A[federateOwner] = sum([federateCount[fed] * cost
     #                                        for federateCount, fed, cost in zip(pathLinkCount_A, federatelist, initcostlist)])
+    # if len(pathlist) != len(pathlist_A):
+    #     print(len(pathlist), len(pathlist_A))
     R_LiA = []
     R_TiA = []
     for i in range(len(federatelist)):
@@ -527,13 +551,14 @@ def optimizeCost(initCostDict, adaptiveBestBundle, bestBundle):
     # print("zero and adaptive links:", linkCountDict, linkCountDict_A)
 
     # print("Adaptive task and link revenue:", R_TiA, R_LiA)
-    def objective(costlist):
-        global linkCountList
-        # print("objective funciton :", )
-        # print(linkCountList)
-        return -1*sum([a*b for a,b in zip(costlist, linkCountList)])
+    # def objective(costlist):
+    #     global linkCountList
+    #     # print("objective funciton :", )
+    #     # print(linkCountList)
+    #     return -1*sum([a*b for a,b in zip(costlist, linkCountList)])
+    objective = Objective(linkCountList)
 
-    conslist1 = [{'type': 'ineq', 'fun': Constraint1(i, linkCountDict, pathlist, initcostlist, federatelist, pathLinkCount, taskValueDict, R_LiA, R_TiA)} for i in range(len(initcostlist))]
+    conslist1 = [{'type': 'ineq', 'fun': Constraint1(i, linkCountDict, pathlist, federatelist, pathLinkCount, taskValueDict, R_LiA, R_TiA)} for i in range(len(initcostlist))]
     conslist2 = [{'type': 'ineq', 'fun': Constraint2(i, path, pathTaskValueList, pathLinkCount, federatelist)} for i, path in enumerate(pathlist)]
 
 
@@ -555,11 +580,15 @@ def optimizeCost(initCostDict, adaptiveBestBundle, bestBundle):
     # print("solution:", sol.x)
     # print("constraints:")
     # for con in cons:
-    if len(pathlist) != len(pathlist_A):
+    cons_changes = [int(round(con['fun'](sol.x))) for con in cons]
+    # print(cons_changes)
+    # consresults = all([e >= 0 for e in [int(round(con['fun'](sol.x))) for con in cons]])
+    if all([e >= 0 for e in cons_changes]) and sum(cons_changes[:2])>0:
         # if True:
         # print(templist, [int(e) for e in sol.x])
-        # consresults = all([e >= 0 for e in [int(round(con['fun'](sol.x))) for con in cons]])
-        # print("Revenue 2, 1:", bestBundle.bundleRevenue, adaptiveBestBundle.bundleRevenue)
+
+
+        # print("Revenue 2, 1:", [int(round(con['fun'](sol.x))) for con in cons])
         # print('')
         return {'F%d' % (i+1): c for i, c in enumerate(list(sol.x))}
     else:

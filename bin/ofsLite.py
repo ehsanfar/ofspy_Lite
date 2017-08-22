@@ -129,7 +129,7 @@ def queryCase(dbHost, dbPort, experiment, elements, numPlayers, numTurns, seed, 
         doc = db[dbName].find_one(query)
     if doc is None:
         # if '-1' in doc['fops'] or '-2' in doc['fops']:
-        db.results.remove(query) #this is temporary, should be removed afterwards
+        # db.results.remove(query) #this is temporary, should be removed afterwards
         doc = db.results.find_one(query)
         if doc:
             # print("Found in DB,elements, storage, sgl, isl, results: ")
@@ -207,6 +207,8 @@ def fopsGenAdaptive(costrange, numplayers):
             yield numplayers * ["x%d,%d,%d" % (sgl, -1, -1)]
             yield numplayers * ["x%d,%d,%d" % (-2, -1, 1)]
         else:
+            if sgl == -3:
+                print(["x%d,%d,%d"%(-2, -1, -1)] + (numplayers-1)*["x%d,%d,%d"%(sgl, -1, -1)])
             yield ["x%d,%d,%d"%(-2, -1, -1)] + (numplayers-1)*["x%d,%d,%d"%(sgl, -1, -1)]
             yield 2 * ["x%d,%d,%d"%(-2, -1, -1)] + (numplayers - 2) * ["x%d,%d,%d"%(sgl, -1, -1)]
             yield numplayers * ["x%d,%d,%d" % (sgl, -1, -1)]
@@ -302,9 +304,9 @@ if __name__ == '__main__':
         # costrange = [-3, 0, 1200, 600]
         # costrange = [-2]
         costrange = [-3, -2, 0, 1200, 600]
-        storange = list(range(0, 1201, 400))
+        storange = list([0, 400, 800, -1])
+        # for fops in fopsGenAdaptive(costrange, numPlayers):
         for fops in fopsGenAdaptive(costrange, numPlayers):
-        # for fops in fopsGen(costrange, storange, numplayers):
             # print(fops)
             # print(argsdict)
             reres = re.search(r'x([-\d]+),([-\d]+),([-\d]+)', fops[0])

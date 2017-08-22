@@ -54,20 +54,12 @@ class Path():
     #         self.pathPrice = None
     #     # print("update pathBid:", self.nodelist, self.pathBid)
     def updateBid(self, linkbids):
-        if isinstance(linkbids, dict):
-            self.linkbidlist = [linkbids[f] for f in self.linkfederatelist]
-        else:
-            self.linkbidlist = linkbids
-
-        self.pathBid = sum(self.linkbidlist)
+        self.linkbidlist = linkbids
+        self.pathBid = sum(linkbids)
         # self.pathBid2 = sum(linkbids2)
 
     def updateCost(self, linkcosts):
-        if isinstance(linkcosts, dict):
-            self.linkcostlist = [linkcosts[f] for f in self.linkfederatelist]
-        else:
-            self.linkcostlist = linkcosts
-
+        self.linkcostlist = linkcosts
         self.pathCost = sum(linkcosts)
         # self.pathPrice = price
 
