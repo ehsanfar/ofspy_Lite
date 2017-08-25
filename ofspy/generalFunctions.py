@@ -596,6 +596,7 @@ def optimizeCost(initCostDict, adaptiveBestBundle, bestBundle):
 
         # print(calGaussianKernel(0,7,6,10, 0.6))
 
+
 # nactions = 12
 # nstates = 6
 # N = nactions * 10

@@ -26,7 +26,7 @@ class ContextLite():
         self.federates = []
         self.elements = []
         self.masterfederate = []
-        self.seed = 0
+        self.seed = 11
         self.currentTasks = {i: queue.Queue(maxsize = 3) for i in range(1,7)}
         self.nodeLocations = []
         self.shortestPathes = []

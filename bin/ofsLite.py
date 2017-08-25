@@ -7,6 +7,7 @@ import pymongo
 # from scoop import futures
 import sys, os
 import re
+from numpy import linspace
 # import random
 
 # add ofspy to system path
@@ -133,7 +134,7 @@ def queryCase(dbHost, dbPort, experiment, elements, numPlayers, numTurns, seed, 
         doc = db.results.find_one(query)
         if doc:
             # print("Found in DB,elements, storage, sgl, isl, results: ")
-            print([doc[k] for k in ['elementlist', 'experiment', 'fops', 'capacity', 'links','results']])
+            print([doc[k] for k in ['seed', 'elementlist', 'experiment', 'fops', 'capacity', 'links','results']])
         if doc is None:
             if '-' not in fops:
                 M = 10
@@ -153,7 +154,7 @@ def queryCase(dbHost, dbPort, experiment, elements, numPlayers, numTurns, seed, 
                     }
             # print("Not Found in DB", doc['results'])
             # print("Not in DB,elements, storage, sgl, isl, results: ")
-            print([doc[k] for k in ['elementlist', 'experiment', 'fops', 'capacity', 'links', 'results']])
+            print([doc[k] for k in ['seed', 'elementlist', 'experiment', 'fops', 'capacity', 'links', 'results']])
             db.results.insert_one(doc)
 
         if dbName is not None:
@@ -226,6 +227,14 @@ def fopsGenAdaptive(costrange, numplayers):
 #             for sto2 in storange:
 #                 stopen2 = sto2
 #                 yield ["x%d,%d,%d" % (costsgl, costisl, stopen2), "x%d,%d,%d" % (costsgl, costisl, stopen), "x%d,%d,%d" % (costsgl, costisl, stopen)]
+def fopsGenStorage(numPlayers):
+    yield numPlayers * ["x%d,%1.2f,%d" % (600, 400, -1)]
+    yield numPlayers * ["x%d,%1.2f,%d" % (600, 800, -1)]
+    yield numPlayers * ["x%d,%1.2f,%d" % (-3, 400, -1)]
+    yield numPlayers * ["x%d,%1.2f,%d" % (-3, 800, -1)]
+    for k in linspace(0., 1.99, 19):
+        yield numPlayers * ["x%d,%1.2f,%d" % (-3, -1*k, -1)]
+        yield numPlayers * ["x%d,%1.2f,%d" % (600, -1*k, -1)]
 
 if __name__ == '__main__':
 
@@ -247,7 +256,7 @@ if __name__ == '__main__':
     # parser.add_argument('-l', '--logging', type=str, default='error',
     #                     choices=['debug', 'info', 'warning', 'error'],
     #                     help='logging level')
-    parser.add_argument('-s', '--start', type=int, default=0,
+    parser.add_argument('-s', '--start', type=int, default=11,
                         help='starting random number seed')
     parser.add_argument('-t', '--stop', type=int, default=20,
                         help='stopping random number seed')
@@ -277,8 +286,9 @@ if __name__ == '__main__':
         # "1.GroundSta@SUR1 2.GroundSta@SUR3 3.GroundSta@SUR5 2.Sat@GEO3 1.Sat@MEO1 2.Sat@MEO3 3.Sat@MEO6 1.Sat@LEO2",
         "1.GroundSta@SUR1 2.GroundSta@SUR3 3.GroundSta@SUR5 1.Sat@MEO1 1.Sat@MEO2 2.Sat@MEO3 2.Sat@MEO5 3.Sat@MEO6",
         "1.GroundSta@SUR1 2.GroundSta@SUR3 3.GroundSta@SUR5 3.Sat@GEO5 1.Sat@MEO1 1.Sat@MEO2 2.Sat@MEO3 2.Sat@MEO5 3.Sat@MEO6",
-        "1.GroundSta@SUR1 2.GroundSta@SUR3 3.GroundSta@SUR5 1.Sat@MEO1 2.Sat@MEO2 3.Sat@MEO5 1.Sat@LEO2 2.Sat@LEO4 3.Sat@LEO6",
-        # "1.GroundSta@SUR1 2.GroundSta@SUR3 3.GroundSta@SUR5 1.Sat@GEO1 1.Sat@MEO1 2.Sat@MEO4 3.Sat@MEO5 1.Sat@LEO2 2.Sat@LEO4 3.Sat@LEO6",
+        #***"1.GroundSta@SUR1 2.GroundSta@SUR3 3.GroundSta@SUR5 1.Sat@MEO1 2.Sat@MEO2 3.Sat@MEO5 1.Sat@LEO2 2.Sat@LEO4 3.Sat@LEO6",
+        # "1.GroundSta@SUR1 2.GroundSta@SUR3 3.GroundSta@SUR5 1.Sat@GEO1 1.Sat@MEO1 2.Sat@MEO4 3.Sat@MEO5 2.Sat@LEO4 3.Sat@LEO6",
+        "1.GroundSta@SUR1 2.GroundSta@SUR3 3.GroundSta@SUR5 1.Sat@MEO1 2.Sat@MEO2 3.Sat@MEO3 1.Sat@LEO1 2.Sat@LEO2 3.Sat@LEO3",
     )
 
     experiment = 'auctioneer'
@@ -307,11 +317,12 @@ if __name__ == '__main__':
         storange = list([0, 400, 800, -1])
         # for fops in fopsGenAdaptive(costrange, numPlayers):
         for fops in fopsGenAdaptive(costrange, numPlayers):
-            # print(fops)
+        # for fops in fopsGenStorage(numPlayers):
+            print(fops)
             # print(argsdict)
-            reres = re.search(r'x([-\d]+),([-\d]+),([-\d]+)', fops[0])
+            reres = re.search(r'x([-\d]+),([-\.\d]+),([-\d]+)', fops[0])
             sgl = int(reres.group(1))
-            strg = int(reres.group(2))
+            strg = float(reres.group(2))
             auc = int(reres.group(3))
 
             argsdict['experiment'] = 'Adaptive Cost'
@@ -324,7 +335,7 @@ if __name__ == '__main__':
             # elif strg == -1 and sgl == -1:
             #     argsdict['experiment'] = 'Stochastic Cost Storage Penalty'
             if auc == 1:
-                argsdict['experiment'] = 'Adaptive Cost Auctioneer'
+                argsdict['experiment'] += ' Auctioneer'
 
             argsdict['fops'] = json.dumps(fops)
             for capacity,links in [(2,2)]:

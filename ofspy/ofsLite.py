@@ -19,11 +19,11 @@ class OFSL(object):
         # print("fops:", fops)
         # args = re.search('x(\d+),(\d+),([-v\d]+)', fops)
         fops = json.loads(fops)
-        self.costSGL = [int(re.search('x([-\d]+),([-\d]+),([-\d]+)', f).group(1)) for f in fops]
+        self.costSGL = [int(re.search('x([-\d]+),([-\.\d]+),([-\d]+)', f).group(1)) for f in fops]
         self.costISL = self.costSGL
-        self.storagePenalty = [int(re.search('x([-\d]+),([-\d]+),([-\d]+)', f).group(2)) for f in fops]
-        self.auctioneer = int(re.search('x([-\d]+),([-\d]+),([-\d]+)', fops[0]).group(3)) == 1
-        print("auctioneer:", int(re.search('x([-\d]+),([-\d]+),([-\d]+)', fops[0]).group(3)), self.auctioneer)
+        self.storagePenalty = [float(re.search('x([-\d]+),([-\.\d]+),([-\d]+)', f).group(2)) for f in fops]
+        self.auctioneer = int(re.search('x([-\d]+),([-\.\d]+),([-\d]+)', fops[0]).group(3)) == 1
+        # print("auctioneer:", int(re.search('x([-\d]+),([-\.\d]+),([-\d]+)', fops[0]).group(3)), self.auctioneer)
         self.capacity = int(capacity)
         self.links = links
 
@@ -45,7 +45,7 @@ class OFSL(object):
             self.context.ticktock(self)
 
         figs = []
-        print("figures")
+        # print("figures")
         for i, f in enumerate(self.context.federates):
             if not f.costlearning:
                 continue

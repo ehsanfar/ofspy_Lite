@@ -71,7 +71,24 @@ class Auctioneer():
     #     alltasks, allpaths = combineBundles(bundles)
     #     auction.bestPathBundle = PathBundle(alltasks, allpaths)
     #     return auction.bestPathBundle
+    def shuffleTasks(self, sortedcosttasks):
+        costlist = [s[0] for s in sortedcosttasks]
+        i = 0
+        tasklist = [s[1] for s in sortedcosttasks]
+        listoflist = []
+        while i < len(costlist):
+            templist = []
+            while True:
+                templist.append(i)
+                i += 1
+                if i >= len(costlist) or costlist[i] != costlist[i-1]:
+                    break
+            self.context.shuffleStream.shuffle(templist)
+            # random.Random(0).shuffle(templist)
+            listoflist.append([tasklist[j] for j in templist])
 
+        newtasklist = [t for l in listoflist for t in l]
+        return newtasklist
 
     def runAuction(self, tasklist):
         # print(tasklist)
@@ -111,8 +128,9 @@ class Auctioneer():
             auction.inquirePrice(costDict= costDict)
             # print(costDict, casename, "task path dict:", len(auction.taskPathDict))
             taskcostlist = returnAvgPathCost(auction.taskPathDict)
+            tasklist = self.shuffleTasks(taskcostlist)
             bundles = []
-            for _, taskid in taskcostlist:
+            for taskid in tasklist:
                 if auction.findBestBundleinAuction([taskid]):
                     newbundle = auction.bestPathBundle
                     bundles.append(newbundle)
@@ -164,6 +182,7 @@ class Auctioneer():
         self.currenttasks = []
         # print(self.costSGLDict)
         # print("elements:",[e.name for e in self.context.elements])
+        self.context.shuffleStream.shuffle(self.context.elements)
         for element in self.context.elements:
             if element.isSpace():
                 newtask = element.collectTasks(self.context)

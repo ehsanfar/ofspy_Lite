@@ -145,7 +145,9 @@ class FederateLite():
 
             # print("storage cost:", [int(e) for e in storagecostlist])
         # print("storage penalty -1:", storagecostlist)
-        return [e/max(1,element.capacity-element.content) for e in storagecostlist]
+        # return [e/max(1,element.capacity-element.content) for e in storagecostlist]
+        # print("storage coef:", self.storagePenalty,)
+        return 6*[abs(self.storagePenalty*storagecostlist[0]/max(1,element.capacity-element.content))]
 
     def discardTask(self):
         for e in self.elements:

@@ -173,7 +173,8 @@ class Auction():
         # print(sorted(path_bundle_length, reverse = True))
         sorted_revenue = sorted(list(zip(path_bundle_profit, possible_bundles)), reverse = True)
         maxprofit_org = sorted_revenue[0][0]
-        self.bestPathBundle = sorted_revenue[0][1]
+        possible_bundles = [tup for tup in sorted_revenue if tup[0] == maxprofit_org]
+        self.bestPathBundle = self.auctioneer.context.masterStream.choice(possible_bundles)[1]
         '''
         for federate in self.auctioneer.context.federates:
             cost_0 = [b.getBundleAlternativeCost(federate, price = 0) for b in possible_bundles]
