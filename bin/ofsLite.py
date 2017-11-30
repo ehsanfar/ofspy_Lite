@@ -188,7 +188,7 @@ def executeCase(experiment, elements, numPlayers, numTurns, seed, fops, capacity
     return ofsl.execute()
 
 
-def fopsGen(costrange, storange, numplayers):
+def fopsGenStorage(costrange, storange, numplayers):
     # costSGLList = list(range(0, 1001, 200))
     # # costISLList = [c/2. for c in costSGLList]
     # storagePenalty = list(range(0, 1001, 200))+[-1]
@@ -196,7 +196,7 @@ def fopsGen(costrange, storange, numplayers):
     for sgl in costrange:
         for s in storange:
             # yield ["x%d,%d,%d"%(sgl, sgl, -2)] + (numplayers-1)*["x%d,%d,%d"%(sgl, sgl, s)]
-            yield numplayers* ["x%d,%d,%d"%(sgl, s, -1)]
+            yield numplayers* ["x%d,%1.2f,%d"%(sgl, s, -1)]
             # yield numplayers* ["x%d,%d,%d"%(-3, s, -1)]
 
         # yield numplayers * ["x%d,%d,%d" % (sgl, -1, -1)]
@@ -208,11 +208,28 @@ def fopsGenAdaptive(costrange, numplayers):
             yield numplayers * ["x%d,%d,%d" % (sgl, -1, -1)]
             yield numplayers * ["x%d,%d,%d" % (-2, -1, 1)]
         else:
-            if sgl == -3:
-                print(["x%d,%d,%d"%(-2, -1, -1)] + (numplayers-1)*["x%d,%d,%d"%(sgl, -1, -1)])
-            yield ["x%d,%d,%d"%(-2, -1, -1)] + (numplayers-1)*["x%d,%d,%d"%(sgl, -1, -1)]
-            yield 2 * ["x%d,%d,%d"%(-2, -1, -1)] + (numplayers - 2) * ["x%d,%d,%d"%(sgl, -1, -1)]
+            # if sgl == -3:
+            #     print(["x%d,%d,%d"%(-2, -1, -1)] + (numplayers-1)*["x%d,%d,%d"%(sgl, -1, -1)])
+
+            for n in range(numplayers):
+                fops = []
+                fops.extend(n*["x%d,%d,%d"%(-2, -1, -1)])
+                fops.extend(["x%d,%d,%d" % (sgl, -1, -1)])
+                fops.extend((numplayers-n-1)*["x%d,%d,%d"%(-2, -1, -1)])
+                # yield n*[] + ["x%d,%d,%d"%(-2, -1, -1)] + (numplayers-1)*["x%d,%d,%d"%(sgl, -1, -1)]
+                yield fops
+
+            for n in range(numplayers):
+                fops = []
+                fops.extend(n*["x%d,%d,%d"%(sgl, -1, -1)])
+                fops.extend(["x%d,%d,%d"%(-2, -1, -1)])
+                fops.extend((numplayers-n-1)*["x%d,%d,%d"%(sgl, -1, -1)])
+                # yield n*[] + ["x%d,%d,%d"%(-2, -1, -1)] + (numplayers-1)*["x%d,%d,%d"%(sgl, -1, -1)]
+                yield fops
+
+            # yield 2 * ["x%d,%d,%d"%(-2, -1, -1)] + (numplayers - 2) * ["x%d,%d,%d"%(sgl, -1, -1)]
             yield numplayers * ["x%d,%d,%d" % (sgl, -1, -1)]
+            yield numplayers * ["x%d,%d,%d"%(-2, -1, -1)]
 
         # yield 2*["x%d,%d" % (-2, -1)] + (numplayers-2)*["x%d,%d"%(sgl, -1)]
 
@@ -227,14 +244,14 @@ def fopsGenAdaptive(costrange, numplayers):
 #             for sto2 in storange:
 #                 stopen2 = sto2
 #                 yield ["x%d,%d,%d" % (costsgl, costisl, stopen2), "x%d,%d,%d" % (costsgl, costisl, stopen), "x%d,%d,%d" % (costsgl, costisl, stopen)]
-def fopsGenStorage(numPlayers):
-    yield numPlayers * ["x%d,%1.2f,%d" % (600, 400, -1)]
-    yield numPlayers * ["x%d,%1.2f,%d" % (600, 800, -1)]
-    yield numPlayers * ["x%d,%1.2f,%d" % (-3, 400, -1)]
-    yield numPlayers * ["x%d,%1.2f,%d" % (-3, 800, -1)]
-    for k in linspace(0., 1.99, 19):
-        yield numPlayers * ["x%d,%1.2f,%d" % (-3, -1*k, -1)]
-        yield numPlayers * ["x%d,%1.2f,%d" % (600, -1*k, -1)]
+# def fopsGenStorage(numPlayers):
+#     yield numPlayers * ["x%d,%1.2f,%d" % (600, 400, -1)]
+#     yield numPlayers * ["x%d,%1.2f,%d" % (600, 800, -1)]
+#     yield numPlayers * ["x%d,%1.2f,%d" % (-3, 400, -1)]
+#     yield numPlayers * ["x%d,%1.2f,%d" % (-3, 800, -1)]
+#     for k in linspace(0., 1.99, 19):
+#         yield numPlayers * ["x%d,%1.2f,%d" % (-3, -1*k, -1)]
+#         yield numPlayers * ["x%d,%1.2f,%d" % (600, -1*k, -1)]
 
 if __name__ == '__main__':
 
@@ -256,9 +273,9 @@ if __name__ == '__main__':
     # parser.add_argument('-l', '--logging', type=str, default='error',
     #                     choices=['debug', 'info', 'warning', 'error'],
     #                     help='logging level')
-    parser.add_argument('-s', '--start', type=int, default=11,
+    parser.add_argument('-s', '--start', type=int, default=0,
                         help='starting random number seed')
-    parser.add_argument('-t', '--stop', type=int, default=20,
+    parser.add_argument('-t', '--stop', type=int, default=30,
                         help='stopping random number seed')
     parser.add_argument('--dbHost', type=str, default=None,
                         help='database host')
@@ -303,7 +320,7 @@ if __name__ == '__main__':
         else:
             numPlayers = 2
 
-        args.stop = args.start + 1
+        args.stop = args.start + 10
         argsdict = vars(args)
         argsdict['design'] = [design]
         # argsdict.pop('logging')
@@ -313,11 +330,10 @@ if __name__ == '__main__':
         # costrange = [-3]
         # costrange = [-3, 0, 1200, 600]
         # costrange = [-2]
-        costrange = [-3, -2, 0, 1200, 600]
-        storange = list([0, 400, 800, -1])
-        # for fops in fopsGenAdaptive(costrange, numPlayers):
-        for fops in fopsGenAdaptive(costrange, numPlayers):
-        # for fops in fopsGenStorage(numPlayers):
+        costrange = [-3, 600]
+        storange = list([400, 800, -1])
+        # for fops in reversed(list(fopsGenAdaptive(costrange, numPlayers))):
+        for fops in fopsGenStorage(costrange, storange, numPlayers):
             print(fops)
             # print(argsdict)
             reres = re.search(r'x([-\d]+),([-\.\d]+),([-\d]+)', fops[0])
@@ -325,7 +341,8 @@ if __name__ == '__main__':
             strg = float(reres.group(2))
             auc = int(reres.group(3))
 
-            argsdict['experiment'] = 'Adaptive Cost'
+            # argsdict['experiment'] = 'Adaptive Cost V2'
+            argsdict['experiment'] = 'Storage Penalty V2'
             # if sgl == -2 :
             #     argsdict['experiment'] = 'Adaptive Cost'
             #

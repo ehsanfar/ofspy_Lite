@@ -714,5 +714,4 @@ def optimizeCost(initCostDict, adaptiveBestBundle, bestBundle):
 #         # "1.GroundSta@SUR1 2.GroundSta@SUR3 3.GroundSta@SUR5 1.Sat@GEO1 1.Sat@MEO1 2.Sat@MEO4 3.Sat@MEO5 1.Sat@LEO2 2.Sat@LEO4 3.Sat@LEO6",
 #     )
 #
-# for i, des in enumerate(hardcoded_designs):
-#     drawGraphbyDesign(i+1, des)
+

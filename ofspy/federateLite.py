@@ -162,16 +162,18 @@ class FederateLite():
     def finishTask(self, task):
         path = task.path
         taskvalue = task.getValue(self.time)
-        self.cash += taskvalue
+        # print(self.time, self.context.ofs.maxTime)
+        if self.time >= self.context.ofs.maxTime//2:
+            self.cash += taskvalue
         # assert path.pathBid == sum(path.linkbidlist)
         tempcost = 0
         for cost, federate in zip(path.linkbidlist, path.linkfederatelist):
-            if federate is not self:
+            if federate is not self and self.time >= self.context.ofs.maxTime//2:
                 tempcost += cost
                 federate.cash += cost
                 self.cash -= cost
 
-        assert path.pathBid == tempcost
+        # assert path.pathBid == tempcost
         # print("finished:", taskvalue)
         self.context.totalcash += taskvalue
 

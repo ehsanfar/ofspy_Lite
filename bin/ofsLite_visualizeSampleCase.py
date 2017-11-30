@@ -1,10 +1,15 @@
 from genfigs.genfigs import *
-from ofspy.task import Task
-from ofspy.path import Path
+# from ofspy.task import Task
+# from ofspy.path import Path
 import networkx as nx
 import random
 from collections import Counter
 from scipy.optimize import minimize
+# from matplotlib import pylab as plt
+# import math
+# import numpy as np
+from gurobipy import Model, LinExpr, GRB, GurobiError
+from collections import namedtuple
 
 
 def bfs_paths(G, source, destination):
@@ -63,12 +68,18 @@ def returnBestBundle():
     orderCostDict = {}
     avgCostDict = defaultdict(float)
     avgRevenueDict = defaultdict(float)
+    avgLength = defaultdict(float)
 
     for e, allnl in orderPathDict.items():
         costlist = [sum(returnPathCost(nl)) for nl in allnl]
+        print(costlist)
         orderCostDict[e] = costlist
         avgCostDict[e] = sum(costlist) / float(len(costlist))
+        avgLength[e] = sum([len(a) for a in allnl])/float(len(allnl))
         avgRevenueDict[e] = taskrevenue[e] - avgCostDict[e]
+
+    print(avgCostDict)
+    # print(avgLength)
 
     sortedtasks = sorted([(avgRevenueDict[e], e) for e in sources], reverse = True)
     edge_counter = defaultdict(int)
@@ -91,6 +102,7 @@ def returnBestBundle():
             mincost = sortedcostnodelist[0][0]
             minlen = len(sortedcostnodelist[0][1])
             selectedpath = random.choice([tup for tup in sortedcostnodelist if tup[0] == mincost and len(tup[1]) == minlen])[1]
+            print("element and selected path:", e, selectedpath)
             pathbundle.append(selectedpath)
             for edge in convertPath2Edge(selectedpath):
                 edge_counter[edge] += 1
@@ -98,9 +110,9 @@ def returnBestBundle():
     return pathbundle
 
 def drawSampleNetwork():
-    global all_edges, satellites, stations, federate_cost_dict
+    global all_edges, satellites, stations, federate_cost_dict, taskids
     plt.figure()
-    loc_dict = {e: loc for e, loc in zip(satellites + stations, [(-0.2-1, 2), (0.7-1,2), (1.5-1,2), (0.3-0.2,1), (1.1, 1),(0.5, 0), (1.5, 0)])}
+    loc_dict = {e: loc for e, loc in zip(satellites + stations, [(-0.2-1, 2), (0.7-1,2), (1.5-0.8,2), (0.3-0.2,1), (1.1, 1),(0.5, 0), (1.5, 0)])}
     sat_locs = [loc_dict[e] for e in satellites]
     sta_locs = [loc_dict[e] for e in stations]
 
@@ -162,6 +174,14 @@ def drawSampleNetwork():
     plt.text(-0.3, 0.1, ha="left", va="center", s=r'$\zeta_{21}=%d$'%federate_cost_dict['F1'], bbox=dict(fc="none", ec="none", lw=2), rotation = 0)
     plt.text(-0.3, 0.0, ha="left", va="center", s=r'$\zeta_{11}=  0$', bbox=dict(fc="none", ec="none", lw=2), rotation = 0)
     plt.text(-0.3, -0.1, ha="left", va="center", s=r'$\zeta_{22}=  0$', bbox=dict(fc="none", ec="none", lw=2), rotation = 0)
+
+    font = FontProperties()
+    font.set_style('italic')
+    font.set_weight('bold')
+    font.set_size('small')
+
+    for i, (x, y) in enumerate([sat_locs[t-1] for t in taskids]):
+        plt.text(x, y, ha="center", va="center", s='$T_%s$'%str(i+1), bbox=dict(fc="none", ec="none", lw=2), fontproperties=font)
     plt.xticks([])
     plt.yticks([])
     plt.axis('off')
@@ -178,6 +198,7 @@ def calTaskLinkRevenue(costlist, fi, federatelist, pathlist, pathLinkCount, link
                 federatelinkcost += cost * federateCount[fed]
 
     fed = federatelist[fi]
+    # print("fed, linkcount, costlist: ", fed, costlist, linkCountDict)
     linkreveune = costlist[fi] * linkCountDict[fed]
     # print(taskValueDict[fed] , pathCostDict[fed])
     taskrevenue = taskValueDict[fed] - federatelinkcost
@@ -236,18 +257,47 @@ class Constraint2():
         return value - pathcost
 
 class Objective():
-    def __init__(self, linkcostlist):
-        self.linkcostlist = linkcostlist
+    def __init__(self, linkCountDict, pathlist, federatelist, pathLinkCount, taskValueDict, R_LiA, R_TiA):
+        self.linkCountDict = linkCountDict
+        self.pathlist = pathlist
+        # self.inicostlist = initcostlist
+        self.federatelist = federatelist
+        self.pathLinkCount = pathLinkCount
+        self.taskValueDict = taskValueDict
+        self.R_LiA = R_LiA
+        self.R_TiA = R_TiA
+        self.R_A = [a+b for a,b in zip(R_LiA, R_TiA)]
 
     def __call__(self, costlist):
-        return -1*sum([a*b for a,b in zip(costlist, self.linkcostlist)])
+        R_T = []
+        R_L = []
+        for fi, _ in enumerate(self.federatelist):
+            R_Ti, R_Li = calTaskLinkRevenue(costlist, fi, self.federatelist, self.pathlist, self.pathLinkCount, self.linkCountDict, self.taskValueDict)
+            R_T.append(R_Ti)
+            R_L.append(R_Li)
+
+        print([a+b for a,b in zip(R_T, R_L)], self.R_A)
+        print(sum([a+b for a,b in zip(R_T, R_L)]), sum(self.R_A))
+        # return -1*(sum([abs(a+b-t-l) for a,b,t,l in zip(R_T, R_L, self.R_TiA, self.R_LiA)]))
+        # return 1*(sum([abs(a+b-t-l) for a,b,t,l in zip(R_T, R_L, self.R_TiA, self.R_LiA)]))
+        return 1*(sum([abs(a-b) for a,b,t,l in zip(R_T, R_L, self.R_TiA, self.R_LiA)]))
+
+    # def __call__(self, costlist):
+    #     # return -1*sum([a*b for a,b in zip(costlist, self.linkCountList)])
+    #     print("costlist:", costlist)
+    #     print("new revenue:", [a*b for a,b in zip(costlist, self.linkCountList)])
+    #     return -1*sum([abs(a*b-c) for a,b,c in zip(costlist, self.linkCountList, self.Revenue)])
+    #     # return -1*sum([abs(a-b)*2 for a,b in zip(costlist, self.initcostlist)])
+
 
 def optimizeCost(adaptiveBestBundle, bestBundle):
     global linkCountList, federate_cost_dict, taskrevenue, element_federate_dict
     # global initcostlist, linkCountList, federatelist, pathLinkCount, taskValueDict, pathCostDict0, R_LiA, R_TiA
+    # print("federate cost dict:", federate_cost_dict)
     initCostItems = sorted(list(federate_cost_dict.items()))
     federatelist = [e[0] for e in initCostItems]
     initcostlist = [e[1] for e in initCostItems]
+    # print("federatelist & initcostlist: ", federatelist, initcostlist)
 
 
     # pathCostDict = defaultdict(int)
@@ -308,13 +358,13 @@ def optimizeCost(adaptiveBestBundle, bestBundle):
 
     # print("zero and adaptive links:", linkCountDict, linkCountDict_A)
 
-    print("Adaptive task and link revenue:", R_TiA, R_LiA)
+    # print("Adaptive task and link revenue:", R_TiA, R_LiA)
     # def objective(costlist):
     #     global linkCountList
     #     # print("objective funciton :", )
     #     # print(linkCountList)
     #     return -1*sum([a*b for a,b in zip(costlist, linkCountList)])
-    objective = Objective(linkCountList)
+    objective = Objective(linkCountDict, pathlist, federatelist, pathLinkCount, taskValueDict, R_LiA, R_TiA)
 
     conslist1 = [{'type': 'ineq', 'fun': Constraint1(i, linkCountDict, pathlist, federatelist, pathLinkCount, taskValueDict, R_LiA, R_TiA)} for i in range(len(initcostlist))]
     conslist2 = [{'type': 'ineq', 'fun': Constraint2(i, path, pathTaskValueList, pathLinkCount, federatelist)} for i, path in enumerate(pathlist)]
@@ -326,7 +376,7 @@ def optimizeCost(adaptiveBestBundle, bestBundle):
 
     cons = conslist1 + conslist2 # [con1, con2, con3][:len(initCostDict)]
 
-    bnds = [(min(0, 1100), 1101) for c in initcostlist]
+    bnds = [(min(100, 1100), 1101) for c in initcostlist]
     # print("boundaries:", bnds)
 
     # print("length of constraints:", len(initCostDict), len(cons))
@@ -346,7 +396,7 @@ def optimizeCost(adaptiveBestBundle, bestBundle):
         # print(templist, [int(e) for e in sol.x])
 
 
-        print("Revenue 2, 1:", [int(round(con['fun'](sol.x))) for con in cons])
+        # print("Revenue 2, 1:", [int(round(con['fun'](sol.x))) for con in cons])
         # print('')
         return {'F%d' % (i+1): c for i, c in enumerate(list(sol.x))}
     else:
@@ -359,43 +409,47 @@ if __name__ == '__main__':
     elements = ['e1', 'e2', 'e3', 'e4', 'e5', 'e6', 'e7']
     satellites = elements[:5]
     stations = elements[5:]
+
     element_federate_dict = {'e1':federates[0], 'e2':federates[1], 'e3':federates[0], 'e4':federates[1], 'e5': federates[0], 'e6':federates[0], 'e7':federates[1]}
-    taskids = [1,2,3,5]
+    taskids = [1,2,3,4]
     federates = [1,2,1,1]
-    taskrevenue = {e: 1000 for e in elements}
+    taskrevenue = {e: 1001 for e in elements}
 
     all_edges = [(satellites[0],satellites[1]), (satellites[3],stations[0]), (satellites[1],satellites[3]),
                  (satellites[2],satellites[4]), (satellites[2],satellites[1]), (satellites[2],satellites[3]), (satellites[3],satellites[4]), (satellites[4],stations[1]), (satellites[2],stations[0])]
+    #
+    # federate_cost_dict = {'F1': 600, 'F2': 500}
+    # drawSampleNetwork()
+    #
+    # maxlink = 2
+    # G = nx.DiGraph()
+    # G.add_nodes_from(elements)
+    # G.add_edges_from(all_edges)
+    #
+    # sources = [elements[i-1] for i in taskids]
+    # destinations = [elements[i-1] for i in [6, 7]]
+    # orderPathDict = addPaths(G, sources, destinations)
+    # print(orderPathDict)
+    #
+    # pathbundle1 = returnBestBundle()
+    # stored_federate_cost_dict = {f: v for f, v in federate_cost_dict.items()}
+    # federate_cost_dict = {f: 0 for f in federate_cost_dict}
+    #
+    # pathbundle0 = returnBestBundle()
+    #
+    # print("path bundle current:", pathbundle1)
+    #
+    # print("path bundle zero:", pathbundle0)
+    #
+    # federate_cost_dict = {f: v for f,v in stored_federate_cost_dict.items()}
+    #
+    # newprice = optimizeCost(pathbundle1, pathbundle0)
+    #
+    # print(newprice)
+    # # plt.figure()
+    # # nx.draw(G)
+    # # plt.show()
 
-    federate_cost_dict = {'F1': 600, 'F2': 500}
-    drawSampleNetwork()
-
-    maxlink = 2
-    G = nx.DiGraph()
-    G.add_nodes_from(elements)
-    G.add_edges_from(all_edges)
-
-    sources = [elements[i-1] for i in taskids]
-    destinations = [elements[i-1] for i in [6, 7]]
-    orderPathDict = addPaths(G, sources, destinations)
-
-    pathbundle1 = returnBestBundle()
-    stored_federate_cost_dict = {f: v for f, v in federate_cost_dict}
-    federate_cost_dict = {f: 0 for f in federate_cost_dict}
-
-    pathbundle0 = returnBestBundle()
-
-    print("path bundle current:", pathbundle1)
-
-    print("path bundle zero:", pathbundle0)
-
-    federate_cost_dict = {f: v for f,v in stored_federate_cost_dict.items()}
-
-    newprice = optimizeCost(pathbundle1, pathbundle0)
-
-    print(newprice)
-    # plt.figure()
-    # nx.draw(G)
-    # plt.show()
+    # The new seciton for MILP
 
 

@@ -26,6 +26,7 @@ class OFSL(object):
         # print("auctioneer:", int(re.search('x([-\d]+),([-\.\d]+),([-\d]+)', fops[0]).group(3)), self.auctioneer)
         self.capacity = int(capacity)
         self.links = links
+        self.seed = seed
 
         # print "OFSL elementlist:", elementlist
 

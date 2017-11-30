@@ -1,12 +1,14 @@
 import pymongo
 import socket
 import json
-import pandas as pd
+# import pandas as pd
+import scipy.stats as stats
 import matplotlib.pyplot as plt
 import re
 from collections import defaultdict, deque
 import math
 import numpy as np
+from matplotlib.font_manager import FontProperties
 
 hardcoded_designs = (
         "1.GroundSta@SUR1 2.GroundSta@SUR4 1.Sat@MEO1 1.Sat@MEO4 2.Sat@MEO5 1.Sat@LEO1 2.Sat@LEO2",
@@ -31,9 +33,9 @@ def findBalancedMembers(dictlist):
     return [dic for dic in dictlist if len(set(dic['costDictList'])) == 1]
 
 def fops2costs(fops):
-    costSGL, storagePenalty, auctioneer = re.search('x([-\d]+),([-\d]+),([-\d]+)', fops).groups()
+    costSGL, storagePenalty, auctioneer = re.search('x([-\d]+),([-\.\d]+),([-\d]+)', fops).groups()
     # print(costSGL, costISL, storagePenalty)
-    return (int(costSGL), int(storagePenalty), int(auctioneer))
+    return (int(costSGL), float(storagePenalty), int(auctioneer))
 
 def fopsGen(des, test):
     # print("test:",test)
@@ -41,19 +43,20 @@ def fopsGen(des, test):
     if '3.' in des:
         numPlayers = 3
 
-    # if 'storage' in test:
-    #     if 'stochastic' in test or 'random' in test:
-    #         costsgl = [-3]
-    #     else:
-    #         costsgl = [600]
-    #
-    #     storage = [-1, 400, 800]
-    #     for sgl in costsgl:
-    #         for stor in storage:
-    #             fopslist = json.dumps(numPlayers*['x%d,%d,%d'%(sgl, stor, -1)])
-    #             yield fopslist
+    if 'regular storage' in test:
+        if 'stochastic' in test or 'random' in test:
+            costsgl = [-3]
+        else:
+            costsgl = [600]
+
+        storage = [-1, 400, 800]
+        for sgl in costsgl:
+            for stor in storage:
+                fopslist = numPlayers*['x%d,%1.2f,%d'%(sgl, stor, -1)]
+                yield fopslist
     # print("design:", des, numPlayers)
-    if 'storage' in test.lower():
+
+    elif 'storage' in test.lower():
         if 'stochastic' in test.lower():
             yield numPlayers * ["x%d,%1.2f,%d" % (-3, 400, -1)]
             yield numPlayers * ["x%d,%1.2f,%d" % (-3, 800, -1)]
@@ -116,13 +119,33 @@ def fopsGenTotal(des):
             fops_4 = ['x%d,%d,%d' % (-2, -1, -1), 'x%d,%d,%d' % (-2, -1, -1), 'x%d,%d,%d' % (-2, -1, -1)]
             yield (fops_1, fops_2, fops_3, fops_4)
 
+def convertLocation2xy(location):
+    if 'SUR' in location:
+        r = 0.5
+    elif 'LEO' in location:
+        r = 1.
+    elif 'MEO' in location:
+        r = 1.5
+    elif "GEO" in location:
+        r = 2
+    else:
+        r = 2.35
+
+    sect = int(re.search(r'.+(\d)', location).group(1))
+    tetha = +math.pi / 3 - (sect - 1) * math.pi / 3
+
+    x, y = (r * math.cos(tetha), r * math.sin(tetha))
+    # print location, x, y
+    return (x, y)
+
+
 def createPoints(letters, x, y, xdelta, ydelta, k):
     # print(letters)
     letterdict = defaultdict(list)
     d = 0.35
-    k = (1.+k)/2
+    k = (1.+k)/2.
     xdelta = k*xdelta
-    ydelta = k*ydelta
+    ydelta = k*ydelta/1.5
     if len(letters) == 2:
         if letters == 'NN':
             delta = -d
@@ -184,7 +207,7 @@ def drawTotalAdaptive(query):
                           'O': (cost_marker_dict[1200], cost_color_dict[1200], 'Federate Cost: %d' % 1200)
                           }
 
-    for basecost in [0, 600, 1200]:
+    for basecost in [0, 600]:
         all_points = []
         for i, des in enumerate(hardcoded_designs):
             numPlayers = 2
@@ -358,14 +381,14 @@ def drawTotalAdaptive(query):
 
 def drawStorage(docslist, design, query):
     # fopslist = [d["fops"] for d in docslist]
-    print(docslist)
+    # print(docslist)
     storageset = sorted(list(set([d['storagePenalty'] for d in docslist])))
     # storageset = [-1, 0, 100, 300, 500]
     # storageset = [-2, -1]
     # plt.figure()
     storage_cashlist_dict = defaultdict(list)
     for s in storageset:
-        print("storage: ", s)
+        # print("storage: ", s)
         tempdocs = [d for d in docslist if int(d["storagePenalty"]) == s]
         costlsit = [d['costSGL'] for d in tempdocs]
         resultlist = [json.loads(d["results"]) for d in tempdocs]
@@ -374,50 +397,161 @@ def drawStorage(docslist, design, query):
 
     storage_residual_dict = defaultdict(int)
     baseline = storage_cashlist_dict[400]
-    print("base line 400:", baseline)
+    # print("base line 400:", baseline)
     # print(maxlist)
     for s in storageset:
         cashlist = storage_cashlist_dict[s]
-        print(s, ' cash list:', cashlist)
+        # print(s, ' cash list:', cashlist)
         residual = [100*(b-a)/a for a,b in zip(baseline, cashlist)]
         # residual = [b for a,b in zip(baseline, cashlist)]
         storage_residual_dict[s] = sum(residual)
 
+    # print(storage_residual_dict)
     return storage_residual_dict
 
+def calResidual(docslist, design, query):
+    # fopslist = [d["fops"] for d in docslist]
+    print(docslist)
+    storageset = sorted(list(set([d['storagePenalty'] for d in docslist])))
+    # storageset = [-1, 0, 100, 300, 500]
+    # storageset = [-2, -1]
+    # plt.figure()
+    storage_cashlist_dict = defaultdict(list)
+    for s in storageset:
+        # print("storage: ", s)
+        tempdocs = [d for d in docslist if int(d["storagePenalty"]) == s]
+        print("length of tempdocs:", len(tempdocs))
+        costlsit = [d['costSGL'] for d in tempdocs]
+        # resultlist = [json.loads(d["results"]) for d in tempdocs]
+        cashlist = [d["cashlist"] for d in tempdocs]
+        storage_cashlist_dict[s] =  [e[1] for e in sorted(list(zip(costlsit, cashlist)))]
+        print(s)
+        print(len(storage_cashlist_dict[s]))
+        print([len(a) for a in storage_cashlist_dict[s]])
+
+    storage_residual_dict = defaultdict(list)
+    baseline = [sum(a)/float(len(a)) for a in storage_cashlist_dict[400]]
+    # print("base line 400:", baseline)
+    # print(maxlist)
+    for s in storageset:
+        cashlist = storage_cashlist_dict[s]
+        # print(s, ' cash list:', cashlist)
+        residual = [[100*(b-a)/a for b in l] for a,l in zip(baseline, cashlist)]
+        # residual = [b for a,b in zip(baseline, cashlist)]
+        print("length of residual:", len(residual))
+        storage_residual_dict[s] = residual
+
+    # print(storage_residual_dict)
+
+    return storage_residual_dict
 
 
 def runQuery(db, query, test):
     global design_dict
     residual_dict = defaultdict(list)
     N = len(design_dict)
+    numseeds = 30
+    boxplot_dict = {}
+    storage_dict = {400: 0, 800: 1, -1: 2}
     for des, i in sorted(design_dict.items(), key = lambda x: x[1]):
         query['elementlist'] = des
+        query['numTurns'] = 240
         templist = []
         for fops in fopsGen(des, test):
-            query['fops'] = fops
-            templist.append(list(db.results.find(query))[0])
-
-        templist2 = []
-        # fopslist = [d['fops'] for d in templist]
-        for row in templist:
-            print("row: ", row)
-            fops = row['fops']
-            costsgl, storage, auctioneer = fops2costs(fops)
+            query['fops'] = json.dumps(fops)
+            # print("query :", query['elementlist'])
+            docsresult = list(db.results.find(query))
+            sample = docsresult[0]
+            # print(len(docsresult), len([d['numTurns'] for d in docsresult]))
+            resultlist = sorted([(d['seed'], json.loads(d["results"])) for d in docsresult])
+            cashlist = [sum([e[1] for e in r[1]]) / 1000000. for r in resultlist]
+            row = {k: sample[k] for k in ['fops']}
+            row['cashlist'] = cashlist[:numseeds]
+            costsgl, storage, auctioneer = fops2costs(row['fops'])
             if costsgl not in [600, -3]:
                 continue
 
             row['costSGL'] = costsgl
             row['costISL'] = costsgl
             row['storagePenalty'] = storage
-            templist2.append(row)
-        # print(len(templist))
-        storage_residual_dict = drawStorage(templist2, design=design_dict[des], query = query)
-        # print("Storage residual dict:", len(storage_residual_dict), storage_residual_dict)
-        for s, v in storage_residual_dict.items():
-            residual_dict[s].append(v)
+            # print("row:", row)
+            x = i * 3 + storage_dict[storage]
+            print(i, des, sum(cashlist))
+            boxplot_dict[x] = cashlist
+            # templist.append(row)
+            # if list(db.results.find(query)):
+            #     templist.append(list(db.results.find(query))[0])
+            # else:
+            #     print(fops)
+            #     termslist = [re.search(r"(x.+),([-\.\d]+),(.+)", f) for f in fops]
+            #     newfops = ["%s,%1.2f,%s"%(terms.group(1), int(terms.group(2)), terms.group(3)) for terms in termslist]
+            #     query['fops'] = json.dumps(newfops)
+            #     print(query)
+            #     templist.append(list(db.results.find(query))[0])
 
-    return residual_dict
+
+        # templist2 = []
+        # # fopslist = [d['fops'] for d in templist]
+        # for row in templist:
+        #     # print("row: ", row)
+        #     fops = row['fops']
+        #     costsgl, storage, auctioneer = fops2costs(fops)
+        #     if costsgl not in [600, -3]:
+        #         continue
+        #
+        #     row['costSGL'] = costsgl
+        #     row['costISL'] = costsgl
+        #     row['storagePenalty'] = storage
+        #     templist2.append(row)
+        # print(len(templist))
+        # storage_residual_dict = calResidual(templist, design=design_dict[des], query = query)
+        # print("Storage residual dict:", len(storage_residual_dict), storage_residual_dict)
+        # for s, v in storage_residual_dict.items():
+        #     print(s)
+        #     print(v)
+        #     residual_dict[s].append(v)
+
+    # print(boxplot_dict)
+    typ = 'Stochastic' if 'stochastic' in test else 'Deterministic'
+    xstick = list(range(1,16))
+    xstick_minor = [2, 5, 8, 11, 14]
+    xstick_design = ['Design %s'%s for s in ['I', 'II', 'III', 'IV', 'V']]
+    xstick_storagepenalty = 5 * [400, 800, 'Marginal']
+    xlines = [3.5, 6.5, 9.5, 12.5]
+
+    # print(len(boxplot_dict))
+    boxplot_list = [b[1] for b in sorted(boxplot_dict.items())]
+    # print(boxplot_list)
+    fig = plt.figure()
+    ax1 = fig.add_subplot(111)
+    plt.boxplot(boxplot_list, whis = 3)
+    if typ == 'Stochastic':
+        for i in range(1, 6):
+            j = 3*i-1
+            print(xstick_design[i-1])
+            # print("800:", stats.f_oneway(boxplot_list[j], boxplot_list[j-1]))
+            # print("400:", stats.f_oneway(boxplot_list[j], boxplot_list[j-2]))
+
+            print("std:", np.std(boxplot_list[j-2]), np.std(boxplot_list[j-1]), np.std(boxplot_list[j]))
+            print("mean:", np.mean(boxplot_list[j-2]), np.mean(boxplot_list[j-1]), np.mean(boxplot_list[j]))
+
+
+    plt.xticks(xstick, xstick_storagepenalty,  rotation = 60)
+
+    # plt.xticks(xstick_minor, xstick_design, minor = True)
+    plt.ylabel('federation value (000)')
+    for xline in xlines:
+        plt.axvline(xline, color='k', linestyle='-', linewidth=0.3)
+
+    plt.xlabel('Storage Penalty')
+    ax2 = plt.twiny()
+    ax2.set_xlim(ax1.get_xlim())
+    ax2.set_xticks([a for a in xstick_minor])
+    ax2.set_xticklabels(xstick_design)
+
+    # plt.savefig("storagepenalty_%s.pdf" %(typ), bbox_inches='tight')
+    plt.show()
+    return boxplot_dict
 
 def draw_Dictionary(residual_dict):
     plt.figure()
@@ -435,7 +569,7 @@ def draw_Dictionary(residual_dict):
     legends = [dic[e] for e in baselist]
     Y = list(zip(*xy))
     designs = Y[-1]
-    print(designs)
+    # print(designs)
     ls = iter(['--', ':', '-.', '-'])
     for s, y in zip(baselist, Y[:-1]):
         if s == 0:
@@ -466,23 +600,50 @@ def sumDics(db, query, test):
     for capacity, links in [(2,2)]:
         query['capacity'] = capacity
         query['links'] = links
-        print(query)
+        # print('Sum Dics query:')
+        # print(query)
         tempdict = runQuery(db, query, test)
-        for s in tempdict:
-            if s in residual_dict:
-                residual_dict[s] = [a+b for a,b in zip(residual_dict[s], tempdict[s])]
-            else:
-                residual_dict[s] = tempdict[s]
+        print(len(tempdict))
+        print([type(t) for t in tempdict])
 
-        draw_Dictionary(tempdict)
-        # plt.title('storage:%d, links:%d' % (capacity, links))
-        plt.ylabel('Improvement over baseline (%)')
+        # for s in tempdict:
+        #     # print("temp dict:", s)
+        #     # print("tempdict seed:", s)
+        #
+        #     if s in residual_dict:
+        #         residual_dict[s] = [a+b for a,b in zip(residual_dict[s], tempdict[s])]
+        #     else:
+        #         residual_dict[s] = tempdict[s]
+        #
+        #     print('residual dict s:', residual_dict[s])
 
+        # draw_Dictionary(tempdict)
+        # # plt.title('storage:%d, links:%d' % (capacity, links))
+        # plt.ylabel('Improvement over baseline (%)')
+        #
+        #
+        # plt.savefig("%s_storagepenalty_%d_%d.pdf" % (typ, capacity, links), bbox_inches='tight')
+def avgQueryResults(query):
+    # receives a query and calculates results as the average of all seeds (global variables)
+    global db, seed1, seed2
+    resultslist = []
+    for seed in range(seed1, seed2):
+        query['seed'] = seed
+        # print(query)
+        resultslist.append(json.loads(list(db.results.find(query))[0]['results']))
 
-        plt.savefig("%s_storagepenalty_%d_%d.pdf" % (typ, capacity, links), bbox_inches='tight')
+    final = resultslist[0]
+    for i, _ in enumerate(final):
+        # print(i, [len(r) for r in resultslist])
+        final[i][1] = sum([r[i][1] for r in resultslist])/(seed2 - seed1)
+
+    # print(final)
+    return final
+
 
 
 def drawAdaptiveSGL(query, test):
+    global divider
     federatecash_dict_list1 = []
     federatecash_dict_list2 = []
 
@@ -501,34 +662,52 @@ def drawAdaptiveSGL(query, test):
         for fops, fops_adaptive in fopsGen(des, test):
             print("fops:", fops, fops_adaptive)
             query['fops'] = fops
+            # print(query)
             sgl = int(re.search(r"x([-\d]+),.+", fops).group(1))
-            docs = list(db.results.find(query))[0]
-            query['fops'] = fops_adaptive
-            print(query)
-            docs_a = list(db.results.find(query))[0]
+            # print("length of query:", list(db.results.find(query)))
+            # docs = list(db.results.find(query))[0]
+            results = avgQueryResults(query)
+            federatecash_1 = sum([e[1] for e in results])/len(results)
 
-            results = json.loads(docs['results'])
-            results_adaptive = json.loads(docs_a['results'])
+            cashlist_2 = []
+            cashlist_a2 = []
+            for n in range(len(results)):
+                tempfops = json.loads(fops_adaptive)
+                temp = tempfops[0]
+                tempfops[0] = tempfops[n]
+                tempfops[n] = temp
+                query['fops'] = json.dumps(tempfops)
+                results_adaptive = avgQueryResults(query)
+                cashlist_a2.append(results_adaptive[n][1])
+                cashlist_2.extend([r[1] for i, r in enumerate(results_adaptive) if i!=n])
 
-            federatecash_1 = results[0][1]
-            federatecash_a1 = results_adaptive[0][1]
-            federatecash_2 = sum([e[1] for e in results[1:]])/len(results[1:])
-            federetecash_a2 = sum([e[1] for e in results_adaptive[1:]])/len(results_adaptive[1:])
+            print(cashlist_2)
+            print(cashlist_a2)
+            federatecash_2 = sum(cashlist_2)/float(len(cashlist_2))
+            federatecash_a2 = sum(cashlist_a2)/float(len(cashlist_a2))
+            # print(query)
+            # print("length of query:", list(db.results.find(query)))
+            # docs_a = list(db.results.find(query))[0]
+
+            # results = json.loads(docs['results'])
+            # results = avgQueryResults(query)
+            # results_adaptive = json.loads(docs_a['results'])
+            # federatecash_a1 = results_adaptive[0][1]
+            # federatecash_2 = sum([e[1] for e in results[1:]])/len(results[1:])
+            # federetecash_a2 = sum([e[1] for e in results_adaptive[1:]])/len(results_adaptive[1:])
 
             totalcash = sum([e[1] for e in results])
             totalcash_adaptive = sum([e[1] for e in results_adaptive])
-            federate_dict_1[sgl] = (federatecash_1, federatecash_a1)
-            federate_dict_2[sgl] = (federatecash_2, federetecash_a2)
-            print(federatecash_1, federatecash_a1)
-            print(federatecash_2, federetecash_a2)
+            print("Federate cash:", federatecash_1, federatecash_2, federatecash_a2)
+            federate_dict_1[sgl] = (federatecash_1, federatecash_a2)
+            federate_dict_2[sgl] = (federatecash_1, federatecash_2)
+            # print(federatecash_1, federatecash_a1)
+            # print(federatecash_2, federetecash_a2)
             totalcash_dict[sgl] = (totalcash, totalcash_adaptive)
-
 
         federatecash_dict_list1.append(federate_dict_1)
         federatecash_dict_list2.append(federate_dict_2)
-
         totalcash_dict_list.append(totalcash_dict)
-
 
     xtickDict = {0: 'I', 1: 'II', 2:'III', 3:'IV', 4:'V', 5:'VI', 6:'VII', 7:'VIII', 8:'XI', 9:'X'}
     xticklist = ['Design %s'%xtickDict[i] for i in range(len(hardcoded_designs))]
@@ -538,79 +717,95 @@ def drawAdaptiveSGL(query, test):
     color_dict = {-3: 'g', 0: 'r', 600: 'b', 1200: 'm' ,'adaptive': 'k'}
     function_dict = {-3: 'CF=tri-random', 0: 'CF=   0', 600: 'CF= 600', 1200: 'CF>1000' ,'adaptive': 'CF=adaptive'}
     order_dict = {-3: 4.5, 0: 2, 600: 3, 1200: 4 ,'adaptive': 5}
+    sp_list = [-3, 0, 600, 1200]
 
-    all_points = defaultdict(list)
-    all_edges = []
-    divider = 1000000.
-    fig = plt.figure()
-    ax1 = fig.add_axes([0.1, 0.5, 0.9, 0.35])
+    all_points1 = defaultdict(list)
+    all_points_adaptive1 = defaultdict(list)
+    all_edges1 = defaultdict(list)
+    all_points2 = defaultdict(list)
+    all_edges2 = defaultdict(list)
+    all_points_adaptive2 = defaultdict(list)
 
     for i, cash_dict in enumerate(federatecash_dict_list1):
         for k, v in cash_dict.items():
+            print("adaptive cash: ", v)
             point1 = (i+1-delta, v[0]/divider)
             point2 = (i+1+delta, v[1]/divider)
-            all_points[k].append(point1)
-            all_points['adaptive'].append(point2)
-            all_edges.append((point1, point2))
-
-    legends = []
-
-    lines = []
-    for s, points in sorted(all_points.items(), key = lambda x: order_dict[x[0]]):
-        lines.append(ax1.scatter(*zip(*points), marker = marker_dict[s], color = color_dict[s], s = 60, facecolors = 'w', linewidth='2'))
-        legends.append(function_dict[s])
-
-    # plt.legend(legends, loc = 2)
-    # fig.legend(lines, legends, frameon=False, ncol=3, loc='upper center', bbox_to_anchor=(0.4, 1.2), labelspacing=2)
-    fig.legend(lines, legends, loc='upper center', ncol = 3)
-
-    for edge in all_edges:
-        # plt.plot(*zip(*edge), 'k:', linewidth = 0.7)
-        ax1.arrow(edge[0][0], edge[0][1], 0.8*(edge[1][0]-edge[0][0]), 0.8*(edge[1][1]-edge[0][1]), head_width=0.02, head_length=0.1, linewidth = 0.4, fc ='k', ec = 'k', zorder = -1)
-
-    plt.xticks(range(1, len(hardcoded_designs)+1), ['' for i in xticklist], rotation = 0)
-
-    for i in range(len(hardcoded_designs)-1):
-        ax1.axvline(i+1.5, color = 'k', linestyle = '-', linewidth = 0.3)
-
-
-    plt.ylabel('adaptive cash (M$)')
-    plt.xlim(0.5, len(hardcoded_designs)+0.5)
-
-    ax2 = fig.add_axes([0.1, 0.1, 0.9, 0.35])
-
-    all_points = defaultdict(list)
-    all_points_adaptive = defaultdict(list)
-    all_edges = []
+            all_points1[k].append(point1)
+            # all_points1['adaptive'].append(point2)
+            all_points_adaptive1[k].append(point2)
+            all_edges1[k].append((point1, point2))
 
     for i, cash_dict in enumerate(federatecash_dict_list2):
         for k, v in cash_dict.items():
+            print("nonadaptive cash: ", v)
             point1 = (i+1-delta, v[0]/divider)
             point2 = (i+1+delta, v[1]/divider)
-            all_points[k].append(point1)
-            # all_points['adaptive'].append(point2)
-            all_points_adaptive[k].append(point2)
-            all_edges.append((point1, point2))
+            all_points2[k].append(point1)
+            # all_points2['adaptive'].append(point2)
+            all_points_adaptive2[k].append(point2)
+            # all_points2['adaptive'].append(point2)
+            all_edges2[k].append((point1, point2))
 
+    legends = []
     lines = []
-    for s, points in sorted(all_points.items(), key = lambda x: order_dict[x[0]]):
+
+    for s in sp_list:
+        fig = plt.figure()
+        ax1 = fig.add_axes([0.1, 0.5, 0.9, 0.35])
+        points = all_points1[s]
+        legends = []
+        lines = []
+        # for s, points in sorted(all_points.items(), key = lambda x: order_dict[x[0]]):
+        lines.append(ax1.scatter(*zip(*points), marker = marker_dict[s], color = color_dict[s], s = 60, facecolors = 'w', linewidth='2'))
+        legends.append(function_dict[s])
+
+        points = all_points_adaptive1[s]
+        lines.append(ax1.scatter(*zip(*points), marker = marker_dict['adaptive'], color = 'k', s = 60, facecolors = 'w', linewidth='2'))
+        legends.append(function_dict['adaptive'])
+        # plt.legend(legends, loc = 2)
+        # fig.legend(lines, legends, frameon=False, ncol=3, loc='upper center', bbox_to_anchor=(0.4, 1.2), labelspacing=2)
+
+        for edge in all_edges1[s]:
+            # plt.plot(*zip(*edge), 'k:', linewidth = 0.7)
+            ax1.arrow(edge[0][0], edge[0][1], 0.5*(edge[1][0]-edge[0][0]), 0.5*(edge[1][1]-edge[0][1]), head_width=0.07, head_length=0.2, linewidth = 0.4, fc ='k', ec = 'k', zorder = -1)
+
+        plt.xticks(range(1, len(hardcoded_designs)+1), ['' for i in xticklist], rotation = 0)
+
+        for i in range(len(hardcoded_designs)-1):
+            ax1.axvline(i+1.5, color = 'k', linestyle = '-', linewidth = 0.3)
+
+        plt.ylabel('adaptive cash (M$)')
+        plt.xlim(0.5, len(hardcoded_designs)+0.5)
+        ax2 = fig.add_axes([0.1, 0.1, 0.9, 0.35])
+
+        # if s in all_edges2:
+        points = all_points2[s]
+        # print(s, points)
+        # for s, points in sorted(all_points2.items(), key = lambda x: order_dict[x[0]]):
         lines.append(ax2.scatter(*zip(*points), marker = marker_dict[s], color = color_dict[s], s = 60, facecolors = 'w', linewidth='2'))
         legends.append(function_dict[s])
 
-    for s, points in sorted(all_points_adaptive.items(), key = lambda x: order_dict[x[0]]):
+        # elif s in all_points_adaptive:
+        points = all_points_adaptive2[s]
+        # print(s, points)
+        # for s, points in sorted(all_points_adaptive.items(), key = lambda x: order_dict[x[0]]):
         lines.append(ax2.scatter(*zip(*points), marker = marker_dict[s], color = 'k', s = 60, facecolors = 'w', linewidth='2'))
         legends.append(function_dict[s])
 
-    for edge in all_edges:
-        # plt.plot(*zip(*edge), 'k:', linewidth = 0.7)
-        ax2.arrow(edge[0][0], edge[0][1], 0.8*(edge[1][0]-edge[0][0]), 0.8*(edge[1][1]-edge[0][1]), head_width=0.02, head_length=0.1, linewidth = 0.4, fc ='k', ec = 'k', zorder = -1)
+        # edge = all_edges2[s]
+        for edge in all_edges2[s]:
+            # plt.plot(*zip(*edge), 'k:', linewidth = 0.7)
+            ax2.arrow(edge[0][0], edge[0][1], 0.5*(edge[1][0]-edge[0][0]), 0.5*(edge[1][1]-edge[0][1]), head_width=0.07, head_length=0.2, linewidth = 0.4, fc ='k', ec = 'k', zorder = -1)
 
-    plt.xticks(range(1, len(hardcoded_designs)+1), xticklist, rotation = 0)
-    for i in range(len(hardcoded_designs)-1):
-        ax2.axvline(i+1.5, color = 'k', linestyle = '-', linewidth = 0.3)
+        plt.xticks(range(1, len(hardcoded_designs)+1), xticklist, rotation = 0)
+        for i in range(len(hardcoded_designs)-1):
+            ax2.axvline(i+1.5, color = 'k', linestyle = '-', linewidth = 0.3)
 
-    plt.ylabel('none-adaptive (M$)')
-    plt.savefig("Federate_revenue_costfunction.pdf", bbox_inches='tight')
+        fig.legend(lines[:2]+lines[3:], legends[:2]+legends[3:], loc='upper center', ncol = 3)
+        plt.ylabel('non-adaptive (M$)')
+        plt.savefig("Federate_revenue_costfunction_V3_sp%s.pdf"%str(s), bbox_inches='tight')
+
     plt.show()
 
     # print(federatecash_dict_list1)
@@ -618,18 +813,19 @@ def drawAdaptiveSGL(query, test):
 
 
 def drawStoragePenalty(db):
-    query = {'experiment': 'Adaptive Cost'}
-    test = 'storage deterministic'
+    query = {'experiment': 'Storage Penalty V2'}
+    test = 'regular storage deterministic'
     sumDics(db, query, test)
 
-    test = 'storage stochastic'
+    test = 'regular storage stochastic'
     sumDics(db, query, test)
-
     plt.show()
 
 def drawFederateAdaptive(db):
-    query = {'experiment': 'Adaptive Cost', 'capacity': 2, 'links': 2}
+    global numTurns
+    query = {'experiment': 'Adaptive Cost V2', 'capacity': 2, 'links': 2, 'numTurns': numTurns}
     test = 'federate adaptive'
+
     drawAdaptiveSGL(query, test)
 
 # def drawTotalAdaptive(db):
@@ -782,8 +978,62 @@ def drawStorageCoefficient(db):
     plt.show()
 
 
+def drawGraphbyDesign(number, design):
+    elements = design.split(' ')
+    federates = set([int(e[0]) for e in elements])
+    federates_location_dict = defaultdict(list)
+    federates_type_dict = defaultdict(list)
+    federate_coordinates_dict = defaultdict(list)
+    my_dpi = 150
+    plt.figure(figsize=(800/my_dpi, 800/my_dpi), dpi=my_dpi)
+    for r in [4, 2.25, 1.]:
+        x = np.linspace(-1.0*r, 1.0*r, 50)
+        y = np.linspace(-1.0*r, 1.0*r, 50)
+        X, Y = np.meshgrid(x, y)
+        F = X ** 2 + Y ** 2 - r
+        plt.contour(X, Y, F, [0], colors='k', linewidths = 0.3, origin = 'lower', zorder = -1)
+
+    font = FontProperties()
+    font.set_style('italic')
+    font.set_weight('bold')
+    font.set_size('x-small')
+    for x,y,lab in [(0,0,'SUR'), (0, 1, "LEO"),(0, 1.5, 'MEO'),(0, 2, 'GEO')]:
+        # plt.annotate(lab, xy = (x,y), xytext = (x-0.2, y-0.1))
+        plt.text(x,y, ha="center", va="center", s = lab, bbox = dict(fc="w", ec="w", lw=2),fontproperties=font)
+
+    for i, (x, y) in enumerate([convertLocation2xy(e) for e in ['OOO'+str(i) for i in range(1,7)]]):
+        plt.text(x, y, ha="center", va="center", s=str(i+1), bbox=dict(fc="none", ec="none", lw=2), fontproperties=font)
+
+    font.set_size('medium')
+    plt.text(0, 2.3 , ha="left", va="center", s=r'$|\rightarrow \theta$', bbox=dict(fc="w", ec="w", lw=2), fontproperties=font)
+
+    types_dict = {'GroundSta': "G", 'Sat': 'S'}
+    colordict = {'F1': 'yellow', 'F2': 'lightcyan', 'F3': 'lightgrey'}
+    allpossiblelocations = []
+    for location in ['SUR', 'LEO', 'MEO', 'GEO']:
+        for i in range(1,7):
+            allpossiblelocations.append(location + str(i))
+
+    allpossiblecoordinates = [convertLocation2xy(e) for e in allpossiblelocations]
+    plt.scatter(*zip(*allpossiblecoordinates), marker = "H", s = 800, color = 'k', facecolors = 'w')
+    for f in federates:
+        types = [re.search(r'\d\.(.+)@(\w+\d)', e).group(1) for e in elements if '%d.' % f in e]
+        federates_type_dict['F%d'%f] = [types_dict[t] for t in types]
+        federates_location_dict['F%d'%f] = [re.search(r'(.+)@(\w+\d)', e).group(2) for e in elements if '%d.'%f in e]
+        federate_coordinates_dict['F%d'%f] = [convertLocation2xy(loc) for loc in federates_location_dict['F%d'%f]]
+        plt.scatter(*zip(*federate_coordinates_dict['F%d'%f]), marker = "H", s = 800, edgecolors = 'k', facecolors = colordict['F%d'%f], linewidth='3')
+        for x, y in federate_coordinates_dict['F%d'%f]:
+            plt.annotate('F%d'%f, xy = (x, y), xytext = (x-0.1, y-0.075))
 
 
+    plt.xticks([])
+    plt.yticks([])
+    rlim = 2.5
+    plt.xlim(-rlim, rlim)
+    plt.ylim(-rlim+0.2, rlim)
+    plt.axis('off')
+    des_roman_dict = {1: 'I', 2: 'II', 3:'III', 4:'IV', 5:'V'}
+    plt.savefig("Design_%s.pdf"%des_roman_dict[number], bbox_inches='tight')
 
 
 
@@ -795,13 +1045,22 @@ def drawStorageCoefficient(db):
 # dbPort = 27017
 #
 # db = pymongo.MongoClient(dbHost, dbPort).ofs
-#
+# seed1 = 20
+# seed2 = 30
+# numTurns = 2400
+# divider = 1000000
+# # #
+# drawStoragePenalty(db)
+# #
 # # drawFederateAdaptive(db)
-#
+# #
 # # drawTotalAdaptive({'experiment': 'Adaptive Cost', 'capacity': 2, 'links': 2, 'numTurns': 2400})
-#
+# #
 # # drawAdaptiveAuctioneer(db)
+# #
+# # drawSampleNetwork()
+# #
+# # drawStorageCoefficient(db)
 #
-# drawSampleNetwork()
-#
-# drawStorageCoefficient(db)
+# # for i, des in enumerate(hardcoded_designs):
+# # #     drawGraphbyDesign(i+1, des)

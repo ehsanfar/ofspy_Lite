@@ -26,7 +26,6 @@ class ContextLite():
         self.federates = []
         self.elements = []
         self.masterfederate = []
-        self.seed = 11
         self.currentTasks = {i: queue.Queue(maxsize = 3) for i in range(1,7)}
         self.nodeLocations = []
         self.shortestPathes = []
@@ -47,7 +46,7 @@ class ContextLite():
         self.maxTime = ofs.maxTime
         self.links = ofs.links
 
-        self.masterStream = random.Random(self.seed)
+        self.masterStream = random.Random(ofs.seed)
         self.shuffleStream = random.Random(self.masterStream.random())
         self.orderStream = random.Random(self.masterStream.random())
 
